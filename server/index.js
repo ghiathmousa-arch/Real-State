@@ -7,6 +7,8 @@ require("dotenv").config({ path: __dirname + "/.env" });
 
 const connectDB = require("./config/db");
 const propertiesRouter = require("./routes/properties");
+const authRouter = require("./routes/auth");
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -19,6 +21,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api/properties", propertiesRouter);
+
+
+app.use("/api/auth", authRouter);  
+
 
 app.get("/api/categories", (req, res) => {
   res.json(["شقة", "منزل", "أرض", "مكتب", "متجر", "مستودع"]);
