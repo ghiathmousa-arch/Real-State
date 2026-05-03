@@ -9,7 +9,6 @@ interface FilterSearch {
     options: string[]
 }
 
-// بيانات الفلاتر (حافظنا على هيكلية الكود الخاص بك)
 const searchData: FilterSearch[] = [
     {
         label: 'الموقع',
@@ -34,7 +33,6 @@ const Search = () => {
 
     return (
         <div className="flex flex-col items-center gap-10">
-            {/* حاوية البحث (الكود الخاص بك مع الربط الديناميكي) */}
             <div dir="rtl" className="w-250 max-w-5xl p-5 bg-[#BABCC0]/80 backdrop-blur-md flex justify-between items-end gap-4 rounded-3xl shadow-2xl">
                 
                 {searchData.map((item, index) => (
