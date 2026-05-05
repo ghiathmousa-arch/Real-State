@@ -1,53 +1,10 @@
-import { useContext, useState, type ReactNode } from "react"
-import { FaLocationDot, FaMoneyBills } from "react-icons/fa6";
-import { BiBuildingHouse } from "react-icons/bi";
 import { FaSearch } from "react-icons/fa";
-import { searchContext } from "../pages/HomePage";
-
-interface FilterSearch {
-    label: string
-    icon: ReactNode
-    options: string[]
-    name : string
-}
-
-const searchData: FilterSearch[] = [
-    {
-        name: 'location',
-        label: 'الموقع',
-        icon: <FaLocationDot className="text-[#004E80]" />,
-        options: ['حدد الموقع', 'دمشق', 'حلب', 'حمص', 'اللاذقية']
-    },
-    {
-        name: 'type',
-        label: 'نوع العقار',
-        icon: <BiBuildingHouse className="text-[#004E80]" />,
-        options: ['حدد العقار المطلوب', 'شقق فاخرة', 'اراضي', 'منازل']
-    },
-    {
-        name: 'price',
-        label: 'نطاق السعر',
-        icon: <FaMoneyBills className="text-[#004E80]" />,
-        options: ['حدد السعر', '100M - 500M ل.س ', '+500M']
-    }
-];
+import {searchData } from "../pages/HomePage";
 
 
 const Search = () => {
     
-const context = useContext(searchContext);
-const [selectedOptions, setSelectedOptions] = useState({
-        location: '',
-        type: '',
-        price: ''
-    });
-    const handleSearch = () => {
-        if (context) {
-            const result = `الموقع: ${selectedOptions.location}, النوع: ${selectedOptions.type} , السعر : ${selectedOptions.price}`;
-            console.log(result);
-            context.setSearch(result);
-        }
-    };
+
     return (
         <div className="flex flex-col items-center gap-10">
             <div dir="rtl" 
@@ -80,11 +37,7 @@ const [selectedOptions, setSelectedOptions] = useState({
                             </span>
 
                             <select 
-                                onChange={(event) => {
-                                    const { value } = event.target;
-
-                                        setSelectedOptions(prev => ({ ...prev, [item.name]: value }));
-                                    }}
+                                
                                 className="appearance-none bg-transparent text-sm text-gray-700  cursor-pointer border-none p-1 font-bold w-full outline-none
 
                                 // شاشات من 768 الى 1000
@@ -113,7 +66,6 @@ const [selectedOptions, setSelectedOptions] = useState({
                     // شاشات صغيرة
                     min-[300px]:max-[500px]:w-full"
 
-                    onClick={handleSearch}
                 >
                     <FaSearch className="text-lg" />
                     بحث متقدم
