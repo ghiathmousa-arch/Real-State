@@ -1,0 +1,9 @@
+{
+  "nav": {
+    "home": "Home",
+    "featured": "Featured Properties",
+    "list": "Properties List",
+    "services": "Our Services",
+    "contact": "Contact Us"
+  }
+}

@@ -4,7 +4,7 @@ export interface Property {
   titleEn: string;
   description: string;
   descriptionEn: string;
-  category: string;
+  category:string;
   categoryEn: string;
   type: string;
   price: number;

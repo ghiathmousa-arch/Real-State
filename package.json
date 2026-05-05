@@ -25,15 +25,23 @@
     "cors": "^2.8.5",
     "dotenv": "^17.4.2",
     "express": "^4.18.2",
+    "i18next": "^26.0.8",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.5.0",
     "multer": "^1.4.5-lts.1",
     "path": "^0.12.7",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-i18next": "^17.0.6",
+    "react-icons": "^5.6.0",
+    "react-router-dom": "^7.14.2",
     "sharp": "^0.34.5",
+    "swiper": "^10.3.1",
     "tailwindcss": "^4.2.4",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@types/swiper": "^5.4.3",
     "concurrently": "^8.2.0",
     "nodemon": "^3.0.1"
   }
