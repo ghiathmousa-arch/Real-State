@@ -98,35 +98,47 @@ router.post("/", protect, adminOnly, upload.any(), compressImages, async (req, r
 
 // ── PUT /:id ───────────────────────────────
 // Admin فقط — تعديل عقار موجود
-router.put("/:id", protect, adminOnly, upload.array("images", 10), async (req, res) => {
+// ── PUT /:id ───────────────────────────────
+// Admin فقط — تعديل عقار موجود
+// استخدمنا upload.any() و compressImages لضمان معالجة الصور بنفس جودة الإضافة
+// ... (داخل دالة الـ PUT)
+router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req, res) => {
   try {
-    const property = await Property.findById(req.params.id);
-    if (!property) return res.status(404).json({ error: "العقار غير موجود" });
+    const property = await Property.findById(req.params.id)
+    if (!property) return res.status(404).json({ error: "العقار غير موجود" })
 
-    let images = property.images || [];
-    if (req.files && req.files.length > 0) {
-      images = [...images, ...req.files.map((f) => `/uploads/${f.filename}`)];
+    const b = req.body
+    const toNum = (v) => (v !== undefined && v !== "" ? Number(v) : null)
+
+    // منطق الصور
+    let finalImages
+    if (b.replaceImages === 'true' && req.compressedImages?.length > 0) {
+      // استبدل القديمة بالجديدة كلياً
+      finalImages = req.compressedImages
+    } else {
+      // ابقِ القديمة نظيفة بدون undefined
+      finalImages = (property.images || []).filter(img => img && !img.includes('undefined'))
     }
 
     const updated = await Property.findByIdAndUpdate(
       req.params.id,
       {
-        ...req.body,
-        price: req.body.price ? parseFloat(req.body.price) : property.price,
-        images,
-        isFeatured: req.body.isFeatured === "true",
-        features: req.body.features
-          ? req.body.features.split(",").map((f) => f.trim()).filter((f) => f)
-          : property.features,
+        ...b,
+        price: b.price ? toNum(b.price) : property.price,
+        area: b.area ? toNum(b.area) : property.area,
+        rooms: b.rooms ? toNum(b.rooms) : property.rooms,
+        bathrooms: b.bathrooms ? toNum(b.bathrooms) : property.bathrooms,
+        images: finalImages,
+        isFeatured: b.isFeatured === "true" || b.isFeatured === true,
       },
       { new: true }
-    );
+    )
 
-    res.json(updated);
+    res.json(updated)
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message })
   }
-});
+})
 
 // ── DELETE /:id ────────────────────────────
 // Admin فقط — حذف عقار
