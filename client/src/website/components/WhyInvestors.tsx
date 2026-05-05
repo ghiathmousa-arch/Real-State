@@ -34,7 +34,8 @@ const content: PropertyInfo[] = [
     }
 ];
 
-const EXPERIENCE_DATA: ExperienceInfo = {
+const expreienceData: ExperienceInfo = {
+    
     years: '15+',
     description: 'عاماً من الخبرة في السوق السوري'
 };
@@ -86,8 +87,8 @@ const WhyInvestors = () => {
     />
 
     {/* بطاقة الخبرة العائمة */}
-    {/* تم تثبيت الـ top والـ right لتكون خارج حدود الصورة كما في التصميم */}
     <div className="absolute -bottom-10 -right-12 bg-white/30 backdrop-blur-2xl rounded-2xl border border-white/20 shadow-2xl max-w-60
+
     min-[300px]:max-[1000px]:right-0
     ">
         <div className="flex p-5 gap-4 items-center mx-w-60
@@ -95,12 +96,12 @@ const WhyInvestors = () => {
         ">
             {/* الرقم */}
             <h1 className="text-[#004E80] text-5xl font-bold leading-none">
-                {EXPERIENCE_DATA.years}
+                {expreienceData.years}
             </h1>
             
             {/* النص */}
             <p className="text-gray-800 text-sm font-bold leading-tight">
-                {EXPERIENCE_DATA.description}
+                {expreienceData.description}
             </p>
         </div>
     </div>
