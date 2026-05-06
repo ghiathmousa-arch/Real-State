@@ -3,7 +3,7 @@ import { useState } from "react";
 import PropertyCard from "../PropetyCards";
 import type { Property } from "../PropetyCards"; // استدعاء نوع العقار
 
-// 🧠 نعرف الـ Props يلي بدنا إياها من الـ App
+//  نعرف الـ Props يلي بدنا إياها من الـ App
 interface BestEstateProps {
     properties: Property[];
 }
