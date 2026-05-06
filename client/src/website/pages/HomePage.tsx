@@ -3,6 +3,7 @@ import Hero from "../components/Hero";
 import { FaLocationDot, FaMoneyBills } from "react-icons/fa6";
 import { BiBuildingHouse } from "react-icons/bi";
 import WhyInvestors from "../components/WhyInvestors";
+import State from "../components/State";
 
 
 interface FilterSearch {
@@ -12,7 +13,6 @@ interface FilterSearch {
     name: string;
 }
 
-// تصدير بيانات البحث لاستخدامها في مكونات أخرى مثل الـ Hero
 export const searchData: FilterSearch[] = [
     {
         name: 'location',
@@ -45,6 +45,9 @@ const HomePage = () => {
             
             <div>
                 <WhyInvestors/>
+            </div>
+            <div>
+                <State/>
             </div>
         </div>
     );
