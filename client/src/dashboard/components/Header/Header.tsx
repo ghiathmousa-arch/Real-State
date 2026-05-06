@@ -2,13 +2,17 @@ interface HeaderProps {
   title: string;
   description: string;
 }
-const Header = ({title, description}: HeaderProps) => {
+
+const Header = ({ title, description }: HeaderProps) => {
   return (
-    <div>
-      <h1 className="text-[#004a77] text-5xl font-bold mb-4">{title}</h1>
-      <p className="text-gray-600 text-sm mt-2">{description}</p>
+    <div className="mb-6 lg:mb-10 px-4 lg:px-0">
+      <h1 className="text-[#004a77] text-2xl sm:text-3xl lg:text-5xl font-bold mb-2">
+        {title}
+      </h1>
+      <p className="text-gray-500 text-xs sm:text-sm">{description}</p>
     </div>
-  ) 
+  )
 }
 
-export default Header
+// السطر اللي كان ناقص ومسبب المشكلة:
+export default Header;

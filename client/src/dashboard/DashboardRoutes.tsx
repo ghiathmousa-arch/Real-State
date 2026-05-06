@@ -23,9 +23,9 @@ const DashboardRoutes = () => {
         <Route element={<DashboardLayout />}>     {/* شكل */}
           <Route path="/" element={<Dashboard />} />
           <Route path="/properties" element={<Properties />} />
-          <Route path="/trends" element={<Trends />} />
+          {/* <Route path="/trends" element={<Trends />} />
           <Route path="/investors" element={<Investors />} />
-          <Route path="/reports" element={<Reports />} />
+          <Route path="/reports" element={<Reports />} /> */}
           <Route path="properties/add" element={<AddProperty />} />
         </Route>
       </Route>

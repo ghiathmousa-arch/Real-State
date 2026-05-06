@@ -2,10 +2,9 @@ const express = require("express");
 const router = express.Router();
 const Property = require("../models/Property");
 const { upload, compressImages } = require("../middleware/upload");
-const { protect, adminOnly } = require("../middleware/auth"); // ← جديد
+const { protect, adminOnly } = require("../middleware/auth");
 
 // ── GET / ──────────────────────────────────
-// عام — أي أحد يقدر يشوف العقارات
 router.get("/", async (req, res) => {
   try {
     const { category, city, minPrice, maxPrice, type, search } = req.query;
@@ -37,7 +36,6 @@ router.get("/", async (req, res) => {
 });
 
 // ── GET /featured ──────────────────────────
-// عام — جلب العقارات المميزة
 router.get("/featured", async (req, res) => {
   try {
     const properties = await Property.find({ isFeatured: true, status: "active" });
@@ -47,8 +45,21 @@ router.get("/featured", async (req, res) => {
   }
 });
 
+// ── GET /recent ← لازم قبل /:id ──────────
+router.get("/recent", async (req, res) => {
+  try {
+    const properties = await Property
+      .find()
+      .sort({ "action.at": -1, createdAt: -1 })
+      .limit(5)
+      .select("title city price status action")
+    res.json(properties)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+});
+
 // ── GET /:id ───────────────────────────────
-// عام — جلب عقار واحد
 router.get("/:id", async (req, res) => {
   try {
     const property = await Property.findById(req.params.id);
@@ -60,9 +71,6 @@ router.get("/:id", async (req, res) => {
 });
 
 // ── POST / ─────────────────────────────────
-// Admin فقط — إضافة عقار جديد
-// protect: تحقق من التوكن أولاً
-// adminOnly: تحقق إن المستخدم Admin
 router.post("/", protect, adminOnly, upload.any(), compressImages, async (req, res) => {
   try {
     const b = req.body;
@@ -88,6 +96,11 @@ router.post("/", protect, adminOnly, upload.any(), compressImages, async (req, r
       features: toArr(b.features),
       isFeatured: b.isFeatured === true || b.isFeatured === "true",
       status: b.status || "active",
+      action: {                          // ← جديد
+        type: "added",
+        by: req.user.name,
+        at: new Date()
+      }
     });
 
     res.status(201).json(property);
@@ -97,11 +110,6 @@ router.post("/", protect, adminOnly, upload.any(), compressImages, async (req, r
 });
 
 // ── PUT /:id ───────────────────────────────
-// Admin فقط — تعديل عقار موجود
-// ── PUT /:id ───────────────────────────────
-// Admin فقط — تعديل عقار موجود
-// استخدمنا upload.any() و compressImages لضمان معالجة الصور بنفس جودة الإضافة
-// ... (داخل دالة الـ PUT)
 router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req, res) => {
   try {
     const property = await Property.findById(req.params.id)
@@ -110,13 +118,10 @@ router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req,
     const b = req.body
     const toNum = (v) => (v !== undefined && v !== "" ? Number(v) : null)
 
-    // منطق الصور
     let finalImages
     if (b.replaceImages === 'true' && req.compressedImages?.length > 0) {
-      // استبدل القديمة بالجديدة كلياً
       finalImages = req.compressedImages
     } else {
-      // ابقِ القديمة نظيفة بدون undefined
       finalImages = (property.images || []).filter(img => img && !img.includes('undefined'))
     }
 
@@ -130,6 +135,11 @@ router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req,
         bathrooms: b.bathrooms ? toNum(b.bathrooms) : property.bathrooms,
         images: finalImages,
         isFeatured: b.isFeatured === "true" || b.isFeatured === true,
+        action: {                        // ← جديد
+          type: b.status === "sold" ? "sold" : "updated",
+          by: req.user.name,
+          at: new Date()
+        }
       },
       { new: true }
     )
@@ -138,10 +148,9 @@ router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req,
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
-})
+});
 
 // ── DELETE /:id ────────────────────────────
-// Admin فقط — حذف عقار
 router.delete("/:id", protect, adminOnly, async (req, res) => {
   try {
     const property = await Property.findByIdAndDelete(req.params.id);
