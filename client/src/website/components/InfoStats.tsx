@@ -18,7 +18,7 @@ const contentDataState : dataState[]=[
 ]
 const InfoStats = () => {
     return (
-        <div className="flex divide-x-2 divide-white 
+        <div className="flex justify-center divide-x-2  divide-white 
         min-[300px]:max-[550px]:flex-col gap-2.5">
             {contentDataState.map((item , index) => (
                 <div  key={index}>
