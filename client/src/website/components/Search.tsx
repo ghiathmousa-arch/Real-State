@@ -1,8 +1,6 @@
-// src/components/Search.tsx
 import { FaSearch } from "react-icons/fa";
 import { useContext, useEffect, useState } from "react";
-import { searchContext } from "../Layout/Layout";
-import { searchData } from "../pages/HomePage"; 
+import { searchContext, searchData } from "../pages/HomePage";
 
 const Search = () => {
     const { setSearch } = useContext(searchContext);
@@ -17,13 +15,11 @@ const Search = () => {
     const [categories, setCategories] = useState<string[]>([]);
 
     useEffect(() => {
-        // جلب المدن من الباك آند
         fetch("http://localhost:5000/api/cities")
             .then(res => res.json())
             .then(data => { if (Array.isArray(data)) setCities(data); })
             .catch(err => console.error("Error fetching cities:", err));
 
-        // جلب الأصناف من الباك آند
         fetch("http://localhost:5000/api/categories")
             .then(res => res.json())
             .then(data => { if (Array.isArray(data)) setCategories(data); })
@@ -31,12 +27,11 @@ const Search = () => {
     }, []);
 
     const handleSearchClick = () => {
-        
         setSearch(localOptions);
     };
 
     return (
-        <div className="flex flex-col items-center gap-10">
+        <div className="flex flex-col items-center gap-10 dark:bg-black">
             <div dir="rtl" 
                 className="w-245 max-w-5xl p-5 bg-[#BABCC0]/80 backdrop-blur-md flex justify-between items-end gap-4 rounded-3xl shadow-2xl min-[768px]:max-[1000px]:w-175 min-[300px]:max-[768px]:flex-col min-[500px]:max-[768px]:w-113.5 min-[300px]:max-[768px]:items-center min-[300px]:max-[500px]:w-70">
                 
