@@ -2,9 +2,6 @@
 import Hero from "../components/Hero";
 import { FaLocationDot, FaMoneyBills } from "react-icons/fa6";
 import { BiBuildingHouse } from "react-icons/bi";
-import WhyInvestors from "../components/WhyInvestors";
-import State from "../components/State";
-import Footer from "../components/Footer";
 import type { ReactNode } from "react";
 
 // تعريف واجهة بيانات البحث
@@ -43,18 +40,8 @@ const HomePage = () => {
         <div className="flex flex-col gap-28">
             {/* مكون الـ Hero: يعرض العقارات المفلترة عبر سحبها من الـ Context داخلياً */}
             
-                <Hero />
+                <Hero />            
 
-            {/* مكون المميزات */}
-            
-                <WhyInvestors />
-
-            {/* مكون الرؤية والعقارات الإضافية: ينسجم تلقائياً مع الفلترة عبر الـ Context */}
-            
-                <State />
-
-            {/* تذييل الصفحة */}
-            <Footer />
         </div>
     );
 };

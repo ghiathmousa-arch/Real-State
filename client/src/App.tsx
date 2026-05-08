@@ -7,9 +7,14 @@ import HomePage from "./website/pages/HomePage";
 import NavBar from "./website/components/NavBar/NavBar";
 import BestEstate from "./website/components/BestEstate/BestEstate";
 import PropertiesList from "./website/components/PropertiesList/PropertiesList";
-import type { Property } from "./website/components/PropetyCards";
 import Contact from "./website/components/contact/contact";
+import type { Property } from "./website/components/PropetyCards";
+import Footer from "./website/components/Footer";
+import State from "./website/components/State";
+import WhyInvestors from "./website/components/WhyInvestors";
+
 type Theme = "light" | "dark";
+
 const data = [
   {
     _id: "1",
@@ -32,49 +37,65 @@ const data = [
     image: "https://picsum.photos/400/300?2",
   },
 ];
+
 function App() {
   const [theme, setTheme] = useState<Theme>(
     (localStorage.getItem("theme") as Theme) || "light"
   );
+
   const { i18n } = useTranslation();
 
+  // 🌙 Theme
   useEffect(() => {
     document.documentElement.className = theme;
     localStorage.setItem("theme", theme);
   }, [theme]);
 
+  // 🌍 Language
   useEffect(() => {
     const currentLang = i18n.language;
-    document.documentElement.dir = currentLang === "ar" ? "rtl" : "ltr";
+
+    document.documentElement.dir =
+      currentLang === "ar" ? "rtl" : "ltr";
+
     document.documentElement.lang = currentLang;
   }, [i18n.language]);
-  const myPropertiesData: Property[] = Array.from({ length: 100 }, (_, i) => ({
-    _id: String(i),
 
-    // 🇸🇦 عربي
-    title: عقار رقم ${i + 1},
-    description: "وصف بسيط للعقار",
-    category: i % 2 ? "بيع" : "إيجار",
-    city: "دمشق",
-    features: ["مكيف", "موقف سيارة"],
+  // 🏠 Dummy properties
+  const myPropertiesData: Property[] = Array.from(
+    { length: 100 },
+    (_, i) => ({
+      _id: String(i),
 
-    // 🇬🇧 إنجليزي
-    titleEn: Property ${i + 1},
-    descriptionEn: "Simple description",
-    categoryEn: i % 2 ? "Sale" : "Rent",
-    cityEn: "Damascus",
-    featuresEn: ["AC", "Parking"],
+      // 🇸🇦 عربي
+      title: `عقار رقم ${i + 1}`,
+      description: "وصف بسيط للعقار",
+      category: i % 2 ? "بيع" : "إيجار",
+      city: "دمشق",
+      features: ["مكيف", "موقف سيارة"],
 
-    // 📊 بيانات عامة
-    price: 100000 + i * 5000,
-    area: 120,
-    rooms: 3,
-    images: [],
-  }));
+      // 🇬🇧 English
+      titleEn: `Property ${i + 1}`,
+      descriptionEn: "Simple description",
+      categoryEn: i % 2 ? "Sale" : "Rent",
+      cityEn: "Damascus",
+      featuresEn: ["AC", "Parking"],
+
+      // 📊 General
+      price: 100000 + i * 5000,
+      area: 120,
+      rooms: 3,
+      images: [],
+    })
+  );
+
   return (
     <Routes>
       {/* dashboard */}
-      <Route path="/dashboard/*" element={<DashboardRoutes />} />
+      <Route
+        path="/dashboard/*"
+        element={<DashboardRoutes />}
+      />
 
       {/* website */}
       <Route path="/" element={<Layout />}>
@@ -82,15 +103,26 @@ function App() {
           index
           element={
             <>
-              <NavBar theme={theme} setTheme={setTheme} />
+              <NavBar
+                theme={theme}
+                setTheme={setTheme}
+              />
 
               <HomePage />
 
-              <BestEstate properties={myPropertiesData} />
+              <BestEstate
+                properties={myPropertiesData}
+              />
 
-              <PropertiesList properties={data} />
+              <PropertiesList
+                properties={data}
+              />
+              <WhyInvestors />
 
+              <State />
               <Contact />
+
+              <Footer />
             </>
           }
         />
@@ -99,8 +131,4 @@ function App() {
   );
 }
 
-<<<<<<< HEAD
 export default App;
-=======
-export default App;
->>>>>>> f9ca34212e4126480f4747a202be7d5a15ad464c
