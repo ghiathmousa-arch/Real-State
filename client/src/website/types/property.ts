@@ -4,7 +4,7 @@ export interface Property {
   titleEn: string;
   description: string;
   descriptionEn: string;
-  category: string;
+  category:string;
   categoryEn: string;
   type: string;
   price: number;
@@ -21,4 +21,6 @@ export interface Property {
   isFeatured: boolean;
   status: string;
   createdAt: string;
+  image: string;
+
 }

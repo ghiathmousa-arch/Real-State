@@ -1,24 +1,37 @@
-import { Routes, Route } from 'react-router-dom'
-import DashboardRoutes from './dashboard/DashboardRoutes'
-import HomePage from './website/pages/HomePage'
-import Layout from './website/Layout/Layout'
+import { Routes, Route } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import DashboardRoutes from "./dashboard/DashboardRoutes";
+import Layout from "./website/Layout/Layout";
+import HomePage from "./website/pages/HomePage";
 
+type Theme = "light" | "dark";
 
 function App() {
-  return (
-    
-      <Routes>
-        {/* مسارات الداشبورد */}
-        <Route path='/dashboard/*' element={<DashboardRoutes />} />
+  const [theme, setTheme] = useState<Theme>(
+    (localStorage.getItem("theme") as Theme) || "light"
+  );
+  const { i18n } = useTranslation();
 
-        {/* مسارات الموقع   */}
-        <Route path='/' element={<Layout/>} >
-        <Route path='' element={<HomePage/>} />
-        </Route>
-        
-      </Routes>
-    
-  )
+  useEffect(() => {
+    document.documentElement.className = theme;
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  useEffect(() => {
+    const currentLang = i18n.language;
+    document.documentElement.dir = currentLang === "ar" ? "rtl" : "ltr";
+    document.documentElement.lang = currentLang;
+  }, [i18n.language]);
+
+  return (
+    <Routes>
+      <Route path="/dashboard/*" element={<DashboardRoutes />} />
+      <Route path="/" element={<Layout />}>
+        <Route index element={<HomePage />} />
+      </Route>
+    </Routes>
+  );
 }
 
-export default App
+export default App;
