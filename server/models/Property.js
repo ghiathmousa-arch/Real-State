@@ -22,9 +22,6 @@ const PropertySchema = new mongoose.Schema({
   isFeatured: { type: Boolean, default: false },
   status: { type: String, default: "active" },
 
-
-
-
   // ← جديد
   action: {
     type: { type: String, enum: ["added", "sold", "updated"], default: "added" },
@@ -35,4 +32,3 @@ const PropertySchema = new mongoose.Schema({
 }, { timestamps: true });
 
 module.exports = mongoose.model("Property", PropertySchema);
-

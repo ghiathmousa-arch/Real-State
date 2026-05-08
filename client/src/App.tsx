@@ -52,14 +52,14 @@ function App() {
     _id: String(i),
 
     // 🇸🇦 عربي
-    title: `عقار رقم ${i + 1}`,
+    title: عقار رقم ${i + 1},
     description: "وصف بسيط للعقار",
     category: i % 2 ? "بيع" : "إيجار",
     city: "دمشق",
     features: ["مكيف", "موقف سيارة"],
 
     // 🇬🇧 إنجليزي
-    titleEn: `Property ${i + 1}`,
+    titleEn: Property ${i + 1},
     descriptionEn: "Simple description",
     categoryEn: i % 2 ? "Sale" : "Rent",
     cityEn: "Damascus",
@@ -99,4 +99,8 @@ function App() {
   );
 }
 
+<<<<<<< HEAD
 export default App;
+=======
+export default App;
+>>>>>>> f9ca34212e4126480f4747a202be7d5a15ad464c
