@@ -23,7 +23,7 @@ const PropertySchema = new mongoose.Schema({
   status: { type: String, default: "active" },
 
 
-module.exports = mongoose.model("Property", PropertySchema); // تصدير الموديل
+
 
   // ← جديد
   action: {

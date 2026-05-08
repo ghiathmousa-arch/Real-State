@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import DashboardRoutes from "./dashboard/DashboardRoutes";
 import Layout from "./website/Layout/Layout";
 import HomePage from "./website/pages/HomePage";
+import NavBar from "./website/components/NavBar/NavBar";
 
 type Theme = "light" | "dark";
 
@@ -26,9 +27,24 @@ function App() {
 
   return (
     <Routes>
+      {/* 1️⃣ مسارات الداشبورد */}
       <Route path="/dashboard/*" element={<DashboardRoutes />} />
+
+      {/* 2️⃣ مسارات الموقع */}
       <Route path="/" element={<Layout />}>
-        <Route index element={<HomePage />} />
+        {/* الصفحة الرئيسية */}
+        <Route
+          index
+          element={
+            <>
+              <NavBar theme={theme} setTheme={setTheme} />
+              <HomePage />
+            </>
+          }
+        />
+
+        {/* إذا أردت صفحة أخرى بـ NavBar مختلف أو بدون NavBar */}
+        {/* <Route path="about" element={<AboutPage />} /> */}
       </Route>
     </Routes>
   );
