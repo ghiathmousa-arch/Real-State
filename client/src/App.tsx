@@ -33,9 +33,9 @@ function App() {
       {/* 2️⃣ مسارات الموقع */}
       <Route path="/" element={<Layout />}>
         {/* الصفحة الرئيسية */}
-        <Route
-          index
-          element={
+        <Route 
+        index
+           element={
             <>
               <NavBar theme={theme} setTheme={setTheme} />
               <HomePage />
