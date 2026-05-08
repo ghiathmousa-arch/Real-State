@@ -1,14 +1,14 @@
-import Logo from "../../../../assets/img/logo.png";
+import Logo from "../../../../assets/img/Logoedit.png";
 import React, { useEffect, useState } from "react";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
 import { GrLanguage } from "react-icons/gr";
 import { useTranslation } from "react-i18next";
 import { GiHamburgerMenu } from "react-icons/gi";
 
-// 🎨 نوع الثيم (فاتح / غامق)
+//  نوع الثيم (فاتح / غامق)
 type Theme = "light" | "dark";
 
-// 🧭 أسماء السكاشن (لازم تطابق id بالصفحة)
+//  أسماء السكاشن (لازم تطابق id بالصفحة)
 type Section =
   | "home"
   | "featuredProperties"
@@ -16,13 +16,13 @@ type Section =
   | "ourServices"
   | "contact";
 
-// 📦 props القادمة من App
+//  props القادمة من App
 interface NavBarProps {
   theme: Theme; // الثيم الحالي
   setTheme: React.Dispatch<React.SetStateAction<Theme>>; // تغيير الثيم
 }
 
-// 🔗 نوع عنصر من عناصر النافبار
+//  نوع عنصر من عناصر النافبار
 type NavItem = {
   translationKey: string; // مفتاح الترجمة
   to: `#${Section}`; // الرابط (#section)
@@ -40,13 +40,13 @@ const navItems: NavItem[] = [
 const NavBar: React.FC<NavBarProps> = ({ theme, setTheme }) => {
   const { t, i18n } = useTranslation();
 
-  // ⭐ العنصر النشط (يتغير مع السكرول)
+  //  العنصر النشط (يتغير مع السكرول)
   const [active, setActive] = useState<string>("home");
 
-  // 📱 حالة قائمة الموبايل (فتح/إغلاق)
+  //  حالة قائمة الموبايل (فتح/إغلاق)
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
-  // 👀 مراقبة السكاشن (Scroll Spy)
+  //  مراقبة السكاشن (Scroll Spy)
   useEffect(() => {
     const sections = document.querySelectorAll("section[id]");
 
@@ -68,14 +68,14 @@ const NavBar: React.FC<NavBarProps> = ({ theme, setTheme }) => {
 
   return (
     <div
-      // 🌍 تغيير اتجاه الصفحة حسب اللغة
+      //  تغيير اتجاه الصفحة حسب اللغة
       dir={i18n.language === "ar" ? "rtl" : "ltr"}
       className="fixed top-0 left-0 w-full flex justify-between z-50 items-center bg-white/95 backdrop-blur-md pt-2 px-4 dark:bg-gray-800 dark:text-white"
     >
-      {/* 🖼️ اللوجو */}
+      {/*  اللوجو */}
       <img src={Logo} alt="logo" className="max-h-12 cursor-pointer" />
 
-      {/* 💻 قائمة الديسكتوب */}
+      {/*  قائمة الديسكتوب */}
       <div className="hidden md:flex items-center gap-6">
         {navItems.map((item) => (
           <a
@@ -89,9 +89,9 @@ const NavBar: React.FC<NavBarProps> = ({ theme, setTheme }) => {
         ))}
       </div>
 
-      {/* 💻 أزرار الديسكتوب */}
+      {/*  أزرار الديسكتوب */}
       <div className="hidden md:flex gap-2 items-center">
-        {/* 🌙 تغيير الثيم */}
+        {/*  تغيير الثيم */}
         <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           className="text-2xl p-2"
@@ -99,7 +99,7 @@ const NavBar: React.FC<NavBarProps> = ({ theme, setTheme }) => {
           {theme === "dark" ? <MdLightMode /> : <MdDarkMode />}
         </button>
 
-        {/* 🌐 تغيير اللغة */}
+        {/*  تغيير اللغة */}
         <button
           onClick={() => {
             const newLang = i18n.language === "ar" ? "en" : "ar";
@@ -120,13 +120,13 @@ const NavBar: React.FC<NavBarProps> = ({ theme, setTheme }) => {
         <GiHamburgerMenu />
       </button>
 
-      {/* 📱 قائمة الموبايل */}
+      {/*  قائمة الموبايل */}
       {isOpen && (
         <div
           className={`md:hidden fixed top-14 ${i18n.dir() === "rtl" ? "left-0" : "right-0"
             } w-[70%] bg-white dark:bg-gray-800 flex flex-col text-center gap-4 px-4 pb-4 pt-4 shadow-lg rounded-lg`}
         >
-          {/* 🔗 الروابط */}
+          {/*  الروابط */}
           {navItems.map((item) => (
             <a
               key={item.to}
@@ -153,7 +153,7 @@ const NavBar: React.FC<NavBarProps> = ({ theme, setTheme }) => {
               {theme === "dark" ? <MdLightMode /> : <MdDarkMode />}
             </button>
 
-            {/* 🌐 زر اللغة (صار داخل القائمة) */}
+            {/*  زر اللغة (صار داخل القائمة) */}
             <button
               onClick={() => {
                 const newLang = i18n.language === "ar" ? "en" : "ar";

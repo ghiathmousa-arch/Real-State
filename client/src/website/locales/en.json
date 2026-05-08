@@ -5,5 +5,32 @@
     "list": "Properties List",
     "services": "Our Services",
     "contact": "Contact Us"
+  },
+  "properties": {
+    "allEstates": "All Estates",
+    "showAllResults": "Show all results",
+    "sale": "Sale",
+    "rent": "For Rent",
+    "squareMeter": "m²",
+    "currency": "S.P"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "get the best property",
+    "callMe": "Call me",
+    "emailMe": "Email me",
+    "address": "Address",
+    "fullName": "Full name",
+    "yourEmail": "Your email",
+    "phoneNumber": "Phone number",
+    "message": "Message",
+    "sendMessage": "Send Message",
+    "sendBTN": "Send"
+  },
+  "bestEstate": {
+    "title": "Carefully Selected Properties",
+    "description": "A premium selection of properties inspected and verified by our engineering team to ensure the highest investment quality.",
+    "prev": "Prev",
+    "next": "Next"
   }
 }

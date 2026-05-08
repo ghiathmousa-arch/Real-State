@@ -5,5 +5,33 @@
     "list": "قائمة العقارات",
     "services": "خدماتنا",
     "contact": "اتصل بنا"
+  },
+  "properties": {
+    "allEstates": "كافة العقارات",
+    "showAllResults": "عرض كل النتائج",
+    "sale": "بيع",
+    "rent": "للإيجار",
+    "squareMeter": "م²",
+    "currency": "ل.س"
+  },
+  "contact": {
+    "title": "تواصل معنا",
+    "subtitle": "احصل على افضل عقار",
+    "callMe": "اتصل بي",
+    "emailMe": "راسلني",
+    "address": "العنوان",
+    "fullName": "الاسم الكامل",
+    "yourEmail": "البريد الإلكتروني",
+    "phoneNumber": "رقم الهاتف",
+    "message": "الرسالة",
+    "sendMessage": "إرسال الرسالة",
+    "sendBTN":"ارسال"
+  },
+   "bestEstate": {
+    "title": "عقارات مختارة بعناية",
+    "description": "نخبة من العقارات التي تم فحصها وتوثيقها من قبل فريقنا الهندسي لضمان أعلى جودة استثمارية.",
+
+    "prev": "السابق",
+    "next": "التالي"
   }
 }

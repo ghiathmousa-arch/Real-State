@@ -1,6 +1,5 @@
 // 📦 React Router للتنقل بين الصفحات
 import { Routes, Route } from "react-router-dom";
-
 // 📦 صفحات الداشبورد
 import DashboardRoutes from "./dashboard/DashboardRoutes";
 
@@ -71,7 +70,7 @@ function App() {
   }, [i18n.language]);
 
   // 🧠 بيانات العقارات (Mock data للـ BestEstate)
-  const myPropertiesData: Property[] = Array.from({ length: 12 }, (_, i) => ({
+  const myPropertiesData: Property[] = Array.from({ length: 100}, (_, i) => ({
     _id: String(i),
 
     // 🇸🇦 عربي
@@ -111,7 +110,7 @@ function App() {
             {/* 🏠 sections */}
             <BestEstate properties={myPropertiesData} />
             <PropertiesList properties={data} />
-            <Contact Message="SyrianEstae" />
+            <Contact  />
           </div>
         }
       />

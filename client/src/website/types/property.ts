@@ -21,4 +21,6 @@ export interface Property {
   isFeatured: boolean;
   status: string;
   createdAt: string;
+  image: string;
+
 }
