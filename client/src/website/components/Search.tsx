@@ -1,87 +1,54 @@
-// src/components/Search.tsx
 import { FaSearch } from "react-icons/fa";
 import { useContext, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { searchContext } from "../Layout/Layout";
-import { searchData } from "../pages/HomePage"; 
 
 const Search = () => {
+    const { t } = useTranslation();
     const { setSearch } = useContext(searchContext);
-
-    const [localOptions, setLocalOptions] = useState({ 
-        location: '', 
-        type: '', 
-        price: '' 
-    });
-
+    const [localOptions, setLocalOptions] = useState({ location: '', type: '', price: '' });
     const [cities, setCities] = useState<string[]>([]);
     const [categories, setCategories] = useState<string[]>([]);
 
     useEffect(() => {
-        // جلب المدن من الباك آند
-        fetch("http://localhost:5000/api/cities")
-            .then(res => res.json())
-            .then(data => { if (Array.isArray(data)) setCities(data); })
-            .catch(err => console.error("Error fetching cities:", err));
-
-        // جلب الأصناف من الباك آند
-        fetch("http://localhost:5000/api/categories")
-            .then(res => res.json())
-            .then(data => { if (Array.isArray(data)) setCategories(data); })
-            .catch(err => console.error("Error fetching categories:", err));
+        fetch("http://localhost:5000/api/cities").then(res => res.json()).then(data => setCities(data));
+        fetch("http://localhost:5000/api/categories").then(res => res.json()).then(data => setCategories(data));
     }, []);
 
-    const handleSearchClick = () => {
-        
-        setSearch(localOptions);
-    };
+    const searchFields = [
+        { name: 'location', label: t('search.location_label'), icon: '📍', options: cities },
+        { name: 'type', label: t('search.type_label'), icon: '🏠', options: categories },
+        { name: 'price', label: t('search.price_label'), icon: '💰', options: [t('search.price_options.low'), t('search.price_options.high')] },
+    ];
 
     return (
-        <div className="flex flex-col items-center gap-10">
-            <div dir="rtl" 
-                className="w-245 max-w-5xl p-5 bg-[#BABCC0]/80 backdrop-blur-md flex justify-between items-end gap-4 rounded-3xl shadow-2xl min-[768px]:max-[1000px]:w-175 min-[300px]:max-[768px]:flex-col min-[500px]:max-[768px]:w-113.5 min-[300px]:max-[768px]:items-center min-[300px]:max-[500px]:w-70">
-                
-                {searchData.map((item, index) => (
-                    <div key={index} className="flex flex-col gap-2 flex-1 min-[300px]:max-[768px]:w-full">
-                        <label className="text-xs text-right font-bold text-gray-800 mr-2">
-                            {item.label}
-                        </label>
-                        <div className="relative flex items-center gap-2 bg-white p-3 rounded-2xl hover:bg-[#cde5fc] transition-all duration-300 border border-transparent shadow-sm focus-within:border-blue-400">
-                            <span className="text-xl">
-                                {item.icon}
-                            </span>
-                            <select 
-                                value={localOptions[item.name as keyof typeof localOptions]}
-                                onChange={(e) => setLocalOptions(prev => ({ ...prev, [item.name]: e.target.value }))}
-                                className="appearance-none bg-transparent text-sm text-gray-700 cursor-pointer border-none p-1 font-bold w-full outline-none min-[768px]:max-[1000px]:text-[11px]"
-                            >
-                                <option value="">{item.options[0]}</option> 
-
-                                {item.name === 'location' && cities.map((city, i) => (
-                                    <option key={i} value={city}>{city}</option>
-                                ))}
-
-                                {item.name === 'type' && categories.map((cat, i) => (
-                                    <option key={i} value={cat}>{cat}</option>
-                                ))}
-
-                                {item.name === 'price' && item.options.slice(1).map((p, i) => (
-                                    <option key={i} value={p}>{p}</option>
-                                ))}
-                            </select>
-                        </div>
+        <div className="w-full max-w-5xl p-5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-3xl shadow-2xl flex flex-col md:flex-row items-end gap-4">
+            {searchFields.map((field) => (
+                <div key={field.name} className="flex flex-col gap-2 flex-1 w-full">
+                    <label className="text-xs font-bold text-gray-700 dark:text-gray-300 px-2">
+                        {field.label}
+                    </label>
+                    <div className="flex items-center gap-2 bg-white dark:bg-slate-700 p-3 rounded-2xl border dark:border-slate-600">
+                        <span>{field.icon}</span>
+                        <select 
+                            className="bg-transparent text-sm w-full outline-none dark:text-white"
+                            onChange={(e) => setLocalOptions(prev => ({ ...prev, [field.name]: e.target.value }))}
+                        >
+                            <option value="">{t('search.placeholder')}</option>
+                            {field.options.map((opt, i) => (
+                                <option key={i} value={opt} className="dark:bg-slate-800">{opt}</option>
+                            ))}
+                        </select>
                     </div>
-                ))}
-
-                <button 
-                    onClick={handleSearchClick}
-                    className="cursor-pointer flex justify-center items-center gap-3 text-white px-8 py-4 rounded-2xl bg-[#004E80] hover:bg-[#005fa1] duration-200 active:scale-95 shadow-md font-bold text-sm active:bg-[#003d66]"
-                >
-                    <FaSearch className="text-lg" />
-                    بحث متقدم
-                </button>
-            </div>
+                </div>
+            ))}
+            <button 
+                onClick={() => setSearch(localOptions)}
+                className="w-full md:w-auto flex justify-center items-center gap-3 text-white px-10 py-4 rounded-2xl bg-[#004E80] hover:bg-blue-700 transition-all font-bold"
+            >
+                <FaSearch /> {t('search.button')}
+            </button>
         </div>
     );
 };
-
 export default Search;

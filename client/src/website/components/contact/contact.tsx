@@ -1,114 +1,27 @@
-
-import React, { useState } from "react"; // 1️⃣ استدعاء useState
-
-// 🌍 i18n
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-
-// 🎨 Icons
-import {
-    FaPhoneAlt,
-    FaEnvelope,
-    FaMapMarkerAlt,
-} from "react-icons/fa";
-
-/**
- * 📦 نوع بيانات معلومات التواصل
- */
-interface ContactInfo {
-    icon: React.ReactNode;
-    title: string;
-    value: string;
-}
-
-/**
- * 📦 نوع بيانات الـ inputs
- */
-interface InputField {
-    type: string;
-    placeholder: string;
-    grid: boolean;
-}
-
-/**
- * 📦 نوع بيانات الـ textarea
- */
-interface TextAreaField {
-    rows: number;
-    placeholder: string;
-}
-
-
-
+import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt } from "react-icons/fa";
 
 const Contact: React.FC = () => {
+    const { t } = useTranslation();
 
-    // 2️⃣ تعريف الـ State لتخزين البيانات (الاسم، الإيميل، الخ...)
+    // 1️⃣ تعديل الأسماء لتطابق الباك إند (name و phone)
     const [formData, setFormData] = useState({
-        fullName: "",
+        name: "",
         email: "",
-        phoneNumber: "",
+        phone: "",
         message: ""
     });
 
-    // حالة للتعامل مع حالة الإرسال (جاري الإرسال، تم النجاح، خطأ)
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
-    // 🌍 Hook الترجمة
-    const { t } = useTranslation();
-
-    /**
-     * 📞 بيانات التواصل
-     */
-    const contactInfo: ContactInfo[] = [
-        {
-            icon: <FaPhoneAlt />,
-            title: t("contact.callMe"),
-            value: "+963962840702",
-        },
-        {
-            icon: <FaEnvelope />,
-            title: t("contact.emailMe"),
-            value: "Syrianestate0.com",
-        },
-        {
-            icon: <FaMapMarkerAlt />,
-            title: t("contact.address"),
-            value: "Damascus, Syria",
-        },
+    const contactInfo = [
+        { icon: <FaPhoneAlt />, title: t("contact.callMe"), value: "+963962840702" },
+        { icon: <FaEnvelope />, title: t("contact.emailMe"), value: "Syrianestate0.com" },
+        { icon: <FaMapMarkerAlt />, title: t("contact.address"), value: "Damascus, Syria" },
     ];
 
-    /**
-     * 📝 بيانات الـ inputs
-     */
-    const inputs: InputField[] = [
-        {
-            type: "text",
-            placeholder: t("contact.fullName"),
-            grid: true,
-        },
-        {
-            type: "email",
-            placeholder: t("contact.yourEmail"),
-            grid: true,
-        },
-        {
-            type: "text",
-            placeholder: t("contact.phoneNumber"),
-            grid: false,
-        },
-    ];
-
-    /**
-     * 📝 بيانات الـ textarea
-     */
-    const textareas: TextAreaField[] = [
-        {
-            rows: 6,
-            placeholder: t("contact.message"),
-        },
-    ];
-
-    // 3️⃣ دالة لتحديث البيانات عند الكتابة في أي حقل
+    // 2️⃣ دالة التحديث
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({
@@ -117,131 +30,98 @@ const Contact: React.FC = () => {
         }));
     };
 
-    // 4️⃣ دالة الإرسال للباك اند
+    // 3️⃣ دالة الإرسال
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault(); // منع تحديث الصفحة
-        setStatus("loading"); // تفعيل حالة التحميل
+        e.preventDefault();
+        setStatus("loading");
 
         try {
-            // استبدل هذا الرابط برابط الـ API الخاص بك
-            //الApi هاد وهمي
-            const response = await fetch("https://your-backend-api.com/send-email", {
+            const response = await fetch("http://localhost:5000/api/contact", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(formData), // تحويل البيانات إلى JSON
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
             });
 
             if (response.ok) {
                 setStatus("success");
-                setFormData({ fullName: "", email: "", phoneNumber: "", message: "" }); // تفريغ الحقول
-                alert("تم إرسال الرسالة بنجاح!"); // أو يمكنك استخدام toast بدلاً من alert
+                setFormData({ name: "", email: "", phone: "", message: "" });
+                alert("تم إرسال الرسالة بنجاح!");
             } else {
                 setStatus("error");
                 alert("حدث خطأ أثناء الإرسال");
             }
         } catch (error) {
             setStatus("error");
-            console.error("Error:", error);
-            alert("حدث خطأ في الاتصال");
+            alert("حدث خطأ في الاتصال بالسيرفر");
         }
     };
 
     return (
-        <section
-            className="py-20 px-6 md:px-16 dark:bg-gray-800"
-            id="contact"
-        >
-            {/* 🔹 Title */}
+        <section className="py-20 px-6 md:px-16 dark:bg-gray-800" id="contact">
             <div className="mb-14">
-                <p className="text-blue-500 font-medium">
-                    {t("contact.title")}
-                </p>
-                <h2 className="text-4xl font-bold text-gray-800 dark:text-white">
-                    {t("contact.subtitle")}
-                </h2>
+                <p className="text-blue-500 font-medium">{t("contact.title")}</p>
+                <h2 className="text-4xl font-bold text-gray-800 dark:text-white">{t("contact.subtitle")}</h2>
             </div>
 
             <div className="grid md:grid-cols-2 gap-12">
                 {/* 🔹 LEFT SIDE */}
-                <div className="flex flex-col gap-6 sm:gap-8 md:gap-10">
+                <div className="flex flex-col gap-6 sm:gap-8">
                     {contactInfo.map((item, index) => (
-                        <div
-                            key={index}
-                            className="flex items-center gap-3 sm:gap-4 p-4 sm:p-5 md:p-6 rounded-xl dark:bg-gray-900 border border-transparent dark:border-gray-800 shadow-sm"
-                        >
-                            <div className="bg-blue-500 text-white p-3 sm:p-4 rounded-lg text-lg sm:text-xl shrink-0">
-                                {item.icon}
-                            </div>
-                            <div className="warp-break-words">
-                                <p className="text-sm sm:text-base text-gray-500">
-                                    {item.title}
-                                </p>
-                                <p className="font-medium text-sm sm:text-base text-gray-500 dark:text-white">
-                                    {item.value}
-                                </p>
+                        <div key={index} className="flex items-center gap-4 p-5 rounded-xl dark:bg-gray-900 border border-transparent dark:border-gray-800 shadow-sm">
+                            <div className="bg-blue-500 text-white p-4 rounded-lg text-xl shrink-0">{item.icon}</div>
+                            <div>
+                                <p className="text-sm text-gray-500">{item.title}</p>
+                                <p className="font-medium text-gray-500 dark:text-white">{item.value}</p>
                             </div>
                         </div>
                     ))}
                 </div>
 
                 {/* 🔹 RIGHT SIDE FORM */}
-                <form
-                    className="flex flex-col gap-6"
-                    onSubmit={handleSubmit} // 5️⃣ ربط دالة الإرسال هنا
-                >
-                    {/* 📝 Inputs داخل Grid */}
+                <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
                     <div className="grid md:grid-cols-2 gap-6">
-                        {inputs
-                            .filter((item) => item.grid)
-                            .map((item, index) => (
-                                <input
-                                    key={index}
-                                    type={item.type}
-                                    placeholder={item.placeholder}
-                                    // 6️⃣ الربط مع البيانات (Two-way binding)
-                                    // لاحظ أننا نستخدم name="fullName" للعنصر الأول وهكذا...
-                                    name={index === 0 ? "fullName" : "email"}
-                                    value={index === 0 ? formData.fullName : formData.email}
-                                    onChange={handleChange}
-                                    className="w-full p-4 rounded-lg border border-gray-300 outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-400"
-                                />
-                            ))}
+                        <input
+                            type="text"
+                            placeholder={t("contact.fullName")}
+                            name="name" // 🔥 طابقنا الاسم مع الباك
+                            value={formData.name}
+                            onChange={handleChange}
+                            required
+                            className="w-full p-4 rounded-lg border border-gray-300 outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                        />
+                        <input
+                            type="email"
+                            placeholder={t("contact.yourEmail")}
+                            name="email" // 🔥 طابقنا الاسم مع الباك
+                            value={formData.email}
+                            onChange={handleChange}
+                            required
+                            className="w-full p-4 rounded-lg border border-gray-300 outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                        />
                     </div>
 
-                    {/* 📝 Inputs خارج Grid */}
-                    {inputs
-                        .filter((item) => !item.grid)
-                        .map((item, index) => (
-                            <input
-                                key={index}
-                                type={item.type}
-                                placeholder={item.placeholder}
-                                name="phoneNumber" // تحديد الاسم
-                                value={formData.phoneNumber}
-                                onChange={handleChange}
-                                className="w-full p-4 rounded-lg border border-gray-300 outline-none focus:border-blue-500 dark:text-white dark:border-gray-400 dark:bg-gray-800"
-                            />
-                        ))}
+                    <input
+                        type="text"
+                        placeholder={t("contact.phoneNumber")}
+                        name="phone" // 🔥 طابقنا الاسم مع الباك
+                        value={formData.phone}
+                        onChange={handleChange}
+                        className="w-full p-4 rounded-lg border border-gray-300 outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                    />
 
-                    {/* 📝 Textarea */}
-                    {textareas.map((item, index) => (
-                        <textarea
-                            key={index}
-                            rows={item.rows}
-                            placeholder={item.placeholder}
-                            name="message" // تحديد الاسم
-                            value={formData.message}
-                            onChange={handleChange}
-                            className="w-full p-4 rounded-lg border border-gray-300 outline-none focus:border-blue-500 dark:text-white dark:border-gray-400"
-                        />
-                    ))}
+                    <textarea
+                        rows={6}
+                        placeholder={t("contact.message")}
+                        name="message" // 🔥 طابقنا الاسم مع الباك
+                        value={formData.message}
+                        onChange={handleChange}
+                        required
+                        className="w-full p-4 rounded-lg border border-gray-300 outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                    />
 
-                    {/* 🔘 Submit Button */}
                     <button
                         type="submit"
-                        disabled={status === "loading"} // تعطيل الزر أثناء التحميل
+                        disabled={status === "loading"}
                         className={`bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg w-fit transition hover:scale-105 duration-500 ${status === "loading" ? "opacity-70 cursor-not-allowed" : ""}`}
                     >
                         {status === "loading" ? "جاري الإرسال..." : t("contact.sendBTN")}
