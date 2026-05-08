@@ -1,22 +1,24 @@
 import { createContext, useState, useEffect, type Dispatch, type SetStateAction } from 'react';
 import { Outlet } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
-interface SearchFilters { 
-    location: string; 
-    type: string; 
-    price: string; 
+interface SearchFilters {
+    location: string;
+    type: string;
+    price: string;
 }
 
 interface SearchContextType {
     search: SearchFilters;
     setSearch: Dispatch<SetStateAction<SearchFilters>>;
-    filteredData: any[]; 
+    filteredData: any[];
     loading: boolean;
 }
 
 export const searchContext = createContext<SearchContextType>({} as SearchContextType);
 
 const Layout = () => {
+    const { i18n } = useTranslation();
     const [search, setSearch] = useState<SearchFilters>({ location: '', type: '', price: '' });
     const [filteredData, setFilteredData] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -25,31 +27,27 @@ const Layout = () => {
         setLoading(true);
         try {
             const params = new URLSearchParams();
-            
-            if (filters.location && !filters.location.includes("حدد")) {
-                params.append('city', filters.location);
-            }
-            if (filters.type && !filters.type.includes("حدد")) {
-                params.append('type', filters.type);
-            }
-            if (filters.price && !filters.price.includes("حدد")) {
-                if (filters.price === "100M - 500M") {
+
+            // التحقق من الفلترة (تجاهل القيم الفارغة أو الافتراضية)
+            if (filters.location && filters.location !== "") params.append('city', filters.location);
+            if (filters.type && filters.type !== "") params.append('type', filters.type);
+
+            if (filters.price) {
+                if (filters.price.includes("500M+")) {
+                    params.append('minPrice', '500000000');
+                } else if (filters.price.includes("-")) {
                     params.append('minPrice', '100000000');
                     params.append('maxPrice', '500000000');
-                } else if (filters.price === "500M+") {
-                    params.append('minPrice', '500000000');
                 }
             }
 
             const response = await fetch(`http://localhost:5000/api/properties?${params.toString()}`);
-            
-            if (!response.ok) throw new Error("Failed to fetch data");
-            
+            if (!response.ok) throw new Error("Failed to fetch");
             const data = await response.json();
             setFilteredData(data);
         } catch (error) {
-            console.error("Error fetching properties:", error);
-            setFilteredData([]); 
+            console.error(error);
+            setFilteredData([]);
         } finally {
             setLoading(false);
         }
@@ -61,7 +59,7 @@ const Layout = () => {
 
     return (
         <searchContext.Provider value={{ search, setSearch, filteredData, loading }}>
-            <div>
+            <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors duration-300">
                 <Outlet />
             </div>
         </searchContext.Provider>

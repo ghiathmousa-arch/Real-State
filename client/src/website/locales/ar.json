@@ -25,13 +25,73 @@
     "phoneNumber": "رقم الهاتف",
     "message": "الرسالة",
     "sendMessage": "إرسال الرسالة",
-    "sendBTN":"ارسال"
+    "sendBTN": "ارسال"
   },
-   "bestEstate": {
+  "bestEstate": {
     "title": "عقارات مختارة بعناية",
     "description": "نخبة من العقارات التي تم فحصها وتوثيقها من قبل فريقنا الهندسي لضمان أعلى جودة استثمارية.",
-
     "prev": "السابق",
     "next": "التالي"
+  },
+  "stats": {
+    "items": [
+      {
+        "title": "15k",
+        "subTitle": "عميل راضٍ"
+      },
+      {
+        "title": "+120",
+        "subTitle": "مشروع حصري"
+      },
+      {
+        "title": "+500",
+        "subTitle": "عقار مباع"
+      }
+    ]
+  },
+  "footer": {
+    "description": "نحن نؤمن بأن العقار ليس مجرد جدران، بل هو استثمار في المستقبل.",
+    "copyright": "© Syrian Architectural Prestige. All rights reserved 2024",
+    "sections": {
+      "investment": {
+        "title": "الاستثمار",
+        "items": [
+          {
+            "label": "دليل الاستثمار"
+          },
+          {
+            "label": "اللوائح المحلية"
+          }
+        ]
+      },
+      "quick_links": {
+        "title": "روابط سريعة",
+        "items": [
+          {
+            "label": "سياسة الخصوصية",
+            "to": "/privacy"
+          },
+          {
+            "label": "شروط الخدمة",
+            "to": "/terms"
+          }
+        ]
+      }
+    }
+  },
+  "hero": {
+    "title": "استثمر في مستقبل العمارة السورية",
+    "subTitle": "نقدم لك أرقى العقارات في سوريا بضمانات قانونية."
+  },
+  "search": {
+    "placeholder": "حدد الخيار",
+    "button": "بحث متقدم",
+    "location_label": "الموقع",
+    "type_label": "النوع",
+    "price_label": "السعر",
+    "price_options": {
+      "low": "100M - 500M",
+      "high": "500M+"
+    }
   }
 }

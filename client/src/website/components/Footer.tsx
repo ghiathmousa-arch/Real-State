@@ -1,122 +1,74 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
-
-// الواجهة الشاملة لكل محتويات الفوتر
-interface FooterConfig {
-    brand: {
-        logoUrl: string;
-        description: string;
-        copyright: string;
-    };
-    sections: {
-        title: string;
-        items: {
-            label: string;
-            to?: string; // اختياري: إذا وجد يصبح رابطاً، وإذا لم يوجد يبقى نصاً
-        }[];
-    }[];
-}
-
-export const footerData: FooterConfig = {
-    brand: {
-        logoUrl: '/img/real_state_logo-removebg-preview.png', // مسار الشعار الخاص بك
-        description: 'نحن نؤمن بأن العقار ليس مجرد جدران، بل هو استثمار في المستقبل وإرث يمتد للأجيال.',
-        copyright: '© Syrian Architectural Prestige. All rights reserved 2024 '
-    },
-    sections: [
-        {
-            title: 'الاستثمار',
-            items: [
-                { label: 'Investment Guide' },
-                { label: 'Local Regulations' }
-            ]
-        },
-        {
-            title: 'روابط سريعة',
-            items: [
-                { label: 'Privacy Policy', to: '/privacy' },
-                { label: 'Terms of Service', to: '/terms' }
-            ]
-        }
-    ]
-};
-interface socialLinks {
-    src: string
-    classes:string
-}
-const socialContent : socialLinks[]=[
-    {
-        src:'/img/insgram-icon.webp',
-        classes:'w-12 cursore-pointer'
-    },
-    {
-        src:'/img/facebook-icon.webp',
-        classes:'w-10 cursore-pointer'
-    }
-]
 const Footer = () => {
-    const { brand, sections } = footerData;
+    const { t } = useTranslation();
+
+    const socialContent = [
+        { src: '/img/insgram-icon.webp', classes: 'w-12 cursor-pointer' },
+        { src: '/img/facebook-icon.webp', classes: 'w-10 cursor-pointer' }
+    ];
 
     return (
-        <div dir="rtl" className="bg-white border-t border-gray-200 pt-10 pb-1 px-6 md:px-20">
-            <div className="max-w-7xl mx-auto flex md:flex-row justify-between items-start gap-12">
+        <footer className="bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 pt-10 pb-6 px-6 md:px-20 transition-colors">
+            <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12">
                 
-                <div className="flex flex-col items-center max-w-sm gap-20">
-                    <p className="text-gray-500 text-[16px]">
-                        {brand.description}
+                {/* Brand Section */}
+                <div className="flex flex-col items-center md:items-start max-w-sm gap-6">
+                    <p className="text-gray-500 dark:text-gray-400 text-center md:text-start">
+                        {t('footer.description')}
                     </p>
                     <div className='flex gap-3'>
-                    {socialContent.map((item , index) => (
-                        <div key={index} className='flex items-center justify-center rounded-xl text-white'>
-                            <img src={item.src} alt="" className={item.classes} />
+                        {socialContent.map((item, index) => (
+                            <div key={index} className='flex items-center justify-center rounded-xl'>
+                                <img src={item.src} alt="social" className={item.classes} />
                             </div>
-                    ))}
+                        ))}
                     </div>
                 </div>
-                    <div className='flex flex-col items-center gap-16'>
-                            <img 
-                        src={brand.logoUrl} 
-                        alt="Logo" 
-                        className="h-34 w-50 object-contain"
-                    />
-                    <div className="text-gray-400 text-[15px] mt-2">
-                        {brand.copyright}
-                    </div>
-                    </div>
 
+                {/* Logo & Copyright */}
+                <div className='flex flex-col items-center gap-6'>
+                    <img src="/img/real_state_logo-removebg-preview.png" alt="Logo" className="h-24 object-contain dark:brightness-125" />
+                    <div className="text-gray-400 text-sm">
+                        {t('footer.copyright')}
+                    </div>
+                </div>
+
+                {/* Links Sections */}
                 <div className="flex gap-16 md:gap-28">
-                    {sections.map((section , index) => (
-                        <div key={index} className="flex flex-col gap-6">
-                            <h3 className="text-[#004E80] font-bold text-lg whitespace-nowrap">
-                                {section.title}
-                            </h3>
-                            
-                            <ul className="flex flex-col gap-3">
-                                {section.items.map((item, index) => (
-                                    <li key={index} className="text-[14px]">
-                                        {item.to ? (
-                                            <Link 
-                                                to={item.to} 
-                                                className="text-gray-500 hover:text-[#004E80] transition-all"
-                                            >
-                                                {item.label}
-                                            </Link>
-                                        ) : (
-                                            <p className="text-gray-400">
-                                                {item.label}
-                                            </p>
-                                        )}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    ))}
-                </div>
+                    {['investment', 'quick_links'].map((sectionKey) => {
+                        // جلب بيانات القسم مع التأكد من أنها كائن (Object)
+                        const sectionData = t(`footer.sections.${sectionKey}`, { returnObjects: true }) as any;
+                        
+                        // التأكد من أن العناصر عبارة عن مصفوفة لتجنب خطأ .map is not a function
+                        const itemsArray = Array.isArray(sectionData?.items) ? sectionData.items : [];
 
+                        return (
+                            <div key={sectionKey} className="flex flex-col gap-4">
+                                <h3 className="text-[#004E80] dark:text-blue-400 font-bold text-lg">
+                                    {sectionData?.title || sectionKey}
+                                </h3>
+                                <ul className="flex flex-col gap-2">
+                                    {itemsArray.map((item: any, idx: number) => (
+                                        <li key={idx} className="text-sm">
+                                            {item.to ? (
+                                                <Link to={item.to} className="text-gray-500 dark:text-gray-400 hover:text-blue-600 transition-all">
+                                                    {item.label}
+                                                </Link>
+                                            ) : (
+                                                <span className="text-gray-400">{item.label}</span>
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
-                            
-        </div>
+        </footer>
     );
 };
-
+// تأكد من وجود هذا السطر في النهاية لحل مشكلة "does not provide an export named 'default'"
 export default Footer;
