@@ -96,22 +96,31 @@
       "high": "500M+"
     }
   },
-"why_us": {
-  "title": "Why Major Investors Choose Us?",
-  "experience_text": "Years of Experience in the Syrian Market",
-  "features": {
-    "legal": {
-      "title": "Absolute Legal Security",
-      "desc": "A specialized legal team reviews all documents and titles to ensure properties are debt-free."
-    },
-    "study": {
-      "title": "Accurate Feasibility Studies",
-      "desc": "We provide precise market analysis and ROI projections for years to come."
-    },
-    "arch": {
-      "title": "Deep Architectural Expertise",
-      "desc": "We evaluate structural and aesthetic conditions with professional engineering standards."
+  "why_us": {
+    "title": "Why Major Investors Choose Us?",
+    "experience_text": "Years of Experience in the Syrian Market",
+    "features": {
+      "legal": {
+        "title": "Absolute Legal Security",
+        "desc": "A specialized legal team reviews all documents and titles to ensure properties are debt-free."
+      },
+      "study": {
+        "title": "Accurate Feasibility Studies",
+        "desc": "We provide precise market analysis and ROI projections for years to come."
+      },
+      "arch": {
+        "title": "Deep Architectural Expertise",
+        "desc": "We evaluate structural and aesthetic conditions with professional engineering standards."
+      }
     }
+  },
+  "ai_chat": {
+    "title": "AI Assistant",
+    "online": "Online",
+    "placeholder": "Type your message...",
+    "welcome": "Welcome! I'm your real estate AI assistant.\nHow can I help you find your dream home today?",
+    "typing": "Typing...",
+    "close": "Close",
+    "coming_soon": "Thanks! AI will be connected soon 🚀"
   }
-}
 }
