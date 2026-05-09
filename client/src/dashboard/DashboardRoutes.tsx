@@ -4,11 +4,9 @@ import ProtectedRoute from "./ProtectedRoute"
 import Login from "./pages/Login"
 import Dashboard from "./pages/Dashboard"
 import DashboardLayout from "./layouts/DashboardLayout"
-import Reports from "./pages/Reports"
-import Investors from "./pages/Investors"
 import Properties from "./pages/Properties"
-import Trends from "./pages/Trends"
 import AddProperty from "./components/AddProperty/AddProperty"
+import Messages from "./pages/Messages"
 
 const DashboardRoutes = () => {
   return (
@@ -23,9 +21,7 @@ const DashboardRoutes = () => {
         <Route element={<DashboardLayout />}>     {/* شكل */}
           <Route path="/" element={<Dashboard />} />
           <Route path="/properties" element={<Properties />} />
-          {/* <Route path="/trends" element={<Trends />} />
-          <Route path="/investors" element={<Investors />} />
-          <Route path="/reports" element={<Reports />} /> */}
+          <Route path="/messages" element={<Messages />} />
           <Route path="properties/add" element={<AddProperty />} />
         </Route>
       </Route>

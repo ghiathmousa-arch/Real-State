@@ -12,6 +12,9 @@ import type { Property } from "./website/components/PropetyCards";
 import Footer from "./website/components/Footer";
 import State from "./website/components/State";
 import WhyInvestors from "./website/components/WhyInvestors";
+import AiChat from "./website/components/AiChat/AiChat";
+import SEO from "./website/components/SEO/SEO";
+
 
 type Theme = "light" | "dark";
 
@@ -103,13 +106,14 @@ function App() {
           index
           element={
             <>
+              <SEO />
               <NavBar
                 theme={theme}
                 setTheme={setTheme}
               />
 
               <HomePage />
-
+              <AiChat />
               <BestEstate
                 properties={myPropertiesData}
               />

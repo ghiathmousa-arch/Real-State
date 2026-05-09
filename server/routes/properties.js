@@ -45,7 +45,9 @@ router.get("/featured", async (req, res) => {
   }
 });
 
-// ── GET /recent ← لازم قبل /:id ──────────
+// 
+
+// اخر 5 عمليات بيع او تحديث
 router.get("/recent", async (req, res) => {
   try {
     const properties = await Property
