@@ -44,7 +44,7 @@ const AiChat = () => {
       {/* البوب */}
       {isOpen && (
         <div
-          className="fixed bottom-24 left-4 sm:left-6 z-[200] w-[calc(100vw-32px)] sm:w-96 bg-white rounded-2xl shadow-2xl border border-[#e3e8f9] flex flex-col overflow-hidden"
+          className="fixed bottom-24 left-4 sm:left-6 z-200 w-[calc(100vw-32px)] sm:w-96 bg-white rounded-2xl shadow-2xl border border-[#e3e8f9] flex flex-col overflow-hidden"
           style={{ maxHeight: "70vh" }}
         >
           {/* هيدر */}
@@ -116,7 +116,7 @@ const AiChat = () => {
       {/* الزر العائم */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 left-4 sm:left-6 z-[200] w-14 h-14 bg-[#004e80] text-white rounded-full shadow-lg hover:bg-[#003d6b] transition-all active:scale-95 flex items-center justify-center"
+        className="fixed bottom-6 left-4 sm:left-6 z-200 w-14 h-14 bg-[#004e80] text-white rounded-full shadow-lg hover:bg-[#003d6b] transition-all active:scale-95 flex items-center justify-center"
       >
         {isOpen ? (
           <MdClose size={24} />
