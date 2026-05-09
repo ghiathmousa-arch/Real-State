@@ -12,6 +12,7 @@ import type { Property } from "./website/components/PropetyCards";
 import Footer from "./website/components/Footer";
 import State from "./website/components/State";
 import WhyInvestors from "./website/components/WhyInvestors";
+import AiChat from "./website/components/AiChat/AiChat";
 
 type Theme = "light" | "dark";
 
@@ -109,7 +110,7 @@ function App() {
               />
 
               <HomePage />
-
+              <AiChat />
               <BestEstate
                 properties={myPropertiesData}
               />
