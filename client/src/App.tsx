@@ -113,11 +113,11 @@ function App() {
               <BestEstate
                 properties={myPropertiesData}
               />
+              <WhyInvestors />
 
               <PropertiesList
                 properties={data}
               />
-              <WhyInvestors />
 
               <State />
               <Contact />
