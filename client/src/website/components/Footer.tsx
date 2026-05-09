@@ -1,18 +1,28 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { FaFacebookSquare } from "react-icons/fa";
+import { FaInstagramSquare } from "react-icons/fa";
 
 const Footer = () => {
     const { t } = useTranslation();
 
     const socialContent = [
-        { src: '/img/insgram-icon.webp', classes: 'w-12 cursor-pointer' },
-        { src: '/img/facebook-icon.webp', classes: 'w-10 cursor-pointer' }
+        {
+            icon: <FaFacebookSquare size={30} />,
+            link: "https://www.facebook.com/share/1Dq9ox9Rkg/",
+            className: "text-[#1877F2] hover:text-sky-400"
+        },
+        {
+            icon: <FaInstagramSquare size={30} />,
+            link: "https://instagram.com/yourprofile",
+            className: "text-[#1877F2] hover:text-sky-400"
+        }
     ];
 
     return (
         <footer className="bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 pt-10 pb-6 px-6 md:px-20 transition-colors">
             <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12">
-                
+
                 {/* Brand Section */}
                 <div className="flex flex-col items-center md:items-start max-w-sm gap-6">
                     <p className="text-gray-500 dark:text-gray-400 text-center md:text-start">
@@ -20,9 +30,15 @@ const Footer = () => {
                     </p>
                     <div className='flex gap-3'>
                         {socialContent.map((item, index) => (
-                            <div key={index} className='flex items-center justify-center rounded-xl'>
-                                <img src={item.src} alt="social" className={item.classes} />
-                            </div>
+                            <a
+                                key={index}
+                                href={item.link}
+                                target="_blank"          // لفتح الرابط في تبويب جديد
+                                rel="noopener noreferrer" // لضمان الأمان وتحسين الأداء
+                                className={`transition-colors duration-300 ${item.className} `}
+                            >
+                                {item.icon}
+                            </a>
                         ))}
                     </div>
                 </div>
@@ -40,7 +56,7 @@ const Footer = () => {
                     {['investment', 'quick_links'].map((sectionKey) => {
                         // جلب بيانات القسم مع التأكد من أنها كائن (Object)
                         const sectionData = t(`footer.sections.${sectionKey}`, { returnObjects: true }) as any;
-                        
+
                         // التأكد من أن العناصر عبارة عن مصفوفة لتجنب خطأ .map is not a function
                         const itemsArray = Array.isArray(sectionData?.items) ? sectionData.items : [];
 
@@ -70,5 +86,4 @@ const Footer = () => {
         </footer>
     );
 };
-// تأكد من وجود هذا السطر في النهاية لحل مشكلة "does not provide an export named 'default'"
 export default Footer;

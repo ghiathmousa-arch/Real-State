@@ -20,7 +20,7 @@ interface Property {
     rooms: number;
 
     // 🏷️ نوع العقار
-    type: "sale"|"rent";
+    type: "sale" | "rent";
 
     image: string;
 }

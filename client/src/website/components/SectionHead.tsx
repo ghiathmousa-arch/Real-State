@@ -27,7 +27,7 @@ const SectionHead = ({ title, subTitle, variant }: props) => {
                 <div className="space-y-4 flex flex-col gap-4 w-full">
                     <h1 className={`font-bold ${
                         variant == 'section' 
-                            ? 'text-black text-4xl font-bold min-[300px]:max-[510px]:text-[23px]'
+                            ? 'text-sky-500 text-4xl font-bold min-[300px]:max-[510px]:text-[23px]'
                             : variant == 'hero' 
                             ? 'm-0 text-white text-5xl lg:text-6xl min-[500px]:max-[768px]:text-[40px] min-[300px]:max-[500px]:text-[30px]' 
                             // تنسيق العنوان في حالة الـ state

@@ -32,5 +32,86 @@
     "description": "A premium selection of properties inspected and verified by our engineering team to ensure the highest investment quality.",
     "prev": "Prev",
     "next": "Next"
+  },
+  "footer": {
+    "description": "We believe that real estate is not just walls, but an investment in the future.",
+    "copyright": "© Syrian Architectural Prestige. All rights reserved 2026",
+    "sections": {
+      "investment": {
+        "title": "Investment",
+        "items": [
+          {
+            "label": "Investment Guide"
+          },
+          {
+            "label": "Local Regulations"
+          }
+        ]
+      },
+      "quick_links": {
+        "title": "Quick Links",
+        "items": [
+          {
+            "label": "Privacy Policy",
+            "to": "/privacy"
+          },
+          {
+            "label": "Terms of Service",
+            "to": "/terms"
+          }
+        ]
+      }
+    }
+  },
+  "hero": {
+    "title": "Invest in the Future of Syrian Architecture",
+    "subTitle": "We offer you the finest real estate in Syria with legal guarantees."
+  },
+  "stats": {
+    "title": "Our Vision: Redefining Real Estate Luxury in Syria",
+    "subTitle": "We aspire to be the most trusted and reliable bridge for investors at home and abroad.",
+    "items": [
+      {
+        "title": "15k",
+        "subTitle": "Satisfied Clients"
+      },
+      {
+        "title": "+120",
+        "subTitle": "Exclusive Projects"
+      },
+      {
+        "title": "+500",
+        "subTitle": "Sold Properties"
+      }
+    ]
+  },
+  "search": {
+    "placeholder": "Select an option",
+    "button": "Advanced Search",
+    "location_label": "Location",
+    "type_label": "Type",
+    "price_label": "Price",
+    "price_options": {
+      "low": "100M - 500M",
+      "high": "500M+"
+    }
+  },
+"why_us": {
+  "title": "Why Major Investors Choose Us?",
+  "experience_text": "Years of Experience in the Syrian Market",
+  "features": {
+    "legal": {
+      "title": "Absolute Legal Security",
+      "desc": "A specialized legal team reviews all documents and titles to ensure properties are debt-free."
+    },
+    "study": {
+      "title": "Accurate Feasibility Studies",
+      "desc": "We provide precise market analysis and ROI projections for years to come."
+    },
+    "arch": {
+      "title": "Deep Architectural Expertise",
+      "desc": "We evaluate structural and aesthetic conditions with professional engineering standards."
+    }
   }
+}
 }

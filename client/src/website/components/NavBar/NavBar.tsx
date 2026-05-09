@@ -1,4 +1,4 @@
-import Logo from "../../../../assets/img/Logoedit.png";
+import Logo from "/img/real_state_logo-removebg-preview.png";
 import React, { useEffect, useState } from "react";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
 import { GrLanguage } from "react-icons/gr";
