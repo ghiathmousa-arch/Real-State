@@ -29,7 +29,7 @@ const PropetyCards: React.FC<{ property: Property }> = ({ property }) => {
     const [current, setCurrent] = useState(0);
 
     return (
-        <div className="border rounded-xl overflow-hidden shadow-md bg-white dark:bg-gray-700 dark:border-gray-600 transition duration-300 hover:shadow-lg">
+        <div className="border rounded-xl overflow-hidden shadow-md bg-white dark:bg-brightness-125 dark:border-gray-600 transition duration-300 hover:shadow-lg">
 
             {/* 📸 Images */}
             <div className="relative w-full h-48 overflow-hidden bg-gray-200">

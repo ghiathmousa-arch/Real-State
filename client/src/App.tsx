@@ -25,13 +25,13 @@ function App() {
 
   const { i18n } = useTranslation();
 
-  // 🌙 Theme
+  //  Theme
   useEffect(() => {
     document.documentElement.className = theme;
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  // 🌍 Language
+  //  Language
   useEffect(() => {
     const currentLang = i18n.language;
 

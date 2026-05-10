@@ -44,9 +44,9 @@ const Footer = () => {
                 </div>
 
                 {/* Logo & Copyright */}
-                <div className='flex flex-col items-center gap-6'>
+                <div className='flex flex-col items-center gap-6 cursor-pointer '>
                     <img src="/img/real_state_logo-removebg-preview.png" alt="Logo" className="h-24 object-contain dark:brightness-125" />
-                    <div className="text-gray-400 text-sm">
+                    <div className="text-gray-400 text-sm hover:text-blue-400">
                         {t('footer.copyright')}
                     </div>
                 </div>
@@ -65,15 +65,15 @@ const Footer = () => {
                                 <h3 className="text-[#004E80] dark:text-blue-400 font-bold text-lg">
                                     {sectionData?.title || sectionKey}
                                 </h3>
-                                <ul className="flex flex-col gap-2">
+                                <ul className="flex flex-col gap-2 cursor-pointer ">
                                     {itemsArray.map((item: any, idx: number) => (
-                                        <li key={idx} className="text-sm">
+                                        <li key={idx} className="text-sm ">
                                             {item.to ? (
                                                 <Link to={item.to} className="text-gray-500 dark:text-gray-400 hover:text-blue-600 transition-all">
                                                     {item.label}
                                                 </Link>
                                             ) : (
-                                                <span className="text-gray-400">{item.label}</span>
+                                                <span className="text-gray-400 hover:text-blue-600">{item.label}</span>
                                             )}
                                         </li>
                                     ))}

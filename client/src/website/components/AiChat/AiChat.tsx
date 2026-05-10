@@ -18,11 +18,21 @@ const AiChat = () => {
   const [input, setInput] = useState("")
 
   // إعادة ضبط رسالة الترحيب عند تغيير اللغة
-  useEffect(() => {
-    setMessages([
-      { role: "ai", text: t("ai_chat.welcome") }
-    ])
-  }, [t])
+useEffect(() => {
+  setMessages(prev => {
+    // إذا أول رسالة هي رسالة الترحيب فقط عدّلها
+    const updated = [...prev]
+
+    if (updated.length > 0 && updated[0].role === "ai") {
+      updated[0] = {
+        role: "ai",
+        text: t("ai_chat.welcome")
+      }
+    }
+
+    return updated
+  })
+}, [t])
 
   const handleSend = () => {
     if (!input.trim()) return

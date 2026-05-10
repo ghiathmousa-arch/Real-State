@@ -62,7 +62,7 @@ const BestEstate: React.FC = () => {
     }, [totalPages]);
 
     return (
-        <section className="p-4 mt-12 dark:bg-gray-800" id="featuredProperties">
+        <section className="p-4 mt-12 dark:bg-brightness-125" id="featuredProperties">
 
             <h1 className="text-center text-sky-400 text-2xl md:text-4xl mb-3 font-bold">
                 {t("bestEstate.title")}

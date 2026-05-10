@@ -70,7 +70,7 @@ const NavBar: React.FC<NavBarProps> = ({ theme, setTheme }) => {
     <div
       //  تغيير اتجاه الصفحة حسب اللغة
       dir={i18n.language === "ar" ? "rtl" : "ltr"}
-      className="fixed top-0 left-0 w-full flex justify-between z-50 items-center bg-white/95 backdrop-blur-md pt-2 px-4 dark:bg-gray-800 dark:text-white"
+      className="fixed top-0 left-0 w-full flex justify-between z-50 items-center bg-white/95 backdrop-blur-md pt-2 px-4 dark:bg-gray-900  dark:text-white"
     >
       {/*  اللوجو */}
       <img src={Logo} alt="logo" className="max-h-12 cursor-pointer" />

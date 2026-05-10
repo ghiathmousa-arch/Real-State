@@ -78,7 +78,7 @@ const PropertiesList: React.FC = () => {
     return (
         <section
             id="PropertiesList"
-            className="py-10 px-6 dark:bg-gray-800"
+            className="py-10 px-6 dark:bg-brightness-125"
         >
             {/* 🔹 Header */}
             <div className="flex justify-between items-center mb-8">

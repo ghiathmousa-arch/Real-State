@@ -5,7 +5,6 @@ import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt } from "react-icons/fa";
 const Contact: React.FC = () => {
     const { t } = useTranslation();
 
-    // 1️⃣ تعديل الأسماء لتطابق الباك إند (name و phone)
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -57,7 +56,7 @@ const Contact: React.FC = () => {
     };
 
     return (
-        <section className="py-20 px-6 md:px-16 dark:bg-gray-800" id="contact">
+        <section className="py-20 px-6 md:px-16 dark:bg-brightness-125" id="contact">
             <div className="mb-14">
                 <p className="text-blue-500 font-medium">{t("contact.title")}</p>
                 <h2 className="text-4xl font-bold text-gray-800 dark:text-white">{t("contact.subtitle")}</h2>
@@ -103,16 +102,47 @@ const Contact: React.FC = () => {
                     <input
                         type="text"
                         placeholder={t("contact.phoneNumber")}
-                        name="phone" // 🔥 طابقنا الاسم مع الباك
+                        name="phone"
                         value={formData.phone}
-                        onChange={handleChange}
+
+                        // 📱 يفتح كيبورد أرقام بالموبايل
+                        inputMode="numeric"
+
+                        // 🔒 أقل وأكبر عدد خانات
+                        minLength={4}
+                        maxLength={15}
+
+                        onChange={(e) => {
+
+                            // ✅ حذف أي شيء ليس رقم
+                            const onlyNumbers = e.target.value
+                                .replace(/\D/g, "")
+
+                                // 🚫 منع إدخال أكثر من 15 رقم
+                                .slice(0, 15);
+
+                            // ✅ تحديث البيانات
+                            setFormData({
+                                ...formData,
+                                phone: onlyNumbers,
+                            });
+                        }}
+
+                        // ✅ التحقق عند خروج المستخدم من الحقل
+                        onBlur={() => {
+
+                            // ⚠️ إذا الرقم أقل من10 خانات
+                            if (formData.phone.length <10) {
+                                alert("رقم الهاتف قصير");
+                            }
+                        }}
+
                         className="w-full p-4 rounded-lg border border-gray-300 outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white"
                     />
-
                     <textarea
                         rows={6}
                         placeholder={t("contact.message")}
-                        name="message" // 🔥 طابقنا الاسم مع الباك
+                        name="message" 
                         value={formData.message}
                         onChange={handleChange}
                         required
