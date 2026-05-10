@@ -45,19 +45,17 @@ router.get("/featured", async (req, res) => {
   }
 });
 
-// 
-
-// اخر 5 عمليات بيع او تحديث
+// ── GET /recent ────────────────────────────
 router.get("/recent", async (req, res) => {
   try {
     const properties = await Property
       .find()
       .sort({ "action.at": -1, createdAt: -1 })
       .limit(5)
-      .select("title city price status action")
-    res.json(properties)
+      .select("title city price status action");
+    res.json(properties);
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -85,20 +83,26 @@ router.post("/", protect, adminOnly, upload.any(), compressImages, async (req, r
 
     const property = await Property.create({
       title: b.title,
+      titleEn: b.titleEn || "",  // ✅ أضفناه
       description: b.description,
+      descriptionEn: b.descriptionEn || "",  // ✅ أضفناه
       category: b.category,
+      categoryEn: b.categoryEn || "",  // ✅ أضفناه
       type: b.type,
       price: toNum(b.price),
       city: b.city,
+      cityEn: b.cityEn || "",  // ✅ أضفناه
       area: toNum(b.area),
       rooms: toNum(b.rooms),
       bathrooms: toNum(b.bathrooms),
       address: b.address || "",
+      addressEn: b.addressEn || "",  // ✅ أضفناه
       images: req.compressedImages,
       features: toArr(b.features),
+      featuresEn: toArr(b.featuresEn),     // ✅ أضفناه
       isFeatured: b.isFeatured === true || b.isFeatured === "true",
       status: b.status || "active",
-      action: {                          // ← جديد
+      action: {
         type: "added",
         by: req.user.name,
         at: new Date()
@@ -114,41 +118,59 @@ router.post("/", protect, adminOnly, upload.any(), compressImages, async (req, r
 // ── PUT /:id ───────────────────────────────
 router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req, res) => {
   try {
-    const property = await Property.findById(req.params.id)
-    if (!property) return res.status(404).json({ error: "العقار غير موجود" })
+    const property = await Property.findById(req.params.id);
+    if (!property) return res.status(404).json({ error: "العقار غير موجود" });
 
-    const b = req.body
-    const toNum = (v) => (v !== undefined && v !== "" ? Number(v) : null)
+    const b = req.body;
+    const toNum = (v) => (v !== undefined && v !== "" ? Number(v) : null);
+    const toArr = (v) => {
+      if (!v) return [];
+      if (Array.isArray(v)) return v;
+      return v.split(",").map((f) => f.trim()).filter((f) => f);
+    };
 
-    let finalImages
-    if (b.replaceImages === 'true' && req.compressedImages?.length > 0) {
-      finalImages = req.compressedImages
+    let finalImages;
+    if (b.replaceImages === "true" && req.compressedImages?.length > 0) {
+      finalImages = req.compressedImages;
     } else {
-      finalImages = (property.images || []).filter(img => img && !img.includes('undefined'))
+      finalImages = (property.images || []).filter(img => img && !img.includes("undefined"));
     }
 
     const updated = await Property.findByIdAndUpdate(
       req.params.id,
       {
-        ...b,
+        title: b.title ?? property.title,
+        titleEn: b.titleEn ?? property.titleEn ?? "",  // ✅ أضفناه
+        description: b.description ?? property.description,
+        descriptionEn: b.descriptionEn ?? property.descriptionEn ?? "",  // ✅ أضفناه
+        category: b.category ?? property.category,
+        categoryEn: b.categoryEn ?? property.categoryEn ?? "",  // ✅ أضفناه
+        type: b.type ?? property.type,
         price: b.price ? toNum(b.price) : property.price,
+        city: b.city ?? property.city,
+        cityEn: b.cityEn ?? property.cityEn ?? "",  // ✅ أضفناه
         area: b.area ? toNum(b.area) : property.area,
         rooms: b.rooms ? toNum(b.rooms) : property.rooms,
         bathrooms: b.bathrooms ? toNum(b.bathrooms) : property.bathrooms,
+        address: b.address ?? property.address ?? "",
+        addressEn: b.addressEn ?? property.addressEn ?? "",  // ✅ أضفناه
         images: finalImages,
+        features: b.features ? toArr(b.features) : property.features,
+        featuresEn: b.featuresEn ? toArr(b.featuresEn) : property.featuresEn ?? [], // ✅ أضفناه
         isFeatured: b.isFeatured === "true" || b.isFeatured === true,
-        action: {                        // ← جديد
+        status: b.status ?? property.status,
+        action: {
           type: b.status === "sold" ? "sold" : "updated",
           by: req.user.name,
           at: new Date()
         }
       },
       { new: true }
-    )
+    );
 
-    res.json(updated)
+    res.json(updated);
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: error.message });
   }
 });
 

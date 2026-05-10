@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt } from "react-icons/fa";
+import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 
 const Contact: React.FC = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const isAr = i18n.language === "ar";
 
-    // 1️⃣ تعديل الأسماء لتطابق الباك إند (name و phone)
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -14,6 +14,7 @@ const Contact: React.FC = () => {
     });
 
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+    const [showModal, setShowModal] = useState(false); // التحكم في إظهار البوب
 
     const contactInfo = [
         { icon: <FaPhoneAlt />, title: t("contact.callMe"), value: "+963962840702" },
@@ -21,16 +22,11 @@ const Contact: React.FC = () => {
         { icon: <FaMapMarkerAlt />, title: t("contact.address"), value: "Damascus, Syria" },
     ];
 
-    // 2️⃣ دالة التحديث
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
+        setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    // 3️⃣ دالة الإرسال
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setStatus("loading");
@@ -44,87 +40,116 @@ const Contact: React.FC = () => {
 
             if (response.ok) {
                 setStatus("success");
+                setShowModal(true); // إظهار البوب عند النجاح
                 setFormData({ name: "", email: "", phone: "", message: "" });
-                alert("تم إرسال الرسالة بنجاح!");
             } else {
                 setStatus("error");
-                alert("حدث خطأ أثناء الإرسال");
+                setShowModal(true); // إظهار البوب عند الخطأ
             }
         } catch (error) {
             setStatus("error");
-            alert("حدث خطأ في الاتصال بالسيرفر");
+            setShowModal(true);
         }
     };
 
     return (
-        <section className="py-20 px-6 md:px-16 dark:bg-gray-800" id="contact">
+        <section className="py-20 px-6 md:px-16 bg-white dark:bg-gray-800 transition-colors duration-300" id="contact">
+            {/* 💠 النافذة المنبثقة (Pop-up) */}
+            {showModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity">
+                    <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center transform scale-100 transition-transform">
+                        <div className="flex justify-center mb-4">
+                            {status === "success" ? (
+                                <FaCheckCircle className="text-emerald-500 text-6xl animate-bounce" />
+                            ) : (
+                                <FaTimesCircle className="text-red-500 text-6xl animate-pulse" />
+                            )}
+                        </div>
+                        <h3 className="text-2xl font-black text-gray-800 dark:text-white mb-2">
+                            {status === "success" ? (isAr ? "تم الإرسال!" : "Sent!") : (isAr ? "فشل الإرسال" : "Failed")}
+                        </h3>
+                        <p className="text-gray-500 dark:text-gray-400 mb-6">
+                            {status === "success"
+                                ? (isAr ? "شكراً لتواصلك معنا، سنرد عليك قريباً." : "We received your message.")
+                                : (isAr ? "حدث خطأ غير متوقع، حاول مرة أخرى." : "Something went wrong.")}
+                        </p>
+                        <button
+                            onClick={() => setShowModal(false)}
+                            className={`w-full py-3 rounded-xl font-bold text-white transition-all active:scale-95 ${status === "success" ? "bg-emerald-500 hover:bg-emerald-600" : "bg-red-500 hover:bg-red-600"}`}
+                        >
+                            {isAr ? "حسناً" : "OK"}
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <div className="mb-14">
-                <p className="text-blue-500 font-medium">{t("contact.title")}</p>
-                <h2 className="text-4xl font-bold text-gray-800 dark:text-white">{t("contact.subtitle")}</h2>
+                <p className="text-blue-500 font-bold uppercase tracking-widest text-sm mb-2">{t("contact.title")}</p>
+                <h2 className="text-4xl font-black text-gray-800 dark:text-white">{t("contact.subtitle")}</h2>
             </div>
 
             <div className="grid md:grid-cols-2 gap-12">
-                {/* 🔹 LEFT SIDE */}
-                <div className="flex flex-col gap-6 sm:gap-8">
+                {/* الجانب الأيسر - معلومات التواصل */}
+                <div className="flex flex-col gap-6">
                     {contactInfo.map((item, index) => (
-                        <div key={index} className="flex items-center gap-4 p-5 rounded-xl dark:bg-gray-900 border border-transparent dark:border-gray-800 shadow-sm">
-                            <div className="bg-blue-500 text-white p-4 rounded-lg text-xl shrink-0">{item.icon}</div>
+                        <div key={index} className="flex items-center gap-4 p-5 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-transparent dark:border-gray-700 shadow-sm">
+                            <div className="bg-blue-500 text-white p-4 rounded-xl text-xl shrink-0">{item.icon}</div>
                             <div>
-                                <p className="text-sm text-gray-500">{item.title}</p>
-                                <p className="font-medium text-gray-500 dark:text-white">{item.value}</p>
+                                <p className="text-xs text-gray-400 font-bold mb-1 uppercase">{item.title}</p>
+                                <p className="font-bold text-gray-700 dark:text-white leading-none">{item.value}</p>
                             </div>
                         </div>
                     ))}
                 </div>
 
-                {/* 🔹 RIGHT SIDE FORM */}
+                {/* الجانب الأيمن - الفورم */}
                 <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
                     <div className="grid md:grid-cols-2 gap-6">
                         <input
                             type="text"
                             placeholder={t("contact.fullName")}
-                            name="name" // 🔥 طابقنا الاسم مع الباك
+                            name="name"
                             value={formData.name}
                             onChange={handleChange}
                             required
-                            className="w-full p-4 rounded-lg border border-gray-300 outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                            className="w-full p-4 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-white dark:border-gray-700 transition-all"
                         />
                         <input
                             type="email"
                             placeholder={t("contact.yourEmail")}
-                            name="email" // 🔥 طابقنا الاسم مع الباك
+                            name="email"
                             value={formData.email}
                             onChange={handleChange}
                             required
-                            className="w-full p-4 rounded-lg border border-gray-300 outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                            className="w-full p-4 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-white dark:border-gray-700 transition-all"
                         />
                     </div>
 
                     <input
                         type="text"
                         placeholder={t("contact.phoneNumber")}
-                        name="phone" // 🔥 طابقنا الاسم مع الباك
+                        name="phone"
                         value={formData.phone}
                         onChange={handleChange}
-                        className="w-full p-4 rounded-lg border border-gray-300 outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                        className="w-full p-4 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-white dark:border-gray-700 transition-all"
                     />
 
                     <textarea
-                        rows={6}
+                        rows={5}
                         placeholder={t("contact.message")}
-                        name="message" // 🔥 طابقنا الاسم مع الباك
+                        name="message"
                         value={formData.message}
                         onChange={handleChange}
                         required
-                        className="w-full p-4 rounded-lg border border-gray-300 outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                        className="w-full p-4 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-white dark:border-gray-700 transition-all resize-none"
                     />
 
                     <button
                         type="submit"
                         disabled={status === "loading"}
-                        className={`bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg w-fit transition hover:scale-105 duration-500 ${status === "loading" ? "opacity-70 cursor-not-allowed" : ""}`}
+                        className={`bg-blue-600 hover:bg-blue-700 text-white font-bold px-10 py-4 rounded-xl w-full md:w-fit transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-200 dark:shadow-none`}
                     >
-                        {status === "loading" ? "جاري الإرسال..." : t("contact.sendBTN")}
+                        {status === "loading" ? (isAr ? "جاري الإرسال..." : "Sending...") : t("contact.sendBTN")}
                     </button>
                 </form>
             </div>

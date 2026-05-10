@@ -1,104 +1,70 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
-
 import PropertyCard from "../PropetyCards";
-import type { Property } from "../../types/property";
-import Pagination from "../Pagination/Pagination";
-
 const BestEstate: React.FC = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const [properties, setProperties] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const [properties, setProperties] = useState<Property[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
-
-    const [page, setPage] = useState(1);
-    const perPage = 3;
-
-    // 🌐 Fetch data
     useEffect(() => {
         const fetchFeaturedProperties = async () => {
             try {
                 setLoading(true);
-
-                const response = await axios.get(
-                    "http://localhost:5000/api/properties/featured"
-                );
-
-                // 🔥 حماية من شكل API مختلف
-                const data = Array.isArray(response.data)
-                    ? response.data
-                    : response.data?.data || [];
-
-                setProperties(data);
+                const response = await axios.get("http://localhost:5000/api/properties/featured");
+                setProperties(Array.isArray(response.data) ? response.data : []);
             } catch (err) {
-                console.error("Error fetching properties:", err);
+                console.error("Error fetching featured properties:", err);
                 setProperties([]);
             } finally {
                 setLoading(false);
             }
         };
-
         fetchFeaturedProperties();
     }, []);
 
-    // 🔄 reset page لما تتغير البيانات
-    useEffect(() => {
-        setPage(1);
-    }, [properties]);
-
-    const totalPages = Math.ceil(properties.length / perPage);
-
-    const currentItems = properties.slice(
-        (page - 1) * perPage,
-        page * perPage
-    );
-
-    // 📌 حماية من page out of range
-    useEffect(() => {
-        if (page > totalPages && totalPages > 0) {
-            setPage(1);
-        }
-    }, [totalPages]);
-
     return (
-        <section className="p-4 mt-12 dark:bg-gray-800" id="featuredProperties">
-
-            <h1 className="text-center text-sky-400 text-2xl md:text-4xl mb-3 font-bold">
-                {t("bestEstate.title")}
-            </h1>
-
-            <p className="text-center max-w-4xl mx-auto mb-8 dark:text-gray-300">
-                {t("bestEstate.description")}
-            </p>
-
-            {loading ? (
-                <div className="text-center py-20 text-xl">
-                    {t("loading...")}
+        <section className="py-16 px-6 bg-gray-50 dark:bg-gray-900/50" id="featuredProperties">
+            <div className="container mx-auto">
+                {/* الرأس */}
+                <div className="text-center mb-12">
+                    <span className="text-sky-600 dark:text-sky-400 font-bold tracking-widest uppercase text-xs">
+                        {t("bestEstate.subtitle") || "Premium Selection"}
+                    </span>
+                    <h2 className="text-3xl md:text-5xl font-black text-gray-800 dark:text-white mt-2 mb-4">
+                        {t("bestEstate.title")}
+                    </h2>
+                    <div className="w-20 h-1.5 bg-sky-600 mx-auto rounded-full mb-6"></div>
+                    <p className="text-gray-500 dark:text-gray-400 max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
+                        {t("bestEstate.description")}
+                    </p>
                 </div>
-            ) : (
-                <>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {currentItems.length > 0 ? (
-                            currentItems.map((item) => (
-                                <PropertyCard key={item._id} property={item} />
-                            ))
-                        ) : (
-                            <p className="col-span-3 text-center py-10 italic">
-                                لا توجد عقارات مميزة حالياً
-                            </p>
-                        )}
-                    </div>
 
-                    {totalPages > 1 && (
-                        <Pagination
-                            currentPage={page}
-                            totalPages={totalPages}
-                            onPageChange={setPage}
-                        />
-                    )}
-                </>
-            )}
+                {/* الحالة: تحميل */}
+                {loading ? (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {[1, 2, 3].map((n) => (
+                            <div key={n} className="h-[450px] bg-gray-200 dark:bg-gray-800 animate-pulse rounded-3xl" />
+                        ))}
+                    </div>
+                ) : (
+                    <>
+                        {/* عرض أول 3 عقارات فقط بدون ترقيم */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {properties.slice(0, 3).map((item: any) => (
+                                <PropertyCard key={item._id} property={item} />
+                            ))}
+                        </div>
+
+                        {/* رسالة في حال عدم وجود عقارات */}
+                        {properties.length === 0 && (
+                            <div className="text-center py-20 text-gray-400 font-bold">
+                                {i18n.language === "ar" ? "لا توجد عقارات مميزة حالياً" : "No featured properties found"}
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
         </section>
     );
 };

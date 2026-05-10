@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import DashboardRoutes from "./dashboard/DashboardRoutes";
 import Layout from "./website/Layout/Layout";
-import HomePage from "./website/pages/HomePage";
 import NavBar from "./website/components/NavBar/NavBar";
 import BestEstate from "./website/components/BestEstate/BestEstate";
 import PropertiesList from "./website/components/PropertiesList/PropertiesList";
@@ -13,71 +12,69 @@ import State from "./website/components/State";
 import WhyInvestors from "./website/components/WhyInvestors";
 import AiChat from "./website/components/AiChat/AiChat";
 import SEO from "./website/components/SEO/SEO";
+import HomePage from "./website/pages/HomePage";
 
+import PropertyDetailPage from "./website/pages/PropertyDetailPage"; // ✅ جديد
+import AllPropertiesPage from "./website/components/Allpropertiespage/Allpropertiespage";
 
 type Theme = "light" | "dark";
-
 
 function App() {
   const [theme, setTheme] = useState<Theme>(
     (localStorage.getItem("theme") as Theme) || "light"
   );
-
   const { i18n } = useTranslation();
 
-  // 🌙 Theme
   useEffect(() => {
     document.documentElement.className = theme;
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  // 🌍 Language
   useEffect(() => {
-    const currentLang = i18n.language;
-
-    document.documentElement.dir =
-      currentLang === "ar" ? "rtl" : "ltr";
-
-    document.documentElement.lang = currentLang;
+    document.documentElement.dir = i18n.language === "ar" ? "rtl" : "ltr";
+    document.documentElement.lang = i18n.language;
   }, [i18n.language]);
-
-
 
   return (
     <Routes>
-      {/* dashboard */}
-      <Route
-        path="/dashboard/*"
-        element={<DashboardRoutes />}
-      />
+      <Route path="/dashboard/*" element={<DashboardRoutes />} />
 
-      {/* website */}
       <Route path="/" element={<Layout />}>
-        <Route
-          index
-          element={
-            <>
-              <SEO />
-              <NavBar
-                theme={theme}
-                setTheme={setTheme}
-              />
 
-              <HomePage />
-              <AiChat />
-              <BestEstate
-              />
-              <WhyInvestors />
+        {/* ── الرئيسية ── */}
+        <Route index element={
+          <>
+            <SEO />
+            <NavBar theme={theme} setTheme={setTheme} />
+            <HomePage />
+            <AiChat />
+            <BestEstate />
+            <WhyInvestors />
+            <PropertiesList />
+            <State />
+            <Contact />
+            <Footer />
+          </>
+        } />
 
-              <PropertiesList />
+        {/* ── كل العقارات ── */}
+        <Route path="properties" element={
+          <>
+            <NavBar theme={theme} setTheme={setTheme} />
+            <AllPropertiesPage />
+            <Footer />
+          </>
+        } />
 
-              <State />
-              <Contact />
+        {/* ── تفاصيل عقار ── */}
+        <Route path="properties/:id" element={
+          <>
+            <NavBar theme={theme} setTheme={setTheme} />
+            <PropertyDetailPage />
+            <Footer />
+          </>
+        } />
 
-              <Footer />
-            </>
-          }
-        />
       </Route>
     </Routes>
   );

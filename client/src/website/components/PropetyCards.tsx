@@ -1,108 +1,103 @@
-import React, { useState } from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
-import type { Property } from "../types/property";
+import { useNavigate } from "react-router-dom";
+import { IoLocationOutline } from "react-icons/io5";
+import { LuBedSingle, LuBath, LuArrowUpLeft, LuArrowUpRight } from "react-icons/lu";
+import { CiRuler } from "react-icons/ci";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE_URL = "http://localhost:5000";
 
-const PropetyCards: React.FC<{ property: Property }> = ({ property }) => {
+const PropertyCard: React.FC<{ property: any }> = ({ property }) => {
     const { i18n } = useTranslation();
-    const isEn = i18n.language === "en";
+    const navigate = useNavigate();
+    const isAr = i18n.language === "ar";
 
-    const displayTitle = isEn ? property.titleEn : property.title;
-    const displayDesc = isEn ? property.descriptionEn : property.description;
-    const displayCity = isEn ? property.cityEn : property.city;
-    const displayCategory = isEn ? property.categoryEn : property.category;
+    // جلب البيانات بناءً على اللغة المفعلة من الداتا المترجمة في الباك-إند
+    const title = isAr ? property.title : property.titleEn;
+    const description = isAr ? property.description : property.descriptionEn;
+    const city = isAr ? property.city : property.cityEn;
+    const category = isAr ? property.category : property.categoryEn;
 
-    // 🔥 حماية features
-    const rawFeatures = isEn ? property.featuresEn : property.features;
+    // نصوص ثابتة بسيطة
+    const labels = {
+        rooms: isAr ? "غرف" : "Rooms",
+        baths: isAr ? "حمام" : "Baths",
+        area: isAr ? "م٢" : "m²",
+        price: isAr ? "السعر" : "Price",
+        currency: isAr ? "ل.س" : "SYP",
+        sale: isAr ? "للبيع" : "For Sale",
+        rent: isAr ? "للإيجار" : "For Rent"
+    };
 
-    const displayFeatures = Array.isArray(rawFeatures) ? rawFeatures : [];
-
-    // 🖼️ الصور
-    const images =
-        property.images?.length > 0
-            ? property.images.map((img) =>
-                img.startsWith("http") ? img : `${API_BASE_URL}${img}`
-            )
-            : ["https://via.placeholder.com/400x300?text=No+Image"];
-
-    const [current, setCurrent] = useState(0);
+    const isSale = property.type === "sale" || property.type === "buy";
+    const imageSrc = property.images?.[0]
+        ? (property.images[0].startsWith("http") ? property.images[0] : `${API_BASE_URL}${property.images[0]}`)
+        : "https://via.placeholder.com/400x300";
 
     return (
-        <div className="border rounded-xl overflow-hidden shadow-md bg-white dark:bg-gray-700 dark:border-gray-600 transition duration-300 hover:shadow-lg">
+        <div
+            onClick={() => navigate(`/properties/${property._id}`)}
+            className="group bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700 flex flex-col h-full cursor-pointer"
+        >
+            <div className="relative h-64 overflow-hidden">
+                <img src={imageSrc} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
 
-            {/* 📸 Images */}
-            <div className="relative w-full h-48 overflow-hidden bg-gray-200">
-                <img
-                    src={images[current]}
-                    className="w-full h-48 object-cover"
-                    alt={displayTitle}
-                />
-
-                {images.length > 1 && (
-                    <div className="absolute inset-0 flex justify-between items-center px-2">
-                        <button
-                            onClick={() =>
-                                setCurrent((prev) =>
-                                    (prev - 1 + images.length) % images.length
-                                )
-                            }
-                            className="bg-black/40 text-white w-8 h-8 rounded-full hover:bg-black/70"
-                        >
-                            ‹
-                        </button>
-
-                        <button
-                            onClick={() =>
-                                setCurrent((prev) => (prev + 1) % images.length)
-                            }
-                            className="bg-black/40 text-white w-8 h-8 rounded-full hover:bg-black/70"
-                        >
-                            ›
-                        </button>
-                    </div>
-                )}
+                <div className={`absolute top-4 ${isAr ? 'right-4' : 'left-4'} flex flex-col gap-2`}>
+                    <span className={`text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-lg ${isSale ? "bg-sky-600" : "bg-amber-500"}`}>
+                        {isSale ? labels.sale : labels.rent}
+                    </span>
+                    {property.isFeatured && (
+                        <div className="bg-emerald-500 text-white w-8 h-8 flex items-center justify-center rounded-full shadow-lg border-2 border-white animate-pulse text-xl">
+                            ★
+                        </div>
+                    )}
+                </div>
             </div>
 
-            {/* 📝 Details */}
-            <div className="p-4">
-                <div className="flex justify-between text-sm text-gray-500 mb-1 dark:text-gray-300">
-                    <span className="font-medium">{displayCategory}</span>
-                    <span>{displayCity}</span>
+            <div className="p-6 flex flex-col flex-grow">
+                <div className={`flex items-center gap-2 text-sky-600 text-xs font-bold mb-2 ${isAr ? "flex-row-reverse" : ""}`}>
+                    <IoLocationOutline /> <span>{city}</span>
+                    <span className="text-gray-300">|</span>
+                    <span>{category}</span>
                 </div>
 
-                <h2 className="text-lg font-bold mb-2 truncate">
-                    {displayTitle}
+                <h2 className={`text-xl font-black text-gray-800 dark:text-white mb-2 ${isAr ? "text-right" : "text-left"}`}>
+                    {title}
                 </h2>
 
-                <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2 mb-3 h-10">
-                    {displayDesc}
+                <p className={`text-gray-500 dark:text-gray-400 text-sm line-clamp-2 mb-4 ${isAr ? "text-right" : "text-left"}`}>
+                    {description}
                 </p>
 
-                {/* Features */}
-                <ul className="flex flex-wrap gap-2 mb-4 h-14 overflow-hidden">
-                    {displayFeatures.slice(0, 3).map((f, i) => (
-                        <li
-                            key={i}
-                            className="bg-sky-50 dark:bg-gray-800 text-sky-700 dark:text-sky-300 text-[10px] px-2 py-1 rounded-md border"
-                        >
-                            {f}
-                        </li>
-                    ))}
-                </ul>
+                <div className="grid grid-cols-3 gap-2 py-4 border-y border-gray-50 dark:border-gray-700 mb-6">
+                    <div className="flex flex-col items-center border-e border-gray-100">
+                        <CiRuler className="text-sky-600 mb-1" size={20} />
+                        <span className="text-xs font-bold">{property.area} {labels.area}</span>
+                    </div>
+                    <div className="flex flex-col items-center border-e border-gray-100">
+                        <LuBedSingle className="text-sky-600 mb-1" size={20} />
+                        <span className="text-xs font-bold">{property.rooms} {labels.rooms}</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                        <LuBath className="text-sky-600 mb-1" size={20} />
+                        <span className="text-xs font-bold">{property.bathrooms} {labels.baths}</span>
+                    </div>
+                </div>
 
-                {/* Price */}
-                <div className="flex items-center justify-between border-t pt-3 dark:border-gray-600">
-                    <span className="text-xl font-bold text-sky-600">
-                        {property.price.toLocaleString()} $
-                    </span>
-                    <span className="text-xs text-gray-400 italic">
-                        {property.area} m²
-                    </span>
+                <div className={`flex items-center justify-between mt-auto ${isAr ? "flex-row-reverse" : ""}`}>
+                    <div>
+                        <span className="text-[10px] text-gray-400 font-black block">{labels.price}</span>
+                        <div className="text-xl font-black text-sky-700 dark:text-sky-400">
+                            {property.price?.toLocaleString()} <span className="text-xs">{labels.currency}</span>
+                        </div>
+                    </div>
+                    <div className="bg-sky-50 dark:bg-gray-700 text-sky-600 p-3 rounded-2xl group-hover:bg-sky-600 group-hover:text-white transition-colors">
+                        {isAr ? <LuArrowUpLeft size={20} /> : <LuArrowUpRight size={20} />}
+                    </div>
                 </div>
             </div>
         </div>
     );
 };
 
-export default PropetyCards;
+export default PropertyCard;
