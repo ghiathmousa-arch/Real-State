@@ -58,7 +58,7 @@ const NavBar: React.FC<NavBarProps> = ({ theme, setTheme }) => {
           }
         });
       },
-      { threshold: 0.4 } // نسبة ظهور السكشن
+      { threshold: 0.6 } // نسبة ظهور السكشن
     );
 
     sections.forEach((section) => observer.observe(section));
