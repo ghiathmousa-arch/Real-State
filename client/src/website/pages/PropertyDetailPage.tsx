@@ -25,7 +25,8 @@ const PropertyDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeImg, setActiveImg] = useState(0);
   const [liked, setLiked] = useState(false);
-
+  const API_URL = import.meta.env.VITE_API_URL;
+  const BASE_URL = API_URL?.replace("/api", "");
   // ── جلب العقار + العقارات المشابهة ──
   useEffect(() => {
     const fetchData = async () => {
@@ -34,13 +35,13 @@ const PropertyDetailPage: React.FC = () => {
         window.scrollTo(0, 0);
 
         // جلب العقار الحالي
-        const res = await axios.get(`http://localhost:5000/api/properties/${id}`);
+        const res = await axios.get(`${API_URL}/api/properties/${id}`);
         const prop = res.data;
         setProperty(prop);
         setActiveImg(0);
 
         // جلب مشابهة بنفس الفئة أو المدينة
-        const allRes = await axios.get("http://localhost:5000/api/properties");
+        const allRes = await axios.get(`${API_URL}/api/properties`);
         const all: any[] = Array.isArray(allRes.data) ? allRes.data : [];
 
         const filtered = all
@@ -103,7 +104,7 @@ const PropertyDetailPage: React.FC = () => {
   const isBuy = property.type === "buy";
 
   const images: string[] = property.images?.length
-    ? property.images.map((img: string) => `http://localhost:5000${img}`)
+    ? property.images.map((img: string) => `${BASE_URL}${img}`)
     : ["https://placehold.co/800x500/e2e8f0/94a3b8?text=No+Image"];
 
   const BackIcon = ar ? LuArrowRight : LuArrowLeft;

@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom"; // ✅
+import { useNavigate } from "react-router-dom";
 import { IoLocationOutline } from "react-icons/io5";
 import { LuBedSingle, LuArrowLeft, LuArrowRight, LuSearch } from "react-icons/lu";
 import { CiRuler } from "react-icons/ci";
 import { PiBathtub } from "react-icons/pi";
 import PropertySlider from "../Propertyslider/Propertyslider";
 
-
 const PER_PAGE = 12;
+
+const API_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = API_URL?.replace("/api", "");
 
 // ── Pagination ────────────────────────────────────────────────────────────────
 const Pagination = ({
@@ -47,7 +49,7 @@ const Pagination = ({
           ) : (
             <button key={p} onClick={() => onPageChange(p as number)}
               className={`w-9 h-9 rounded-xl text-sm font-semibold transition-all duration-200
-                                ${p === currentPage ? "bg-sky-600 text-white shadow-md" : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"}`}>
+                ${p === currentPage ? "bg-sky-600 text-white shadow-md" : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"}`}>
               {p}
             </button>
           )
@@ -65,11 +67,11 @@ const Pagination = ({
 const AllPropertiesPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const ar = i18n.language === "ar";
-  const navigate = useNavigate(); // ✅
+  const navigate = useNavigate();
 
   const [allProperties, setAllProperties] = useState<any[]>([]);
   const [filtered, setFiltered] = useState<any[]>([]);
-  const [featured, setFeatured] = useState<any[]>([]); // ✅ للسلايدر
+  const [featured, setFeatured] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
 
@@ -82,12 +84,10 @@ const AllPropertiesPage: React.FC = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const res = await axios.get("http://localhost:5000/api/properties");
+        const res = await axios.get(`${API_URL}/properties`); // ✅ Railway
         const data = Array.isArray(res.data) ? res.data : [];
         setAllProperties(data);
         setFiltered(data);
-
-        // ✅ مميزة للسلايدر في الأسفل
         setFeatured(data.filter((p: any) => p.isFeatured));
       } catch (e) {
         console.error(e);
@@ -117,7 +117,6 @@ const AllPropertiesPage: React.FC = () => {
   }, [search, typeFilter, cityFilter, allProperties]);
 
   const cities = [...new Set(allProperties.map(p => p.city).filter(Boolean))];
-
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
   const currentItems = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
@@ -188,13 +187,13 @@ const AllPropertiesPage: React.FC = () => {
                 const title = ar ? property.title : (property.titleEn || property.title);
                 const city = ar ? property.city : (property.cityEn || property.city);
                 const imgSrc = property.images?.length > 0
-                  ? `http://localhost:5000${property.images[0]}`
+                  ? `${BASE_URL}${property.images[0]}` // ✅ Railway
                   : "https://placehold.co/400x280/e2e8f0/94a3b8?text=No+Image";
                 const isBuy = property.type === "buy";
 
                 return (
                   <div key={property._id}
-                    onClick={() => navigate(`/properties/${property._id}`)} // ✅
+                    onClick={() => navigate(`/properties/${property._id}`)}
                     className="group bg-white dark:bg-gray-700 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-600 hover:border-sky-200 dark:hover:border-sky-700 hover:shadow-xl hover:-translate-y-1 shadow-sm transition-all duration-300 cursor-pointer">
                     <div className="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-600">
                       <img src={imgSrc} alt={title} loading="lazy"
@@ -231,7 +230,6 @@ const AllPropertiesPage: React.FC = () => {
                 );
               })}
             </div>
-
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} ar={ar} />
           </>
         ) : (
@@ -242,9 +240,7 @@ const AllPropertiesPage: React.FC = () => {
         )}
       </div>
 
-      {/* ════════════════════════════════
-                سلايدر العقارات المميزة ✅
-            ════════════════════════════════ */}
+      {/* ── سلايدر العقارات المميزة ── */}
       {featured.length > 0 && (
         <div className="bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 px-6 py-12">
           <div className="max-w-7xl mx-auto">

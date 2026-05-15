@@ -10,10 +10,21 @@ const Search = () => {
     const [cities, setCities] = useState<string[]>([]);
     const [categories, setCategories] = useState<string[]>([]);
 
+    // 💠 التعديل 1: جلب رابط الـ API من متغيرات البيئة
+    const API_BASE_URL = import.meta.env.VITE_API_URL;
+
     useEffect(() => {
-        fetch("http://localhost:5000/api/cities").then(res => res.json()).then(data => setCities(data));
-        fetch("http://localhost:5000/api/categories").then(res => res.json()).then(data => setCategories(data));
-    }, []);
+        // 💠 التعديل 2: تحديث روابط الـ fetch لتكون ديناميكية
+        fetch(`${API_BASE_URL}/api/cities`)
+            .then(res => res.json())
+            .then(data => setCities(data))
+            .catch(err => console.error("Error fetching cities:", err));
+
+        fetch(`${API_BASE_URL}/api/categories`)
+            .then(res => res.json())
+            .then(data => setCategories(data))
+            .catch(err => console.error("Error fetching categories:", err));
+    }, [API_BASE_URL]);
 
     const searchFields = [
         { name: 'location', label: t('search.location_label'), icon: '📍', options: cities },
@@ -30,11 +41,11 @@ const Search = () => {
                     </label>
                     <div className="flex items-center gap-2 bg-white dark:bg-slate-700 p-3 rounded-2xl border dark:border-slate-600">
                         <span>{field.icon}</span>
-                        <select 
-                            className="bg-transparent text-sm w-full outline-none dark:text-white"
+                        <select
+                            className="bg-transparent text-sm w-full outline-none dark:text-white cursor-pointer"
                             onChange={(e) => setLocalOptions(prev => ({ ...prev, [field.name]: e.target.value }))}
                         >
-                            <option value="">{t('search.placeholder')}</option>
+                            <option value="" className="dark:bg-slate-800">{t('search.placeholder')}</option>
                             {field.options.map((opt, i) => (
                                 <option key={i} value={opt} className="dark:bg-slate-800">{opt}</option>
                             ))}
@@ -42,13 +53,14 @@ const Search = () => {
                     </div>
                 </div>
             ))}
-            <button 
+            <button
                 onClick={() => setSearch(localOptions)}
-                className="w-full md:w-auto flex justify-center items-center gap-3 text-white px-10 py-4 rounded-2xl bg-[#004E80] hover:bg-blue-700 transition-all font-bold"
+                className="w-full md:w-auto flex justify-center items-center gap-3 text-white px-10 py-4 rounded-2xl bg-[#004E80] hover:bg-blue-700 active:scale-95 transition-all font-bold shadow-lg shadow-blue-900/20"
             >
                 <FaSearch /> {t('search.button')}
             </button>
         </div>
     );
 };
+
 export default Search;

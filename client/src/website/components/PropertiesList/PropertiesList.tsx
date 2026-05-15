@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
-import { useNavigate, Link } from "react-router-dom"; // ✅
+import { useNavigate, Link } from "react-router-dom";
 import { IoLocationOutline } from "react-icons/io5";
 import { LuBedSingle, LuArrowLeft, LuArrowRight, LuArrowUpRight } from "react-icons/lu";
 import { CiRuler } from "react-icons/ci";
@@ -63,7 +63,10 @@ const Pagination = ({
 const PropertiesList: React.FC = () => {
     const { t, i18n } = useTranslation();
     const ar = i18n.language === "ar";
-    const navigate = useNavigate(); // ✅
+    const navigate = useNavigate();
+
+    // 💠 التعديل 1: تعريف رابط الـ API من متغيرات البيئة
+    const API_URL = import.meta.env.VITE_API_URL;
 
     const [properties, setProperties] = useState<any[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
@@ -73,7 +76,8 @@ const PropertiesList: React.FC = () => {
         const fetchProperties = async () => {
             try {
                 setLoading(true);
-                const response = await axios.get("http://localhost:5000/api/properties");
+                // 💠 التعديل 2: استخدام API_URL بدلاً من localhost
+                const response = await axios.get(`${API_URL}/api/properties`);
                 setProperties(Array.isArray(response.data) ? response.data : []);
             } catch (err) {
                 console.error("Error fetching:", err);
@@ -82,7 +86,7 @@ const PropertiesList: React.FC = () => {
             }
         };
         fetchProperties();
-    }, []);
+    }, [API_URL]); // إضافة API_URL كمُعتمد لـ useEffect
 
     useEffect(() => { setPage(1); }, [i18n.language]);
 
@@ -108,8 +112,7 @@ const PropertiesList: React.FC = () => {
 
     return (
         <section id="PropertiesList" className="py-14 px-6 dark:bg-gray-800">
-
-            {/* ── Header ── */}
+            {/* ... الهيدر يبقى كما هو ... */}
             <div className={`flex items-end justify-between mb-10 gap-4 flex-wrap ${ar ? "flex-row-reverse" : ""}`}>
                 <div className={ar ? "text-right" : "text-left"}>
                     <span className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-widest text-sky-600 dark:text-sky-400 uppercase mb-2">
@@ -140,15 +143,18 @@ const PropertiesList: React.FC = () => {
                         {currentItems.map((property) => {
                             const title = ar ? property.title : (property.titleEn || property.title);
                             const city = ar ? property.city : (property.cityEn || property.city);
+
+                            // 💠 التعديل 3: استخدام API_URL لجلب الصور من السيرفر
                             const imgSrc = property.images?.length > 0
-                                ? `http://localhost:5000${property.images[0]}`
+                                ? `${API_URL}${property.images[0]}`
                                 : "https://placehold.co/400x280/e2e8f0/94a3b8?text=No+Image";
+
                             const isBuy = property.type === "buy";
 
                             return (
                                 <div
                                     key={property._id}
-                                    onClick={() => navigate(`/properties/${property._id}`)} // ✅
+                                    onClick={() => navigate(`/properties/${property._id}`)}
                                     className="group bg-white dark:bg-gray-700 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-600 hover:border-sky-200 dark:hover:border-sky-700 hover:shadow-xl hover:-translate-y-1 shadow-sm transition-all duration-300 cursor-pointer"
                                 >
                                     <div className="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-600">

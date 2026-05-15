@@ -6,6 +6,9 @@ const Contact: React.FC = () => {
     const { t, i18n } = useTranslation();
     const isAr = i18n.language === "ar";
 
+    // جلب الرابط من إعدادات البيئة
+    const API_URL = import.meta.env.VITE_API_URL;
+
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -14,7 +17,7 @@ const Contact: React.FC = () => {
     });
 
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-    const [showModal, setShowModal] = useState(false); // التحكم في إظهار البوب
+    const [showModal, setShowModal] = useState(false);
 
     const contactInfo = [
         { icon: <FaPhoneAlt />, title: t("contact.callMe"), value: "+963962840702" },
@@ -32,7 +35,8 @@ const Contact: React.FC = () => {
         setStatus("loading");
 
         try {
-            const response = await fetch("http://localhost:5000/api/contact", {
+            // التعديل هنا: استخدام الرابط الديناميكي
+            const response = await fetch(`${API_URL}/api/contact`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),
@@ -40,13 +44,14 @@ const Contact: React.FC = () => {
 
             if (response.ok) {
                 setStatus("success");
-                setShowModal(true); // إظهار البوب عند النجاح
+                setShowModal(true);
                 setFormData({ name: "", email: "", phone: "", message: "" });
             } else {
                 setStatus("error");
-                setShowModal(true); // إظهار البوب عند الخطأ
+                setShowModal(true);
             }
         } catch (error) {
+            console.error("Contact Error:", error);
             setStatus("error");
             setShowModal(true);
         }

@@ -20,8 +20,8 @@ interface Property {
 
 interface Props {
   properties: Property[];
-  title?: string;   // عنوان فوق السلايدر — اختياري
-  perPage?: number;   // كم كرت بكل مرة (افتراضي 3)
+  title?: string;
+  perPage?: number;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -34,6 +34,9 @@ const PropertySlider: React.FC<Props> = ({
   const navigate = useNavigate();
   const ar = i18n.language === "ar";
 
+  // 💠 التعديل 1: تعريف رابط الـ API من متغيرات البيئة
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const [index, setIndex] = useState(0);
 
   if (!properties?.length) return null;
@@ -45,16 +48,14 @@ const PropertySlider: React.FC<Props> = ({
   const prev = () => setIndex(i => Math.max(0, i - 1));
   const next = () => setIndex(i => Math.min(maxIndex, i + 1));
 
-  // بـ RTL نعكس الأزرار
   const onLeft = ar ? next : prev;
   const onRight = ar ? prev : next;
   const disableLeft = ar ? !canNext : !canPrev;
   const disableRight = ar ? !canPrev : !canNext;
 
-  // حساب الـ translate — كل كرت عرضه (100/perPage)%
   const translateX = ar
-    ? `${(index / perPage) * 100}%`          // RTL: نتحرك لليمين
-    : `-${(index / perPage) * 100}%`;         // LTR: نتحرك لليسار
+    ? `${(index / perPage) * 100}%`
+    : `-${(index / perPage) * 100}%`;
 
   return (
     <div>
@@ -65,18 +66,12 @@ const PropertySlider: React.FC<Props> = ({
           : <span />
         }
 
-        {/* أزرار التنقل */}
         <div className="flex gap-2">
           <button
             onClick={onLeft}
             disabled={disableLeft}
             aria-label="previous"
-            className="w-9 h-9 rounded-xl border border-gray-200 dark:border-gray-600
-                                   flex items-center justify-center
-                                   text-gray-400 hover:text-sky-600 hover:border-sky-300
-                                   dark:hover:text-sky-400 dark:hover:border-sky-700
-                                   disabled:opacity-25 disabled:cursor-not-allowed
-                                   transition-all duration-200"
+            className="w-9 h-9 rounded-xl border border-gray-200 dark:border-gray-600 flex items-center justify-center text-gray-400 hover:text-sky-600 hover:border-sky-300 dark:hover:text-sky-400 dark:hover:border-sky-700 disabled:opacity-25 disabled:cursor-not-allowed transition-all duration-200"
           >
             <LuChevronLeft size={17} />
           </button>
@@ -84,12 +79,7 @@ const PropertySlider: React.FC<Props> = ({
             onClick={onRight}
             disabled={disableRight}
             aria-label="next"
-            className="w-9 h-9 rounded-xl border border-gray-200 dark:border-gray-600
-                                   flex items-center justify-center
-                                   text-gray-400 hover:text-sky-600 hover:border-sky-300
-                                   dark:hover:text-sky-400 dark:hover:border-sky-700
-                                   disabled:opacity-25 disabled:cursor-not-allowed
-                                   transition-all duration-200"
+            className="w-9 h-9 rounded-xl border border-gray-200 dark:border-gray-600 flex items-center justify-center text-gray-400 hover:text-sky-600 hover:border-sky-300 dark:hover:text-sky-400 dark:hover:border-sky-700 disabled:opacity-25 disabled:cursor-not-allowed transition-all duration-200"
           >
             <LuChevronRight size={17} />
           </button>
@@ -105,12 +95,13 @@ const PropertySlider: React.FC<Props> = ({
           {properties.map(property => {
             const name = ar ? property.title : (property.titleEn || property.title);
             const city = ar ? property.city : (property.cityEn || property.city);
-            const imgSrc = property.images?.[0]
-              ? `http://localhost:5000${property.images[0]}`
-              : "https://placehold.co/400x280/e2e8f0/94a3b8?text=No+Image";
-            const isBuy = property.type === "buy";
 
-            // عرض كل كرت = 100/perPage % مع gap ثابت
+            // 💠 التعديل 2: استخدام API_URL بدلاً من localhost لعرض الصور
+            const imgSrc = property.images?.[0]
+              ? `${API_URL}${property.images[0]}`
+              : "https://placehold.co/400x280/e2e8f0/94a3b8?text=No+Image";
+
+            const isBuy = property.type === "buy";
             const cardWidth = `calc(${100 / perPage}% - ${((perPage - 1) * 16) / perPage}px)`;
 
             return (
@@ -118,20 +109,14 @@ const PropertySlider: React.FC<Props> = ({
                 key={property._id}
                 onClick={() => navigate(`/properties/${property._id}`)}
                 style={{ minWidth: cardWidth, maxWidth: cardWidth, marginInlineEnd: "16px" }}
-                className="group bg-white dark:bg-gray-700 rounded-2xl overflow-hidden
-                                           border border-gray-100 dark:border-gray-600
-                                           hover:border-sky-200 dark:hover:border-sky-700
-                                           hover:shadow-lg hover:-translate-y-1 shadow-sm
-                                           transition-all duration-300 cursor-pointer flex-shrink-0"
+                className="group bg-white dark:bg-gray-700 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-600 hover:border-sky-200 dark:hover:border-sky-700 hover:shadow-lg hover:-translate-y-1 shadow-sm transition-all duration-300 cursor-pointer flex-shrink-0"
               >
-                {/* صورة */}
                 <div className="relative h-44 overflow-hidden bg-gray-100 dark:bg-gray-600">
                   <img src={imgSrc} alt={name} loading="lazy"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
                   <div className={`absolute top-2.5 flex gap-1.5 ${ar ? "left-2.5" : "right-2.5"}`}>
-                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full text-white shadow-sm
-                                            ${isBuy ? "bg-sky-600" : "bg-amber-500"}`}>
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full text-white shadow-sm ${isBuy ? "bg-sky-600" : "bg-amber-500"}`}>
                       {isBuy ? t("properties.sale") : t("properties.rent")}
                     </span>
                     {property.isFeatured && (
@@ -140,7 +125,6 @@ const PropertySlider: React.FC<Props> = ({
                   </div>
                 </div>
 
-                {/* محتوى */}
                 <div className={`p-4 ${ar ? "text-right" : "text-left"}`}>
                   <h3 className="font-bold text-gray-800 dark:text-white text-sm leading-snug mb-1 line-clamp-1">
                     {name}
@@ -186,10 +170,7 @@ const PropertySlider: React.FC<Props> = ({
             <button
               key={i}
               onClick={() => setIndex(i)}
-              className={`h-1.5 rounded-full transition-all duration-300
-                                ${i === index
-                  ? "w-6 bg-sky-600"
-                  : "w-1.5 bg-gray-300 dark:bg-gray-600 hover:bg-sky-300"}`}
+              className={`h-1.5 rounded-full transition-all duration-300 ${i === index ? "w-6 bg-sky-600" : "w-1.5 bg-gray-300 dark:bg-gray-600 hover:bg-sky-300"}`}
             />
           ))}
         </div>

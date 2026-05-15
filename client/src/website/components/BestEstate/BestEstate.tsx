@@ -7,11 +7,13 @@ const BestEstate: React.FC = () => {
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const API_URL = import.meta.env.VITE_API_URL;
+    const BASE_URL = API_URL?.replace("/api", "");
     useEffect(() => {
         const fetchFeaturedProperties = async () => {
             try {
                 setLoading(true);
-                const response = await axios.get("http://localhost:5000/api/properties/featured");
+                const response = await axios.get(`${API_URL}/api/properties/featured`);
                 setProperties(Array.isArray(response.data) ? response.data : []);
             } catch (err) {
                 console.error("Error fetching featured properties:", err);

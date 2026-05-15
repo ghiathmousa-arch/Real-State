@@ -5,14 +5,15 @@ import { IoLocationOutline } from "react-icons/io5";
 import { LuBedSingle, LuBath, LuArrowUpLeft, LuArrowUpRight } from "react-icons/lu";
 import { CiRuler } from "react-icons/ci";
 
-const API_BASE_URL = "http://localhost:5000";
+// 💠 التعديل 1: استخدام رابط الـ API من متغيرات البيئة بدلاً من localhost الثابت
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const PropertyCard: React.FC<{ property: any }> = ({ property }) => {
     const { i18n } = useTranslation();
     const navigate = useNavigate();
     const isAr = i18n.language === "ar";
 
-    // جلب البيانات بناءً على اللغة المفعلة من الداتا المترجمة في الباك-إند
+    // جلب البيانات بناءً على اللغة المفعلة
     const title = isAr ? property.title : property.titleEn;
     const description = isAr ? property.description : property.descriptionEn;
     const city = isAr ? property.city : property.cityEn;
@@ -30,6 +31,8 @@ const PropertyCard: React.FC<{ property: any }> = ({ property }) => {
     };
 
     const isSale = property.type === "sale" || property.type === "buy";
+
+    // 💠 التعديل 2: معالجة رابط الصورة بشكل ديناميكي
     const imageSrc = property.images?.[0]
         ? (property.images[0].startsWith("http") ? property.images[0] : `${API_BASE_URL}${property.images[0]}`)
         : "https://via.placeholder.com/400x300";
@@ -40,7 +43,11 @@ const PropertyCard: React.FC<{ property: any }> = ({ property }) => {
             className="group bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700 flex flex-col h-full cursor-pointer"
         >
             <div className="relative h-64 overflow-hidden">
-                <img src={imageSrc} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <img
+                    src={imageSrc}
+                    alt={title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
 
                 <div className={`absolute top-4 ${isAr ? 'right-4' : 'left-4'} flex flex-col gap-2`}>
                     <span className={`text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-lg ${isSale ? "bg-sky-600" : "bg-amber-500"}`}>
@@ -70,11 +77,11 @@ const PropertyCard: React.FC<{ property: any }> = ({ property }) => {
                 </p>
 
                 <div className="grid grid-cols-3 gap-2 py-4 border-y border-gray-50 dark:border-gray-700 mb-6">
-                    <div className="flex flex-col items-center border-e border-gray-100">
+                    <div className="flex flex-col items-center border-e border-gray-100 dark:border-gray-700">
                         <CiRuler className="text-sky-600 mb-1" size={20} />
                         <span className="text-xs font-bold">{property.area} {labels.area}</span>
                     </div>
-                    <div className="flex flex-col items-center border-e border-gray-100">
+                    <div className="flex flex-col items-center border-e border-gray-100 dark:border-gray-700">
                         <LuBedSingle className="text-sky-600 mb-1" size={20} />
                         <span className="text-xs font-bold">{property.rooms} {labels.rooms}</span>
                     </div>
@@ -86,7 +93,7 @@ const PropertyCard: React.FC<{ property: any }> = ({ property }) => {
 
                 <div className={`flex items-center justify-between mt-auto ${isAr ? "flex-row-reverse" : ""}`}>
                     <div>
-                        <span className="text-[10px] text-gray-400 font-black block">{labels.price}</span>
+                        <span className="text-[10px] text-gray-400 font-black block uppercase">{labels.price}</span>
                         <div className="text-xl font-black text-sky-700 dark:text-sky-400">
                             {property.price?.toLocaleString()} <span className="text-xs">{labels.currency}</span>
                         </div>

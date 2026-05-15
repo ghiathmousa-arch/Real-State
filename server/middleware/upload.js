@@ -1,61 +1,78 @@
-const multer = require("multer"); // مكتبة استقبال الملفات من الـ Form
-const path = require("path"); // للتعامل مع مسارات المجلدات
-const fs = require("fs"); // للتحكم بالملفات (إنشاء مجلد uploads)
-const sharp = require("sharp"); // المكتبة الأساسية لضغط الصور
-const { v4: uuidv4 } = require("uuid"); // لتوليد اسم عشوائي فريد لكل صورة
+const multer = require("multer");
+const path = require("path");
+const sharp = require("sharp");
+const { v4: uuidv4 } = require("uuid");
+const cloudinary = require("cloudinary").v2;
 
-// إعداد التخزين في الذاكرة المؤقتة (RAM) بدلاً من الهاردسك لتجنب حفظ الصور الأصلية الكبيرة
+// ── إعداد Cloudinary ──────────────────────────────────────────────────────────
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// ── إعداد Multer (تخزين مؤقت بالـ RAM) ───────────────────────────────────────
 const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
-  limits: { fileSize: 7 * 1024 * 1024 }, // أقصى حجم مسموح 7 ميجا بايت
+  limits: { fileSize: 7 * 1024 * 1024 }, // أقصى حجم 7 ميجا
   fileFilter: (req, file, cb) => {
-    const allowed = /jpeg|jpg|png|gif|webp/; // اللواحق المسموح بها
+    const allowed = /jpeg|jpg|png|gif|webp/;
     const isMimetype = allowed.test(file.mimetype);
     const isExtname = allowed.test(path.extname(file.originalname).toLowerCase());
 
     if (isMimetype && isExtname) {
-      cb(null, true); // اقبل الملف إذا كان صورة
+      cb(null, true);
     } else {
-      cb(new Error("يرجى رفع صور فقط بلاحقة مدعومة")); // ارفض الملف إذا كان شيئاً آخر
+      cb(new Error("يرجى رفع صور فقط بلاحقة مدعومة"));
     }
-  }
+  },
 });
 
-// وظيفة ضغط الصور وتحويلها لصيغة WebP
+// ── ضغط الصور ورفعها على Cloudinary ─────────────────────────────────────────
 const compressImages = async (req, res, next) => {
-  // إذا لم يرفع المستخدم أي صور، ننشئ مصفوفة فارغة ونكمل العمل (حتى لا يتوقف السيرفر)
   if (!req.files || req.files.length === 0) {
     req.compressedImages = [];
     return next();
   }
 
-  const uploadDir = path.join(__dirname, "../uploads");
-  // إنشاء المجلد إذا لم يكن موجوداً على السيرفر
-  if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-
-  req.compressedImages = []; // مصفوفة لتخزين الروابط التي ستذهب لقاعدة البيانات
+  req.compressedImages = [];
 
   try {
-    // معالجة جميع الصور المرفوعة في وقت واحد لسرعة الاستجابة
     await Promise.all(
       req.files.map(async (file) => {
-        const fileName = `${uuidv4()}.webp`; // تحويل اسم الصورة لاسم فريد وصيغة WebP الخفيفة
-        const filePath = path.join(uploadDir, fileName); // المسار الكامل للملف على الجهاز
+        // ضغط الصورة بـ sharp وتحويلها WebP في الذاكرة
+        const compressedBuffer = await sharp(file.buffer)
+          .resize(1200, null, { withoutEnlargement: true })
+          .webp({ quality: 75 })
+          .toBuffer();
 
-        await sharp(file.buffer) // قراءة الملف من الذاكرة المؤقتة
-          .resize(1200, null, { withoutEnlargement: true }) // تصغير العرض لـ 1200 بكسل إذا كانت الصورة ضخمة
-          .webp({ quality: 75 }) // ضغط الجودة لـ 75% (توازن ممتاز بين الحجم والوضوح)
-          .toFile(filePath); // حفظ النسخة المضغوطة فقط في مجلد uploads
+        // رفع الصورة المضغوطة مباشرة على Cloudinary
+        const result = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            {
+              folder: "real-state",           // مجلد على Cloudinary
+              public_id: uuidv4(),            // اسم فريد
+              resource_type: "image",
+              format: "webp",
+            },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          );
+          stream.end(compressedBuffer);
+        });
 
-        req.compressedImages.push(`/uploads/${fileName}`); // إضافة الرابط للمصفوفة
+        req.compressedImages.push(result.secure_url); // رابط HTTPS دائم من Cloudinary
       })
     );
-    next(); // الانتقال للمرحلة التالية (حفظ البيانات في الداتابيز)
+
+    next();
   } catch (error) {
     res.status(500).json({ error: "فشلت عملية معالجة الصور: " + error.message });
   }
 };
 
-module.exports = { upload, compressImages }; // تصدير الأدوات لاستخدامها في الراوتس
+module.exports = { upload, compressImages };
