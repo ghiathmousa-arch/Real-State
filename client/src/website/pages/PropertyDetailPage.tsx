@@ -13,7 +13,6 @@ import { PiBathtub } from "react-icons/pi";
 import { TbCheck } from "react-icons/tb";
 import PropertySlider from "../components/Propertyslider/Propertyslider";
 
-
 const PropertyDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -27,6 +26,7 @@ const PropertyDetailPage: React.FC = () => {
   const [liked, setLiked] = useState(false);
   const API_URL = import.meta.env.VITE_API_URL;
   const BASE_URL = API_URL?.replace("/api", "");
+
   // ── جلب العقار + العقارات المشابهة ──
   useEffect(() => {
     const fetchData = async () => {
@@ -103,8 +103,9 @@ const PropertyDetailPage: React.FC = () => {
     : property.featuresEn;
   const isBuy = property.type === "buy";
 
+  // ✅ التعديل الذكي لفحص الروابط (Cloudinary vs Local) لضمان عدم تشوه الرابط
   const images: string[] = property.images?.length
-    ? property.images.map((img: string) => `${BASE_URL}${img}`)
+    ? property.images.map((img: string) => img.startsWith("http") ? img : `${BASE_URL}${img}`)
     : ["https://placehold.co/800x500/e2e8f0/94a3b8?text=No+Image"];
 
   const BackIcon = ar ? LuArrowRight : LuArrowLeft;
@@ -129,7 +130,7 @@ const PropertyDetailPage: React.FC = () => {
 
         {/* ════════════════════════════════
                     معرض الصور
-                ════════════════════════════════ */}
+        ════════════════════════════════ */}
         <div className="relative rounded-2xl overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800"
           style={{ height: "420px" }}>
           <img src={images[activeImg]} alt={title}
@@ -201,7 +202,7 @@ const PropertyDetailPage: React.FC = () => {
 
         {/* ════════════════════════════════
                     العنوان والسعر
-                ════════════════════════════════ */}
+        ════════════════════════════════ */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 mb-4">
           <div className={`flex items-start justify-between gap-4 flex-wrap ${ar ? "flex-row-reverse" : ""}`}>
             <div className={ar ? "text-right" : "text-left"}>
@@ -230,7 +231,7 @@ const PropertyDetailPage: React.FC = () => {
 
         {/* ════════════════════════════════
                     إحصائيات
-                ════════════════════════════════ */}
+        ════════════════════════════════ */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
           {[
             { icon: <CiRuler size={22} />, label: ar ? "المساحة" : "Area", value: `${property.area} ${ar ? "م²" : "m²"}` },
@@ -249,7 +250,7 @@ const PropertyDetailPage: React.FC = () => {
 
         {/* ════════════════════════════════
                     الوصف
-                ════════════════════════════════ */}
+        ════════════════════════════════ */}
         {description && (
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 mb-4">
             <h2 className="font-bold text-gray-800 dark:text-white text-lg mb-3">
@@ -263,7 +264,7 @@ const PropertyDetailPage: React.FC = () => {
 
         {/* ════════════════════════════════
                     المميزات
-                ════════════════════════════════ */}
+        ════════════════════════════════ */}
         {features?.length > 0 && (
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 mb-4">
             <h2 className="font-bold text-gray-800 dark:text-white text-lg mb-4">
@@ -284,7 +285,7 @@ const PropertyDetailPage: React.FC = () => {
 
         {/* ════════════════════════════════
                     معلومات سريعة
-                ════════════════════════════════ */}
+        ════════════════════════════════ */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 mb-10">
           <h3 className="font-bold text-gray-700 dark:text-gray-300 text-sm mb-3">
             {ar ? "معلومات سريعة" : "Quick Info"}
@@ -304,9 +305,7 @@ const PropertyDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* ════════════════════════════════
-                    عقارات مشابهة — السلايدر ✅
-                ════════════════════════════════ */}
+        {/* ── عقارات مشابهة ── */}
         {similar.length > 0 && (
           <div className="mb-6">
             <PropertySlider

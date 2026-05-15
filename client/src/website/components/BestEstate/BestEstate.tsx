@@ -2,13 +2,16 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
 import PropertyCard from "../PropetyCards";
+
 const BestEstate: React.FC = () => {
     const { t, i18n } = useTranslation();
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const API_URL = import.meta.env.VITE_API_URL;
+    // استخراج الدومين الأساسي في حال وجود صور محلية قديمة
     const BASE_URL = API_URL?.replace("/api", "");
+
     useEffect(() => {
         const fetchFeaturedProperties = async () => {
             try {
@@ -23,7 +26,7 @@ const BestEstate: React.FC = () => {
             }
         };
         fetchFeaturedProperties();
-    }, []);
+    }, [API_URL]);
 
     return (
         <section className="py-16 px-6 bg-gray-50 dark:bg-gray-900/50" id="featuredProperties">
@@ -53,9 +56,19 @@ const BestEstate: React.FC = () => {
                     <>
                         {/* عرض أول 3 عقارات فقط بدون ترقيم */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            {properties.slice(0, 3).map((item: any) => (
-                                <PropertyCard key={item._id} property={item} />
-                            ))}
+                            {properties.slice(0, 3).map((item: any) => {
+                                // 🛠️ الفحص الذكي للروابط قبل تمريرها للمكوّن لضمان عدم تشوه الرابط
+                                const processedImages = item.images?.map((img: string) =>
+                                    img.startsWith("http") ? img : `${BASE_URL}${img}`
+                                ) || [];
+
+                                // نمرر البيانات للكرت مع مصفوفة الصور بعد معالجتها وتصحيحها
+                                const updatedItem = { ...item, images: processedImages };
+
+                                return (
+                                    <PropertyCard key={item._id} property={updatedItem} />
+                                );
+                            })}
                         </div>
 
                         {/* رسالة في حال عدم وجود عقارات */}

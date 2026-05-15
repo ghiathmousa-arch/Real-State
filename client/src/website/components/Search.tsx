@@ -10,16 +10,17 @@ const Search = () => {
     const [cities, setCities] = useState<string[]>([]);
     const [categories, setCategories] = useState<string[]>([]);
 
-    // 💠 التعديل 1: جلب رابط الـ API من متغيرات البيئة
+    // 💠 جلب رابط الـ API من متغيرات البيئة
     const API_BASE_URL = import.meta.env.VITE_API_URL;
 
     useEffect(() => {
-        // 💠 التعديل 2: تحديث روابط الـ fetch لتكون ديناميكية
+        // 🛠️ تم التعديل هنا: إضافة /api/ قبل cities ليصبح الرابط صحيحاً
         fetch(`${API_BASE_URL}/api/cities`)
             .then(res => res.json())
             .then(data => setCities(data))
             .catch(err => console.error("Error fetching cities:", err));
 
+        // 🛠️ تم التعديل هنا: إضافة /api/ قبل categories ليصبح الرابط صحيحاً
         fetch(`${API_BASE_URL}/api/categories`)
             .then(res => res.json())
             .then(data => setCategories(data))
