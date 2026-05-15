@@ -4,11 +4,14 @@ const sharp = require("sharp");
 const { v4: uuidv4 } = require("uuid");
 const cloudinary = require("cloudinary").v2;
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+// الحل: وضع الإعدادات داخل دالة أو التأكد من تنظيف القيم
+const configureCloudinary = () => {
+  cloudinary.config({
+    cloud_name: (process.env.CLOUDINARY_CLOUD_NAME || "").trim(),
+    api_key: (process.env.CLOUDINARY_API_KEY || "").trim(),
+    api_secret: (process.env.CLOUDINARY_API_SECRET || "").trim(),
+  });
+};
 
 const storage = multer.memoryStorage();
 
@@ -25,6 +28,9 @@ const upload = multer({
 });
 
 const compressImages = async (req, res, next) => {
+  // استدعاء الإعداد هنا يضمن أن متغيرات البيئة قد تم تحميلها بالفعل
+  configureCloudinary();
+
   if (!req.files || req.files.length === 0) {
     req.compressedImages = [];
     return next();
@@ -42,8 +48,20 @@ const compressImages = async (req, res, next) => {
 
         const result = await new Promise((resolve, reject) => {
           const stream = cloudinary.uploader.upload_stream(
-            { folder: "real-state", public_id: uuidv4(), resource_type: "image", format: "webp" },
-            (error, result) => { if (error) reject(error); else resolve(result); }
+            {
+              folder: "real-state",
+              public_id: uuidv4(),
+              resource_type: "image",
+              format: "webp"
+            },
+            (error, result) => {
+              if (error) {
+                console.error("Cloudinary Upload Error:", error);
+                reject(error);
+              } else {
+                resolve(result);
+              }
+            }
           );
           stream.end(compressedBuffer);
         });
