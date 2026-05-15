@@ -30,7 +30,11 @@ const upload = multer({
 const compressImages = async (req, res, next) => {
   // استدعاء الإعداد هنا يضمن أن متغيرات البيئة قد تم تحميلها بالفعل
   configureCloudinary();
-
+  console.log("Cloudinary config:", {
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET?.slice(0, 5) + "..."
+  });
   if (!req.files || req.files.length === 0) {
     req.compressedImages = [];
     return next();
@@ -73,6 +77,8 @@ const compressImages = async (req, res, next) => {
   } catch (error) {
     res.status(500).json({ error: "فشلت عملية معالجة الصور: " + error.message });
   }
+
+
 };
 
 module.exports = { upload, compressImages };

@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 const path = require("path");
 
 // 1. يجب أن يكون هذا السطر في القمة تماماً قبل استدعاء أي Router
-require("dotenv").config();
+require("dotenv").config({ path: __dirname + "/.env" });
 
 const connectDB = require("./config/db");
 
