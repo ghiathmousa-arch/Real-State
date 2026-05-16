@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { MdWarning, MdClose } from "react-icons/md";
 
 interface Props {

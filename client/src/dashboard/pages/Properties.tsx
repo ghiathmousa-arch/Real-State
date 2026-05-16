@@ -4,6 +4,10 @@ import { useEffect, useState, useMemo, useCallback } from "react"
 import StatCard from "../components/StatCard/StatCard"
 import PropertiesTable from "../components/PropertiesTable/PropertiesTable"
 
+const API_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = API_URL?.replace("/api", "");
+
+
 const Properties = () => {
   const [propertiesList, setPropertiesList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,7 +22,7 @@ const Properties = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/properties");
+      const res = await fetch(`${BASE_URL}/api/properties`);
       const data = await res.json();
 
       // التأكد من أن البيانات مصفوفة

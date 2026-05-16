@@ -4,6 +4,9 @@ import { MdCloudUpload, MdClose, MdSave } from 'react-icons/md'
 import Header from '../Header/Header'
 import SuccessModal from '../SuccessModal/SuccessModal'
 
+const API_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = API_URL?.replace("/api", "");
+
 const CITIES = [
   "دمشق", "ريف دمشق", "حلب", "ريف حلب", "حمص",
   "حماة", "اللاذقية", "طرطوس", "إدلب", "درعا",
@@ -84,7 +87,7 @@ const AddProperty = () => {
       formData.append('featuresEn', featuresEn.join(','))
       files.forEach(file => formData.append('images', file))
 
-      const res = await fetch("http://localhost:5000/api/properties", {
+      const res = await fetch(`${BASE_URL}/api/properties`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData

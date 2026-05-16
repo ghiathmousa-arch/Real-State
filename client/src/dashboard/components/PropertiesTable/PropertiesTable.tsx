@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { MdSearch, MdLocationOn, MdChevronLeft, MdChevronRight, MdHomeWork } from "react-icons/md";
+import { MdSearch, MdChevronLeft, MdChevronRight, MdHomeWork } from "react-icons/md";
 import PropertyActions from '../PropertyActions/PropertyActions';
 
 interface Property {
@@ -13,6 +13,11 @@ interface Props {
   refreshData: () => void;
 }
 
+// جلب رابط الـ API الأساسي من متغيرات البيئة
+const API_URL = import.meta.env.VITE_API_URL || "";
+// تنظيف الرابط للحصول على رابط السيرفر الأساسي للملفات والصور (بدون /api)
+const BASE_URL = API_URL.replace(/\/api\/?$/, "");
+
 const CITIES = ["الكل", "دمشق", "حلب", "طرطوس", "اللاذقية", "حماة"]
 
 const PropertiesTable = ({ data, loading, refreshData }: Props) => {
@@ -20,7 +25,6 @@ const PropertiesTable = ({ data, loading, refreshData }: Props) => {
   const [filterCity, setFilterCity] = useState("الكل")
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 5
-  const BACKEND_URL = "http://localhost:5000"
 
   const filteredData = useMemo(() => {
     return (data || []).filter(item => {
@@ -58,13 +62,14 @@ const PropertiesTable = ({ data, loading, refreshData }: Props) => {
               className={`px-3 py-1.5 rounded-xl text-[9px] font-black transition-all ${filterCity === city ? "bg-[#0f2d4a] text-white shadow-md shadow-blue-900/10" : "bg-white border border-gray-100 text-gray-400 hover:bg-gray-50"
                 }`}
             >
-              {city}
+              {city
+}
             </button>
           ))}
         </div>
       </div>
 
-      {/* الجدول الذكي - بدون سكرول وبدون تداخل */}
+      {/* الجدول الذكي */}
       <div className="bg-white rounded-[1.5rem] shadow-sm border border-gray-50 overflow-hidden w-full">
         <table className="w-full text-right border-collapse">
           <thead>
@@ -81,15 +86,21 @@ const PropertiesTable = ({ data, loading, refreshData }: Props) => {
               <tr><td colSpan={5} className="p-12 text-center text-[10px] font-bold text-gray-300 animate-pulse">جاري جلب البيانات...</td></tr>
             ) : (
               currentData.map((p) => {
-                const firstImg = p.images?.find(img => img && !img.includes('undefined'))
+                const firstImg = p.images?.find(img => img && !img.includes('undefined'));
+
+                // بناء رابط الصورة البرمجي الآمن (يتعامل مع السلاش الزائد أو روابط الـ كاملة البديلة)
+                const imgSrc = firstImg
+                  ? (firstImg.startsWith('http') ? firstImg : `${BASE_URL}/${firstImg.replace(/^\//, '')}`)
+                  : null;
+
                 return (
                   <tr key={p._id} className="hover:bg-blue-50/10 transition-colors group">
-                    {/* عمود العقار: مرن (يتصغر عند الحاجة) */}
+                    {/* عمود العقار */}
                     <td className="px-4 py-4 overflow-hidden">
                       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                         <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg overflow-hidden shrink-0 border border-gray-100 bg-gray-50 flex items-center justify-center">
-                          {firstImg ? (
-                            <img src={`${BACKEND_URL}${firstImg}`} className="w-full h-full object-cover" alt="" />
+                          {imgSrc ? (
+                            <img src={imgSrc} className="w-full h-full object-cover" alt={p.title} />
                           ) : (
                             <MdHomeWork size={16} className="text-gray-300" />
                           )}
@@ -105,12 +116,12 @@ const PropertiesTable = ({ data, loading, refreshData }: Props) => {
                       </div>
                     </td>
 
-                    {/* الموقع: يظهر فقط في الشاشات الكبيرة */}
+                    {/* الموقع */}
                     <td className="px-2 py-4 text-center hidden md:table-cell">
                       <span className="text-[10px] font-bold text-gray-500">{p.city}</span>
                     </td>
 
-                    {/* السعر: يأخذ مساحة محددة لمنع الانهيار */}
+                    {/* السعر */}
                     <td className="px-2 py-4 text-center shrink-0">
                       <div className="flex flex-col items-center justify-center whitespace-nowrap">
                         <span className="text-[10px] sm:text-[11px] font-black text-blue-600">
@@ -125,7 +136,7 @@ const PropertiesTable = ({ data, loading, refreshData }: Props) => {
                       <span className={`w-1.5 h-1.5 inline-block rounded-full ${p.status === 'active' ? 'bg-green-500' : 'bg-gray-300'}`}></span>
                     </td>
 
-                    {/* التحكم: محمي بـ min-w-fit لضمان ظهور الأزرار دائماً */}
+                    {/* التحكم */}
                     <td className="px-4 py-4 text-left">
                       <div className="flex justify-end items-center">
                         <div className="min-w-fit">

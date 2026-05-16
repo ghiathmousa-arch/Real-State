@@ -25,12 +25,15 @@ const timeAgo = (dateStr: string) => {
   return `منذ ${days} يوم`
 }
 
+const API_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = API_URL?.replace("/api", "");
 const RecentActivities = () => {
+  
   const [activities, setActivities] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/properties/recent")
+    fetch(`${BASE_URL}/api/properties/recent`)
       .then(res => res.json())
       .then(data => setActivities(data))
       .catch(err => console.error(err))
@@ -78,10 +81,8 @@ const RecentActivities = () => {
         </div>
       )}
 
-      {/* زر عرض الكل */}
-      <button className="w-full mt-2 py-3 border border-gray-200 rounded-2xl text-sm font-bold text-blue-600 hover:bg-gray-50 transition">
-        عرض كافة النشاطات
-      </button>
+      
+    
 
     </div>
   )

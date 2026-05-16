@@ -5,7 +5,6 @@ import Header from "../components/Header/Header"
 import StatCard from "../components/StatCard/StatCard"
 import RecentActivities from "../components/RecentActivities/RecentActivities"
 
-
 interface Property {
   type: 'buy' | 'rent'
   isFeatured: boolean
@@ -47,13 +46,17 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     </div>
   )
 }
+const API_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = API_URL?.replace("/api", "");
+
 
 const Dashboard = () => {
+
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/properties")
+    fetch(`${BASE_URL}/api/properties`)
       .then(res => res.json())
       .then(data => setProperties(Array.isArray(data) ? data : data.data || []))
       .catch(err => console.error(err))
