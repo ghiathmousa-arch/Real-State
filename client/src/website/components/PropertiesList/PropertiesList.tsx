@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
 import { useNavigate, Link } from "react-router-dom";
@@ -6,6 +6,8 @@ import { IoLocationOutline } from "react-icons/io5";
 import { LuBedSingle, LuArrowLeft, LuArrowRight, LuArrowUpRight } from "react-icons/lu";
 import { CiRuler } from "react-icons/ci";
 import { PiBathtub } from "react-icons/pi";
+import { searchContext } from "../../Layout/Layout";
+
 
 const PER_PAGE = 8;
 
@@ -65,29 +67,40 @@ const PropertiesList: React.FC = () => {
     const ar = i18n.language === "ar";
     const navigate = useNavigate();
 
-    // 💠 تعريف رابط الـ API من متغيرات البيئة
     const API_URL = import.meta.env.VITE_API_URL;
 
-    const [properties, setProperties] = useState<any[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
+    // ← جلب البيانات المفلترة والحالة من الكونتكست
+    const { filteredData, loading: filterLoading, search } = useContext(searchContext);
+
+    const [allProperties, setAllProperties] = useState<any[]>([]);
+    const [loadingAll, setLoadingAll] = useState<boolean>(true);
     const [page, setPage] = useState(1);
 
+    // هل الفلتر نشط؟ (يعني المستخدم اختار شي)
+    const isFiltered = search.location !== "" || search.type !== "" || search.price !== "";
+
+    // العقارات المعروضة: إذا في فلتر نشط نعرض filteredData، وإلا نعرض الكل
+    const properties = isFiltered ? filteredData : allProperties;
+    const loading = isFiltered ? filterLoading : loadingAll;
+
+    // جلب كل العقارات مرة واحدة عند أول تحميل
     useEffect(() => {
         const fetchProperties = async () => {
             try {
-                setLoading(true);
+                setLoadingAll(true);
                 const response = await axios.get(`${API_URL}/api/properties`);
-                setProperties(Array.isArray(response.data) ? response.data : []);
+                setAllProperties(Array.isArray(response.data) ? response.data : []);
             } catch (err) {
                 console.error("Error fetching:", err);
             } finally {
-                setLoading(false);
+                setLoadingAll(false);
             }
         };
         fetchProperties();
     }, [API_URL]);
 
-    useEffect(() => { setPage(1); }, [i18n.language]);
+    // إعادة الصفحة للأولى عند تغيير الفلتر أو اللغة
+    useEffect(() => { setPage(1); }, [search, i18n.language]);
 
     const totalPages = Math.ceil(properties.length / PER_PAGE);
     const currentItems = properties.slice((page - 1) * PER_PAGE, page * PER_PAGE);
@@ -119,7 +132,8 @@ const PropertiesList: React.FC = () => {
                         <span className="w-5 h-px bg-sky-500 inline-block" />
                     </span>
                     <h1 className="text-2xl md:text-4xl font-extrabold text-gray-800 dark:text-white leading-tight">
-                        {t("properties.allEstates")}
+                        {/* عنوان يتغير حسب حالة الفلتر */}
+                        {isFiltered ? (ar ? "نتائج البحث" : "Search Results") : t("properties.allEstates")}
                         <span className="ms-3 align-middle text-sm font-semibold px-2.5 py-1 rounded-full bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400">
                             {properties.length}
                         </span>
@@ -142,12 +156,9 @@ const PropertiesList: React.FC = () => {
                             const title = ar ? property.title : (property.titleEn || property.title);
                             const city = ar ? property.city : (property.cityEn || property.city);
 
-                            // 🛠️ التعديل الذكي لعرض الصور: يتعامل مع روابط Cloudinary المباشرة والروابط المحلية النسبية معاً
                             let imgSrc = "https://placehold.co/400x280/e2e8f0/94a3b8?text=No+Image";
-
                             if (property.images && property.images.length > 0) {
                                 const firstImg = property.images[0];
-                                // إذا كان الرابط يبدأ بـ http (رابط Cloudinary كامل)، نأخذه كما هو، وإلا ندمجه مع API_URL
                                 imgSrc = firstImg.startsWith("http") ? firstImg : `${API_URL}${firstImg}`;
                             }
 
@@ -200,7 +211,10 @@ const PropertiesList: React.FC = () => {
                 </>
             ) : (
                 <div className="text-center py-16 text-gray-400 dark:text-gray-500">
-                    {t("properties.noPropertiesFound")}
+                    {isFiltered
+                        ? (ar ? "لا توجد نتائج تطابق بحثك" : "No results match your search")
+                        : t("properties.noPropertiesFound")
+                    }
                 </div>
             )}
         </section>
