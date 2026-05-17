@@ -10,7 +10,9 @@ import PropertySlider from "../Propertyslider/Propertyslider";
 
 const PER_PAGE = 12;
 
+// ✅ التصحيح: API_URL يحتوي على /api مسبقاً من متغير البيئة
 const API_URL = import.meta.env.VITE_API_URL;
+// BASE_URL للصور المحلية فقط (مش Cloudinary)
 const BASE_URL = API_URL?.replace("/api", "");
 
 // ── Pagination ────────────────────────────────────────────────────────────────
@@ -84,7 +86,8 @@ const AllPropertiesPage: React.FC = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`${API_URL}/properties`); // ✅ Railway
+        // ✅ التصحيح: API_URL يحتوي /api مسبقاً فلا نكررها
+        const res = await axios.get(`${API_URL}/api/properties`);
         const data = Array.isArray(res.data) ? res.data : [];
         setAllProperties(data);
         setFiltered(data);
@@ -186,9 +189,16 @@ const AllPropertiesPage: React.FC = () => {
               {currentItems.map(property => {
                 const title = ar ? property.title : (property.titleEn || property.title);
                 const city = ar ? property.city : (property.cityEn || property.city);
-                const imgSrc = property.images?.length > 0
-                  ? `${BASE_URL}${property.images[0]}` // ✅ Railway
+
+                // ✅ التصحيح: نتحقق إذا كان الرابط Cloudinary (http) نأخذه مباشرة
+                // وإذا كان رابط محلي (/uploads/...) ندمجه مع BASE_URL
+                const firstImg = property.images?.[0];
+                const imgSrc = firstImg
+                  ? firstImg.startsWith("http")
+                    ? firstImg
+                    : `${BASE_URL}${firstImg}`
                   : "https://placehold.co/400x280/e2e8f0/94a3b8?text=No+Image";
+
                 const isBuy = property.type === "buy";
 
                 return (

@@ -10,17 +10,14 @@ const Search = () => {
     const [cities, setCities] = useState<string[]>([]);
     const [categories, setCategories] = useState<string[]>([]);
 
-    // 💠 جلب رابط الـ API من متغيرات البيئة
     const API_BASE_URL = import.meta.env.VITE_API_URL;
 
     useEffect(() => {
-        // 🛠️ تم التعديل هنا: إضافة /api/ قبل cities ليصبح الرابط صحيحاً
         fetch(`${API_BASE_URL}/api/cities`)
             .then(res => res.json())
             .then(data => setCities(data))
             .catch(err => console.error("Error fetching cities:", err));
 
-        // 🛠️ تم التعديل هنا: إضافة /api/ قبل categories ليصبح الرابط صحيحاً
         fetch(`${API_BASE_URL}/api/categories`)
             .then(res => res.json())
             .then(data => setCategories(data))
@@ -32,6 +29,15 @@ const Search = () => {
         { name: 'type', label: t('search.type_label'), icon: '🏠', options: categories },
         { name: 'price', label: t('search.price_label'), icon: '💰', options: [t('search.price_options.low'), t('search.price_options.high')] },
     ];
+
+    // ← تطبيق البحث + scroll للنتائج
+    const handleSearch = () => {
+        setSearch(localOptions);
+        setTimeout(() => {
+            document.getElementById("PropertiesList")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 400);
+    };
 
     return (
         <div className="w-full max-w-5xl p-5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-3xl shadow-2xl flex flex-col md:flex-row items-end gap-4">
@@ -55,7 +61,7 @@ const Search = () => {
                 </div>
             ))}
             <button
-                onClick={() => setSearch(localOptions)}
+                onClick={handleSearch}
                 className="w-full md:w-auto flex justify-center items-center gap-3 text-white px-10 py-4 rounded-2xl bg-[#004E80] hover:bg-blue-700 active:scale-95 transition-all font-bold shadow-lg shadow-blue-900/20"
             >
                 <FaSearch /> {t('search.button')}
