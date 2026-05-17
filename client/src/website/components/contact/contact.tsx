@@ -6,7 +6,6 @@ const Contact: React.FC = () => {
     const { t, i18n } = useTranslation();
     const isAr = i18n.language === "ar";
 
-    // جلب الرابط من إعدادات البيئة
     const API_URL = import.meta.env.VITE_API_URL;
 
     const [formData, setFormData] = useState({
@@ -21,7 +20,7 @@ const Contact: React.FC = () => {
 
     const contactInfo = [
         { icon: <FaPhoneAlt />, title: t("contact.callMe"), value: "+963962840702" },
-        { icon: <FaEnvelope />, title: t("contact.emailMe"), value: "Syrianestate0.com" },
+        { icon: <FaEnvelope />, title: t("contact.emailMe"), value: "syrianestate0@gmail.com" }, // ← تم التصحيح
         { icon: <FaMapMarkerAlt />, title: t("contact.address"), value: "Damascus, Syria" },
     ];
 
@@ -35,7 +34,6 @@ const Contact: React.FC = () => {
         setStatus("loading");
 
         try {
-            // التعديل هنا: استخدام الرابط الديناميكي
             const response = await fetch(`${API_URL}/api/contact`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -59,7 +57,7 @@ const Contact: React.FC = () => {
 
     return (
         <section className="py-20 px-6 md:px-16 bg-white dark:bg-gray-800 transition-colors duration-300" id="contact">
-            {/* 💠 النافذة المنبثقة (Pop-up) */}
+            {/* النافذة المنبثقة */}
             {showModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity">
                     <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center transform scale-100 transition-transform">
@@ -94,7 +92,7 @@ const Contact: React.FC = () => {
             </div>
 
             <div className="grid md:grid-cols-2 gap-12">
-                {/* الجانب الأيسر - معلومات التواصل */}
+                {/* معلومات التواصل */}
                 <div className="flex flex-col gap-6">
                     {contactInfo.map((item, index) => (
                         <div key={index} className="flex items-center gap-4 p-5 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-transparent dark:border-gray-700 shadow-sm">
@@ -107,7 +105,7 @@ const Contact: React.FC = () => {
                     ))}
                 </div>
 
-                {/* الجانب الأيمن - الفورم */}
+                {/* الفورم */}
                 <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
                     <div className="grid md:grid-cols-2 gap-6">
                         <input
@@ -152,7 +150,7 @@ const Contact: React.FC = () => {
                     <button
                         type="submit"
                         disabled={status === "loading"}
-                        className={`bg-blue-600 hover:bg-blue-700 text-white font-bold px-10 py-4 rounded-xl w-full md:w-fit transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-200 dark:shadow-none`}
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-10 py-4 rounded-xl w-full md:w-fit transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-200 dark:shadow-none"
                     >
                         {status === "loading" ? (isAr ? "جاري الإرسال..." : "Sending...") : t("contact.sendBTN")}
                     </button>
