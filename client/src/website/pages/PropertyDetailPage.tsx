@@ -311,7 +311,7 @@ const PropertyDetailPage: React.FC = () => {
             <PropertySlider
               properties={similar}
               title={ar ? "عقارات مشابهة" : "Similar Properties"}
-              visibleCount={3}
+             
             />
           </div>
         )}
