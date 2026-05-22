@@ -1,5 +1,13 @@
 {
-  "version": 2,
-  "builds": [{ "src": "server/index.js", "use": "@vercel/node" }],
-  "routes": [{ "src": "/(.*)", "dest": "server/index.js" }]
+  "buildCommand": "cd client && npm install && npm run build",
+  "outputDirectory": "client/dist",
+  "env": {
+    "VITE_API_URL": "https://real-state-production-dc36.up.railway.app"
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
