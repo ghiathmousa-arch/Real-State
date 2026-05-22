@@ -7,7 +7,7 @@ interface Message {
   text: string
 }
 
-const FLASK_URL = "http://127.0.0.1:5001"
+const FLASK_URL = import.meta.env.VITE_CHATBOT_URL || "http://127.0.0.1:5001"
 
 const AiChat = () => {
   const [isOpen, setIsOpen] = useState(false)
