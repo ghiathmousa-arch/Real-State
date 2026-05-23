@@ -19,9 +19,24 @@ const Contact: React.FC = () => {
     const [showModal, setShowModal] = useState(false);
 
     const contactInfo = [
-        { icon: <FaPhoneAlt />, title: t("contact.callMe"), value: "+963962840702" },
-        { icon: <FaEnvelope />, title: t("contact.emailMe"), value: "syrianestate0@gmail.com" }, // ← تم التصحيح
-        { icon: <FaMapMarkerAlt />, title: t("contact.address"), value: "Damascus, Syria" },
+        {
+            icon: <FaPhoneAlt />,
+            title: t("contact.callMe"),
+            value: "+963962840702",
+            href: "https://wa.me/963962840702"
+        },
+        {
+            icon: <FaEnvelope />,
+            title: t("contact.emailMe"),
+            value: "syrianestate0@gmail.com",
+            href: "https://mail.google.com/mail/?view=cm&to=syrianestate0@gmail.com"
+        },
+        {
+            icon: <FaMapMarkerAlt />,
+            title: t("contact.address"),
+            value: "Damascus, Syria",
+            href: null
+        },
     ];
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -56,7 +71,10 @@ const Contact: React.FC = () => {
     };
 
     return (
-        <section className="py-20 px-6 md:px-16 bg-white dark:bg-gray-800 transition-colors duration-300" id="contact">
+        <section
+            className="py-20 px-6 md:px-16 bg-white dark:bg-gray-800 transition-colors duration-300 overflow-x-hidden"
+            id="contact"
+        >
             {/* النافذة المنبثقة */}
             {showModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity">
@@ -95,19 +113,25 @@ const Contact: React.FC = () => {
                 {/* معلومات التواصل */}
                 <div className="flex flex-col gap-6">
                     {contactInfo.map((item, index) => (
-                        <div key={index} className="flex items-center gap-4 p-5 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-transparent dark:border-gray-700 shadow-sm">
+                        <a
+                            key={index}
+                            href={item.href ?? undefined}
+                            target={item.href ? "_blank" : undefined}
+                            rel="noopener noreferrer"
+                            className={`flex items-center gap-4 p-5 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-transparent dark:border-gray-700 shadow-sm transition-all ${item.href ? "hover:shadow-md hover:border-blue-100 cursor-pointer" : "cursor-default"}`}
+                        >
                             <div className="bg-blue-500 text-white p-4 rounded-xl text-xl shrink-0">{item.icon}</div>
                             <div>
                                 <p className="text-xs text-gray-400 font-bold mb-1 uppercase">{item.title}</p>
                                 <p className="font-bold text-gray-700 dark:text-white leading-none">{item.value}</p>
                             </div>
-                        </div>
+                        </a>
                     ))}
                 </div>
 
                 {/* الفورم */}
                 <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
-                    <div className="grid md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <input
                             type="text"
                             placeholder={t("contact.fullName")}
@@ -150,13 +174,13 @@ const Contact: React.FC = () => {
                     <button
                         type="submit"
                         disabled={status === "loading"}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-10 py-4 rounded-xl w-full md:w-fit transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-200 dark:shadow-none"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl w-full transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-200 dark:shadow-none"
                     >
                         {status === "loading" ? (isAr ? "جاري الإرسال..." : "Sending...") : t("contact.sendBTN")}
                     </button>
                 </form>
             </div>
-        </section>
+        </section >
     );
 };
 

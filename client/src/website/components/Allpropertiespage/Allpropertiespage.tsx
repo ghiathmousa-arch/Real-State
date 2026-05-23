@@ -129,7 +129,7 @@ const AllPropertiesPage: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 ${ar ? "text-right" : "text-left"}`}>
+    <div className={`min-h-screen p-8 bg-gray-50 dark:bg-gray-900 ${ar ? "text-right" : "text-left"}`}>
 
       {/* ── Hero ── */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-6 py-10">
