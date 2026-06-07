@@ -4,11 +4,10 @@ import { MdDarkMode, MdLightMode } from "react-icons/md";
 import { GrLanguage } from "react-icons/gr";
 import { useTranslation } from "react-i18next";
 import { GiHamburgerMenu } from "react-icons/gi";
+import { useNavigate, useLocation } from "react-router-dom";
 
-//  نوع الثيم (فاتح / غامق)
 type Theme = "light" | "dark";
 
-//  أسماء السكاشن (لازم تطابق id بالصفحة)
 type Section =
   | "home"
   | "featuredProperties"
@@ -16,19 +15,16 @@ type Section =
   | "ourServices"
   | "contact";
 
-//  props القادمة من App
 interface NavBarProps {
-  theme: Theme; // الثيم الحالي
-  setTheme: React.Dispatch<React.SetStateAction<Theme>>; // تغيير الثيم
+  theme: Theme;
+  setTheme: React.Dispatch<React.SetStateAction<Theme>>;
 }
 
-//  نوع عنصر من عناصر النافبار
 type NavItem = {
-  translationKey: string; // مفتاح الترجمة
-  to: `#${Section}`; // الرابط (#section)
+  translationKey: string;
+  to: `#${Section}`;
 };
 
-// 📌 روابط النافبار
 const navItems: NavItem[] = [
   { translationKey: "nav.home", to: "#home" },
   { translationKey: "nav.featured", to: "#featuredProperties" },
@@ -39,59 +35,79 @@ const navItems: NavItem[] = [
 
 const NavBar: React.FC<NavBarProps> = ({ theme, setTheme }) => {
   const { t, i18n } = useTranslation();
-
-  //  العنصر النشط (يتغير مع السكرول)
+  const navigate = useNavigate();
+  const location = useLocation();
   const [active, setActive] = useState<string>("home");
-
-  //  حالة قائمة الموبايل (فتح/إغلاق)
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
-  //  مراقبة السكاشن (Scroll Spy)
+  // Scroll Spy (بس بالصفحة الرئيسية)
   useEffect(() => {
-    const sections = document.querySelectorAll("section[id]");
+    if (location.pathname !== "/") return;
 
+    const sections = document.querySelectorAll("section[id]");
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            setActive(entry.target.id); // تحديث العنصر النشط
+            setActive(entry.target.id);
           }
         });
       },
-      { threshold: 0.6 } // نسبة ظهور السكشن
+      { threshold: 0.4 }
     );
 
     sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, [location.pathname]);
 
-    return () => observer.disconnect(); // تنظيف
-  }, []);
+  const handleNavClick = (to: string) => {
+    if (location.pathname !== "/") {
+      navigate("/", { state: { scrollTo: to } });
+    } else {
+      const element = document.querySelector(to);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+    setIsOpen(false);
+  };
 
   return (
     <div
-      //  تغيير اتجاه الصفحة حسب اللغة
       dir={i18n.language === "ar" ? "rtl" : "ltr"}
       className="fixed top-0 left-0 w-full flex justify-between z-50 items-center bg-white/95 backdrop-blur-md pt-2 px-4 dark:bg-gray-800 dark:text-white"
     >
-      {/*  اللوجو */}
-      <img src={Logo} alt="logo" className="max-h-12 cursor-pointer" />
+      {/* ✅ اللوجو - بكبس عليه بيرجع عالرئيسية */}
+      <img
+        src={Logo}
+        alt="logo"
+        className="max-h-12 cursor-pointer"
+        onClick={() => {
+          navigate("/");
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          setIsOpen(false);
+        }}
+      />
 
-      {/*  قائمة الديسكتوب */}
+      {/* قائمة الديسكتوب */}
       <div className="hidden md:flex items-center gap-6">
         {navItems.map((item) => (
-          <a
+          <button
             key={item.to}
-            href={item.to}
-            className={`text-sm hover:text-accent ${item.to === `#${active}` ? "text-sky-500" : ""
-              }`}
+            onClick={() => handleNavClick(item.to)}
+            className={`text-sm hover:text-accent cursor-pointer bg-transparent border-none ${
+              item.to === `#${active}` && location.pathname === "/"
+                ? "text-sky-500"
+                : ""
+            }`}
           >
             {t(item.translationKey)}
-          </a>
+          </button>
         ))}
       </div>
 
-      {/*  أزرار الديسكتوب */}
+      {/* أزرار الديسكتوب */}
       <div className="hidden md:flex gap-2 items-center">
-        {/*  تغيير الثيم */}
         <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           className="text-2xl p-2"
@@ -99,7 +115,6 @@ const NavBar: React.FC<NavBarProps> = ({ theme, setTheme }) => {
           {theme === "dark" ? <MdLightMode /> : <MdDarkMode />}
         </button>
 
-        {/*  تغيير اللغة */}
         <button
           onClick={() => {
             const newLang = i18n.language === "ar" ? "en" : "ar";
@@ -112,7 +127,7 @@ const NavBar: React.FC<NavBarProps> = ({ theme, setTheme }) => {
         </button>
       </div>
 
-      {/* 📱 زر الموبايل */}
+      {/* زر الموبايل */}
       <button
         className="md:hidden text-2xl"
         onClick={() => setIsOpen((prev) => !prev)}
@@ -120,29 +135,28 @@ const NavBar: React.FC<NavBarProps> = ({ theme, setTheme }) => {
         <GiHamburgerMenu />
       </button>
 
-      {/*  قائمة الموبايل */}
+      {/* قائمة الموبايل */}
       {isOpen && (
         <div
-          className={`md:hidden fixed top-14 ${i18n.dir() === "rtl" ? "left-0" : "right-0"
-            } w-[70%] bg-white dark:bg-gray-800 flex flex-col text-center gap-4 px-4 pb-4 pt-4 shadow-lg rounded-lg`}
+          className={`md:hidden fixed top-14 ${
+            i18n.dir() === "rtl" ? "left-0" : "right-0"
+          } w-[70%] bg-white dark:bg-gray-800 flex flex-col text-center gap-4 px-4 pb-4 pt-4 shadow-lg rounded-lg`}
         >
-          {/*  الروابط */}
           {navItems.map((item) => (
-            <a
+            <button
               key={item.to}
-              href={item.to}
-              className={`text-sm ${item.to === `#${active}` ? "text-sky-500" : ""
-                }`}
-              onClick={() => setIsOpen(false)}
+              onClick={() => handleNavClick(item.to)}
+              className={`text-sm cursor-pointer bg-transparent border-none ${
+                item.to === `#${active}` && location.pathname === "/"
+                  ? "text-sky-500"
+                  : ""
+              }`}
             >
               {t(item.translationKey)}
-            </a>
+            </button>
           ))}
 
-          {/* ➖ فاصل */}
           <div className="border-t pt-3 flex justify-center gap-6">
-
-            {/* 🌙 زر الثيم (صار داخل القائمة) */}
             <button
               onClick={() => {
                 setTheme(theme === "dark" ? "light" : "dark");
@@ -153,7 +167,6 @@ const NavBar: React.FC<NavBarProps> = ({ theme, setTheme }) => {
               {theme === "dark" ? <MdLightMode /> : <MdDarkMode />}
             </button>
 
-            {/*  زر اللغة (صار داخل القائمة) */}
             <button
               onClick={() => {
                 const newLang = i18n.language === "ar" ? "en" : "ar";

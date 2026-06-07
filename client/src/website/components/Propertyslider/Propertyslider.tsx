@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
@@ -28,16 +28,40 @@ interface Props {
 const PropertySlider: React.FC<Props> = ({
   properties,
   title,
-  perPage = 3,
+  perPage: initialPerPage = 3,
 }) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const ar = i18n.language === "ar";
 
-  // 💠 التعديل 1: تعريف رابط الـ API من متغيرات البيئة
   const API_URL = import.meta.env.VITE_API_URL;
 
   const [index, setIndex] = useState(0);
+  const [perPage, setPerPage] = useState(initialPerPage);
+
+  // ✅ التعديل 1: responsive perPage حسب عرض الشاشة
+  useEffect(() => {
+    const handleResize = () => {
+      const w = window.innerWidth;
+      if (w < 640) {
+        setPerPage(1);                          // موبايل: بطاقة واحدة
+      } else if (w < 1024) {
+        setPerPage(Math.min(2, initialPerPage)); // تابلت: 2 كحد أقصى
+      } else {
+        setPerPage(initialPerPage);              // ديسكتوب: القيمة الأصلية
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [initialPerPage]);
+
+  // ✅ التعديل 2: إعادة ضبط الـ index لما يتغير perPage
+  useEffect(() => {
+    const max = Math.max(0, properties.length - perPage);
+    setIndex((i) => Math.min(i, max));
+  }, [perPage, properties.length]);
 
   if (!properties?.length) return null;
 
@@ -45,8 +69,8 @@ const PropertySlider: React.FC<Props> = ({
   const canPrev = index > 0;
   const canNext = index < maxIndex;
 
-  const prev = () => setIndex(i => Math.max(0, i - 1));
-  const next = () => setIndex(i => Math.min(maxIndex, i + 1));
+  const prev = () => setIndex((i) => Math.max(0, i - 1));
+  const next = () => setIndex((i) => Math.min(maxIndex, i + 1));
 
   const onLeft = ar ? next : prev;
   const onRight = ar ? prev : next;
@@ -57,14 +81,19 @@ const PropertySlider: React.FC<Props> = ({
     ? `${(index / perPage) * 100}%`
     : `-${(index / perPage) * 100}%`;
 
+  // ✅ التعديل 3: حساب العرض مع الـ gap
+  const GAP = 16; // px
+  const cardWidth = `calc(${100 / perPage}% - ${((perPage - 1) * GAP) / perPage}px)`;
+
   return (
     <div>
       {/* ── Header ── */}
       <div className={`flex items-center justify-between mb-5 ${ar ? "flex-row-reverse" : ""}`}>
-        {title
-          ? <h2 className="text-xl font-bold text-gray-800 dark:text-white">{title}</h2>
-          : <span />
-        }
+        {title ? (
+          <h2 className="text-xl font-bold text-gray-800 dark:text-white">{title}</h2>
+        ) : (
+          <span />
+        )}
 
         <div className="flex gap-2">
           <button
@@ -92,35 +121,51 @@ const PropertySlider: React.FC<Props> = ({
           className="flex transition-transform duration-500 ease-in-out"
           style={{ transform: `translateX(${translateX})` }}
         >
-          {properties.map(property => {
+          {properties.map((property, idx) => {
             const name = ar ? property.title : (property.titleEn || property.title);
             const city = ar ? property.city : (property.cityEn || property.city);
 
-            // 💠 التعديل 2: استخدام API_URL بدلاً من localhost لعرض الصور
             const imgSrc = property.images?.[0]
               ? `${API_URL}${property.images[0]}`
               : "https://placehold.co/400x280/e2e8f0/94a3b8?text=No+Image";
 
             const isBuy = property.type === "buy";
-            const cardWidth = `calc(${100 / perPage}% - ${((perPage - 1) * 16) / perPage}px)`;
+
+            // ✅ التعديل 4: نزيل الـ margin من آخر عنصر في المصفوفة
+            const isLastItem = idx === properties.length - 1;
+            const marginEnd = isLastItem ? "0px" : `${GAP}px`;
 
             return (
               <div
                 key={property._id}
                 onClick={() => navigate(`/properties/${property._id}`)}
-                style={{ minWidth: cardWidth, maxWidth: cardWidth, marginInlineEnd: "16px" }}
+                style={{
+                  minWidth: cardWidth,
+                  maxWidth: cardWidth,
+                  marginInlineEnd: marginEnd,
+                }}
                 className="group bg-white dark:bg-gray-700 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-600 hover:border-sky-200 dark:hover:border-sky-700 hover:shadow-lg hover:-translate-y-1 shadow-sm transition-all duration-300 cursor-pointer flex-shrink-0"
               >
                 <div className="relative h-44 overflow-hidden bg-gray-100 dark:bg-gray-600">
-                  <img src={imgSrc} alt={name} loading="lazy"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img
+                    src={imgSrc}
+                    alt={name}
+                    loading="lazy"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
                   <div className={`absolute top-2.5 flex gap-1.5 ${ar ? "left-2.5" : "right-2.5"}`}>
-                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full text-white shadow-sm ${isBuy ? "bg-sky-600" : "bg-amber-500"}`}>
+                    <span
+                      className={`text-xs font-bold px-2.5 py-1 rounded-full text-white shadow-sm ${
+                        isBuy ? "bg-sky-600" : "bg-amber-500"
+                      }`}
+                    >
                       {isBuy ? t("properties.sale") : t("properties.rent")}
                     </span>
                     {property.isFeatured && (
-                      <span className="text-xs font-bold px-2 py-1 rounded-full bg-emerald-500 text-white">★</span>
+                      <span className="text-xs font-bold px-2 py-1 rounded-full bg-emerald-500 text-white">
+                        ★
+                      </span>
                     )}
                   </div>
                 </div>
@@ -129,23 +174,34 @@ const PropertySlider: React.FC<Props> = ({
                   <h3 className="font-bold text-gray-800 dark:text-white text-sm leading-snug mb-1 line-clamp-1">
                     {name}
                   </h3>
-                  <div className={`flex items-center gap-1 text-gray-400 text-xs mb-3 ${ar ? "flex-row-reverse justify-end" : ""}`}>
+                  <div
+                    className={`flex items-center gap-1 text-gray-400 text-xs mb-3 ${
+                      ar ? "flex-row-reverse justify-end" : ""
+                    }`}
+                  >
                     <IoLocationOutline className="shrink-0" />
                     <span>{city}</span>
                   </div>
                   <div className="border-t border-gray-100 dark:border-gray-600 mb-3" />
-                  <div className={`flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mb-3 ${ar ? "flex-row-reverse" : ""}`}>
+                  <div
+                    className={`flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mb-3 ${
+                      ar ? "flex-row-reverse" : ""
+                    }`}
+                  >
                     <span className="flex items-center gap-1">
-                      <CiRuler className="text-sm" />{property.area} {t("properties.squareMeter")}
+                      <CiRuler className="text-sm" />
+                      {property.area} {t("properties.squareMeter")}
                     </span>
                     {(property.rooms ?? 0) > 0 && (
                       <span className="flex items-center gap-1">
-                        <LuBedSingle className="text-sm" />{property.rooms}
+                        <LuBedSingle className="text-sm" />
+                        {property.rooms}
                       </span>
                     )}
                     {(property.bathrooms ?? 0) > 0 && (
                       <span className="flex items-center gap-1">
-                        <PiBathtub className="text-sm" />{property.bathrooms}
+                        <PiBathtub className="text-sm" />
+                        {property.bathrooms}
                       </span>
                     )}
                   </div>
@@ -170,7 +226,11 @@ const PropertySlider: React.FC<Props> = ({
             <button
               key={i}
               onClick={() => setIndex(i)}
-              className={`h-1.5 rounded-full transition-all duration-300 ${i === index ? "w-6 bg-sky-600" : "w-1.5 bg-gray-300 dark:bg-gray-600 hover:bg-sky-300"}`}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                i === index
+                  ? "w-6 bg-sky-600"
+                  : "w-1.5 bg-gray-300 dark:bg-gray-600 hover:bg-sky-300"
+              }`}
             />
           ))}
         </div>

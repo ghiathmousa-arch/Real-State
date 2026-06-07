@@ -1,156 +1,248 @@
-// استيراد مكتبة React الأساسية
-import React from 'react';
-// استيراد الأيقونات اللازمة لتنسيق واجهة عرض تفاصيل العقار من مكتبة react-icons
+import React, { useState } from "react";
 import {
   MdClose, MdLocationOn, MdSquareFoot,
   MdAttachMoney, MdDescription, MdOutlineMeetingRoom,
-  MdLayers, MdMeetingRoom, MdCheckCircle, MdInfoOutline
+  MdMeetingRoom, MdCheckCircle, MdInfoOutline,
+  MdChevronLeft, MdChevronRight, MdBathtub,
+  MdCalendarToday, MdPerson, MdUpdate,
+  MdStar, MdHome, MdSell
 } from "react-icons/md";
 
-// تعريف واجهة الأنواع (Interface) لتحديد البيانات المستقبلة (Props) للمكون لضمان سلامة الكود وثباته (TypeScript)
 interface Props {
-  isOpen: boolean;        // حالة فتح أو إغلاق النافذة الجانبية المنبثقة
-  onClose: () => void;     // الدالة المسؤولة عن إغلاق النافذة
-  property: any;          // كائن يحتوي على جميع تفاصيل العقار المراد عرضه
-  onEditClick: () => void; // الدالة التي يتم استدعاؤها عند الضغط على زر التعديل لفتح مودال التعديل بشكل سلس
+  isOpen: boolean;
+  onClose: () => void;
+  property: any;
+  onEditClick: () => void;
 }
 
-// جلب رابط الـ API الأساسي من متغيرات البيئة لضمان التوافق التام بين التطوير المحلي والإنتاج (Railway)
 const API_URL = import.meta.env.VITE_API_URL || "";
-// تنظيف الرابط وحذف كلمة /api للحصول على الرابط الجذري الصافي للسيرفر لمعالجة مسارات صوَر العقارات بشكل صحيح
 const BASE_URL = API_URL.replace(/\/api\/?$/, "");
 
-// بناء مكون نافذة عرض تفاصيل العقار (PropertyDetailsModal)
 const PropertyDetailsModal = ({ isOpen, onClose, property, onEditClick }: Props) => {
-  // شرط وقائي: إذا كانت النافذة مغلقة أو بيانات العقار غير متوفرة، لا تقم برسم (Render) أي شيء في المتصفح
+  const [activeImg, setActiveImg] = useState(0);
+
   if (!isOpen || !property) return null;
 
-  // دالة مساعده لتنسيق الأرقام (مثل السعر) وإضافة فواصل الآلاف (مثال: 1,000,000) لتسهيل القراءة على المستخدم
-  const formatPrice = (price: number) => price?.toLocaleString('en-US');
+  const formatPrice = (price: number) => price?.toLocaleString("en-US");
+
+  // ✅ التحقق من الصور
+  const images: string[] = property.images?.length
+    ? property.images.map((img: string) =>
+      img.startsWith("http") ? img : `${BASE_URL}/${img.replace(/^\//, "")}`
+    )
+    : ["https://placehold.co/800x600/e2e8f0/94a3b8?text=No+Image"];
+
+  const nextImg = () => setActiveImg((i) => (i + 1) % images.length);
+  const prevImg = () => setActiveImg((i) => (i - 1 + images.length) % images.length);
+
+  // ✅ الحقول من الـ Schema فقط (بدون floor, isFurnished, ownership)
+  const stats = [
+    { label: "السعر", value: `${formatPrice(property.price)} ل.س`, icon: <MdAttachMoney size={20} />, color: "text-green-600", bg: "bg-green-50" },
+    { label: "المساحة", value: `${property.area} م²`, icon: <MdSquareFoot size={20} />, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "الغرف", value: property.rooms || "—", icon: <MdOutlineMeetingRoom size={20} />, color: "text-purple-600", bg: "bg-purple-50" },
+    { label: "الحمامات", value: property.bathrooms || "—", icon: <MdBathtub size={20} />, color: "text-cyan-600", bg: "bg-cyan-50" },
+    { label: "النوع", value: property.type === "buy" ? "للبيع" : "للإيجار", icon: <MdSell size={20} />, color: "text-amber-600", bg: "bg-amber-50" },
+    { label: "الفئة", value: property.category || "—", icon: <MdHome size={20} />, color: "text-indigo-600", bg: "bg-indigo-50" },
+  ];
+
+  // ✅ المميزات (features) من الـ Schema
+  const features = property.features || [];
+
+  // ✅ حالة العقار
+  const isActive = property.status === "active";
+  const isFeatured = property.isFeatured;
+
+  // ✅ تاريخ الإنشاء
+  const createdAt = property.createdAt
+    ? new Date(property.createdAt).toLocaleDateString("ar-SY")
+    : "—";
 
   return (
-    // الحاوية الرئيسية الثابتة (Fixed) لتغطية الشاشة بالكامل وضمان ظهور النافذة فوق جميع عناصر لوحة التحكم الأخرى
     <div className="fixed inset-0 z-[110] flex items-center justify-end">
+      {/* الخلفية */}
+      <div
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300"
+        onClick={onClose}
+      />
 
-      {/* الخلفية المظلمة الشفافة مع تأثير الضبابية الفاخر (Blur)، وعند الضغط عليها في أي مكان فارغ يتم إغلاق النافذة */}
-      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-500" onClick={onClose} />
+      {/* النافذة */}
+      <div className="relative bg-white dark:bg-gray-900 h-full w-full max-w-xl shadow-2xl animate-in slide-in-from-left duration-300 flex flex-col">
 
-      {/* القائمة أو النافذة الجانبية البيضاء التي تحتوي على تفاصيل العقار وتتحرك بسلاسة من اليمين/اليسار فور الفتح */}
-      <div className="relative bg-[#fcfdfe] h-full w-full max-w-xl shadow-2xl animate-in slide-in-from-left duration-500 border-r border-white/20 shadow-blue-900/20 flex flex-col">
-
-        {/* ---- 1. قسم الصورة العلوية (الهيدر) ---- */}
-        <div className="relative h-56 sm:h-80 w-full shrink-0">
-          {/* عرض الصورة الأولى للعقار ديناميكياً من السيرفر المرفوع، أو عرض صورة رمادية بديلة إذا لم يرفع المستخدم صوراً */}
+        {/* ═══════════════════ 1. معرض الصور ═══════════════════ */}
+        <div className="relative h-56 sm:h-72 w-full shrink-0 bg-gray-100 dark:bg-gray-800">
           <img
-            src={
-              property.images?.[0]
-                ? property.images[0].startsWith('http')
-                  ? property.images[0]
-                  : `${BASE_URL}/${property.images[0].replace(/^\//, '')}`
-                : 'https://via.placeholder.com/800x600'
-            }
+            src={images[activeImg]}
             className="w-full h-full object-cover"
             alt={property.title}
           />
-          {/* طبقة تدرج لوني أسود شفاف أسفل الصورة لضمان وضوح وقراءة النصوص البيضاء المكتوبة فوقها */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0f2d4a] via-transparent to-transparent opacity-90" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-          {/* زر الإغلاق (X) العائم أعلى اليمين مع تأثير ضبابي وتغيير الألوان بسلاسة عند حرك الماوس */}
-          <button onClick={onClose} className="absolute top-4 sm:top-6 right-4 sm:right-6 w-10 h-10 sm:w-12 sm:h-12 bg-white/10 backdrop-blur-xl text-white rounded-2xl flex items-center justify-center hover:bg-white hover:text-black transition-all shadow-xl">
-            <MdClose size={24} />
+          {/* زر الإغلاق */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-10 h-10 bg-white/20 backdrop-blur-md text-white rounded-xl flex items-center justify-center hover:bg-white hover:text-black transition-all shadow-lg z-10"
+          >
+            <MdClose size={22} />
           </button>
 
-          {/* حاوية النصوص المكتوبة فوق الصورة (التصنيف، الحالة، العنوان، الموقع) */}
-          <div className="absolute bottom-6 sm:bottom-8 right-4 sm:right-8 left-4 sm:left-8 text-white text-right">
-            {/* شارات (Badges) تصنيف العقار وحالته (نشط / معلق) */}
-            <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              {/* شارة نوع وتصنيف العقار (مثال: شقة، أرض، فيلا) */}
-              <span className="px-3 py-1 bg-blue-500 rounded-lg text-[10px] font-black uppercase tracking-wider">{property.category}</span>
-              {/* شارة ديناميكية يتغير لونها حسب حالة العقار (أخضر للنشط، برتقالي للمعلق والتأكيد) */}
-              <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${property.status === 'active' ? 'bg-green-500' : 'bg-amber-500'}`}>
-                {property.status === 'active' ? 'نشط' : 'معلق'}
-              </span>
-            </div>
-            {/* عنوان العقار الرئيسي بخط عريض وكبير جداً وواضح */}
-            <h2 className="text-2xl sm:text-3xl font-black leading-tight">{property.title}</h2>
-            {/* عرض المدينة والعنوان التفصيلي بجانب أيقونة الموقع الجغرافي الصغير */}
-            <div className="flex items-center gap-1 text-blue-200 mt-1 sm:mt-2 font-medium">
-              <MdLocationOn size={16} />
-              <span className="text-xs sm:text-sm">{property.city} - {property.address}</span>
-            </div>
-          </div>
-        </div>
+          {/* أزرار التنقل بين الصور */}
+          {images.length > 1 && (
+            <>
+              <button
+                onClick={prevImg}
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 dark:bg-gray-800/80 rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all z-10"
+              >
+                <MdChevronRight size={22} className="text-gray-700 dark:text-gray-200" />
+              </button>
+              <button
+                onClick={nextImg}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 dark:bg-gray-800/80 rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all z-10"
+              >
+                <MdChevronLeft size={22} className="text-gray-700 dark:text-gray-200" />
+              </button>
+            </>
+          )}
 
-        {/* ---- 2. قسم محتوى تفاصيل العقار (قابل للتمرير عمودياً في الشاشات الصغيرة) ---- */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-8 space-y-6 sm:space-y-8 text-right" dir="rtl">
-
-          {/* قسم السعر والمساحة مرتبين في شبكة هندسية (Grid) متوازية من عمودين */}
-          <div className="grid grid-cols-2 gap-3 sm:gap-4">
-            {/* بطاقة عرض السعر الرقمي مع رمز العملة */}
-            <div className="bg-white p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-3">
-              <div className="w-9 h-9 sm:w-11 sm:h-11 bg-green-50 text-green-600 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0">
-                <MdAttachMoney size={20} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-gray-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-tighter">السعر</p>
-                <p className="text-sm sm:text-lg font-black text-[#0f2d4a] truncate">{formatPrice(property.price)} <small className="text-[9px] sm:text-[10px]">ل.س</small></p>
-              </div>
-            </div>
-            {/* بطاقة عرض مساحة العقار الإجمالية */}
-            <div className="bg-white p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-3">
-              <div className="w-9 h-9 sm:w-11 sm:h-11 bg-blue-50 text-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0">
-                <MdSquareFoot size={20} />
-              </div>
-              <div>
-                <p className="text-gray-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-tighter">المساحة</p>
-                <p className="text-sm sm:text-lg font-black text-[#0f2d4a]">{property.area} <small className="text-[9px] sm:text-[10px]">م²</small></p>
-              </div>
-            </div>
-          </div>
-
-          {/* قسم المواصفات الداخلية والهيكلية للعقار (الغرف، الطابق، حالة الفرش، ونوع الملكية) */}
-          <section className="space-y-3 sm:space-y-4">
-            <h4 className="text-[#0f2d4a] font-black flex items-center gap-2 text-base sm:text-lg">
-              <MdInfoOutline className="text-blue-600" /> المواصفات
-            </h4>
-            {/* استعراض مصفوفة البيانات ديناميكياً بهدف توفير الأكواد المتكررة وبناء بطاقات المواصفات الفرعية */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-              {[
-                { label: "الغرف", value: property.rooms || "—", icon: <MdOutlineMeetingRoom /> },
-                { label: "الطابق", value: property.floor || "—", icon: <MdLayers /> },
-                { label: "الفرش", value: property.isFurnished ? "مفروش" : "خالي", icon: <MdMeetingRoom /> },
-                { label: "الملكية", value: property.ownership || "—", icon: <MdCheckCircle /> },
-              ].map((item, idx) => (
-                <div key={idx} className="p-3 sm:p-4 bg-gray-50/50 rounded-2xl border border-gray-100/50 hover:bg-white transition-all group">
-                  {/* أيقونة المواصفة مع تأثيرات وتغيير ألوان تفاعلية عند مرور مؤشر الماوس */}
-                  <div className="text-blue-500/50 group-hover:text-blue-600 mb-1 transition-colors text-base sm:text-lg">{item.icon}</div>
-                  {/* اسم الخاصية الفرعية (مثل: الغرف أو الملكية) */}
-                  <p className="text-gray-400 text-[9px] font-bold">{item.label}</p>
-                  {/* القيمة الفعلية القادمة للعقار من قاعدة بيانات مونجو دي بي (MongoDB) */}
-                  <p className="text-[#0f2d4a] text-xs font-bold">{item.value}</p>
-                </div>
+          {/* الـ Dots */}
+          {images.length > 1 && (
+            <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+              {images.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveImg(i)}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${i === activeImg ? "w-6 bg-white" : "w-1.5 bg-white/50"
+                    }`}
+                />
               ))}
             </div>
-          </section>
+          )}
 
-          {/* قسم النص الوصفي الشامل المكتوب من قِبل المُعلن */}
-          <section className="space-y-3 sm:space-y-4">
-            <h4 className="text-[#0f2d4a] font-black flex items-center gap-2 text-base sm:text-lg">
-              <MdDescription className="text-blue-600" /> الوصف
-            </h4>
-            {/* عرض حقل النص الوصفي، وإظهار جملة افتراضية واضحة في حال كان الحقل فارغاً في قاعدة البيانات */}
-            <p className="p-4 sm:p-6 bg-white rounded-[1.5rem] sm:rounded-[2rem] border border-gray-100 text-gray-500 text-sm leading-relaxed">
-              {property.description || "لا يوجد وصف إضافي لهذا العقار"}
-            </p>
-          </section>
+          {/* العنوان والموقع فوق الصورة */}
+          <div className="absolute bottom-4 right-4 left-4 text-white text-right">
+            <div className="flex items-center gap-2 mb-2 flex-wrap justify-end">
+              <span className="px-2.5 py-1 bg-blue-500 rounded-lg text-[10px] font-bold uppercase">
+                {property.category || "عقار"}
+              </span>
+              <span
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase ${isActive ? "bg-green-500" : "bg-amber-500"
+                  }`}
+              >
+                {isActive ? "نشط" : "معلق"}
+              </span>
+              {isFeatured && (
+                <span className="px-2.5 py-1 bg-emerald-500 rounded-lg text-[10px] font-bold uppercase flex items-center gap-1">
+                  <MdStar size={12} /> مميز
+                </span>
+              )}
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black leading-tight mb-1">
+              {property.title}
+            </h2>
+            <div className="flex items-center gap-1 text-blue-200 text-xs sm:text-sm">
+              <MdLocationOn size={14} />
+              <span>{property.city} - {property.address}</span>
+            </div>
+          </div>
         </div>
 
-        {/* ---- 3. قسم تذييل النافذة الثابت (Footer) المخصص لزر إجراء التعديل ---- */}
-        <div className="shrink-0 px-5 sm:px-8 py-4 sm:py-6 bg-[#fcfdfe] border-t border-gray-100">
-          {/* عند ضغط الأدمن على هذا الزر، يتم استدعاء الدالة الممررة onEditClick لفتح مودال التعديل فوراً */}
+        {/* ═══════════════════ 2. المحتوى (قابل للتمرير) ═══════════════════ */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 text-right" dir="rtl">
+
+          {/* الإحصائيات الرئيسية */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+            {stats.map((stat, idx) => (
+              <div
+                key={idx}
+                className="bg-gray-50 dark:bg-gray-800 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 flex items-center gap-2.5"
+              >
+                <div className={`w-9 h-9 ${stat.bg} ${stat.color} rounded-xl flex items-center justify-center shrink-0`}>
+                  {stat.icon}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-gray-400 dark:text-gray-500 text-[9px] font-bold uppercase">{stat.label}</p>
+                  <p className="text-sm font-bold text-gray-800 dark:text-white truncate">{stat.value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* الوصف */}
+          {property.description && (
+            <section className="space-y-2">
+              <h4 className="text-gray-800 dark:text-white font-bold flex items-center gap-2 text-base">
+                <MdDescription className="text-blue-600" /> الوصف
+              </h4>
+              <p className="p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+                {property.description}
+              </p>
+            </section>
+          )}
+
+          {/* المميزات */}
+          {features.length > 0 && (
+            <section className="space-y-2">
+              <h4 className="text-gray-800 dark:text-white font-bold flex items-center gap-2 text-base">
+                <MdCheckCircle className="text-blue-600" /> المميزات
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {features.map((f: string, i: number) => (
+                  <span
+                    key={i}
+                    className="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-xl text-xs font-bold border border-blue-100 dark:border-blue-800"
+                  >
+                    {f}
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* معلومات إضافية من الـ Schema */}
+          <section className="space-y-2">
+            <h4 className="text-gray-800 dark:text-white font-bold flex items-center gap-2 text-base">
+              <MdInfoOutline className="text-blue-600" /> معلومات إضافية
+            </h4>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
+                <p className="text-gray-400 dark:text-gray-500 text-[10px] font-bold mb-1">تاريخ الإضافة</p>
+                <p className="font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1 justify-end">
+                  <MdCalendarToday size={14} className="text-blue-500" /> {createdAt}
+                </p>
+              </div>
+              {property.action && (
+                <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
+                  <p className="text-gray-400 dark:text-gray-500 text-[10px] font-bold mb-1">الحالة</p>
+                  <p className="font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1 justify-end">
+                    <MdUpdate size={14} className="text-blue-500" />
+                    {property.action.type === "sold" ? "تم البيع" : property.action.type === "added" ? "جديد" : "محدّث"}
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Thumbnails (مصغرات الصور) */}
+          {images.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {images.map((img, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveImg(i)}
+                  className={`flex-shrink-0 w-16 h-12 rounded-lg overflow-hidden border-2 transition-all ${i === activeImg ? "border-blue-500" : "border-transparent opacity-60"
+                    }`}
+                >
+                  <img src={img} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ═══════════════════ 3. Footer (زر التعديل) ═══════════════════ */}
+        <div className="shrink-0 px-4 sm:px-6 py-4 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-700">
           <button
             onClick={onEditClick}
-            className="w-full py-4 sm:py-5 bg-[#0f2d4a] text-white rounded-[1.5rem] sm:rounded-[2rem] font-black text-base sm:text-lg shadow-2xl shadow-blue-900/40 hover:bg-blue-900 transition-all active:scale-[0.98]"
+            className="w-full py-3.5 sm:py-4 bg-blue-900 dark:bg-blue-700 text-white rounded-2xl font-bold text-base shadow-lg hover:bg-blue-800 transition-all active:scale-[0.98]"
           >
             تعديل بيانات هذا العقار
           </button>
@@ -160,5 +252,4 @@ const PropertyDetailsModal = ({ isOpen, onClose, property, onEditClick }: Props)
   );
 };
 
-// تصدير المكون بشكل افتراضي ليتم استدعاؤه وعرضه داخل لوحة التحكم الرئيسية الخاصة بالعقارات
 export default PropertyDetailsModal;

@@ -1,29 +1,30 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import DashboardRoutes from "./dashboard/DashboardRoutes";
 import Layout from "./website/Layout/Layout";
 import NavBar from "./website/components/NavBar/NavBar";
+import Footer from "./website/components/Footer";
+import HomePage from "./website/pages/HomePage";
+import PropertyDetailPage from "./website/pages/PropertyDetailPage";
+import AllPropertiesPage from "./website/components/Allpropertiespage/Allpropertiespage";
+
+import SEO from "./website/components/SEO/SEO";
+import AiChat from "./website/components/AiChat/AiChat";
 import BestEstate from "./website/components/BestEstate/BestEstate";
 import PropertiesList from "./website/components/PropertiesList/PropertiesList";
-import Contact from "./website/components/contact/contact";
-import Footer from "./website/components/Footer";
 import State from "./website/components/State";
 import WhyInvestors from "./website/components/WhyInvestors";
-import AiChat from "./website/components/AiChat/AiChat";
-import SEO from "./website/components/SEO/SEO";
-import HomePage from "./website/pages/HomePage";
-
-import PropertyDetailPage from "./website/pages/PropertyDetailPage"; // ✅ جديد
-import AllPropertiesPage from "./website/components/Allpropertiespage/Allpropertiespage";
+import Contact from "./website/components/contact/contact";
 
 type Theme = "light" | "dark";
 
 function App() {
-  const [theme, setTheme] = useState<Theme>(
+  const [theme, setTheme] = useState < Theme > (
     (localStorage.getItem("theme") as Theme) || "light"
   );
   const { i18n } = useTranslation();
+  const location = useLocation();
 
   useEffect(() => {
     document.documentElement.className = theme;
@@ -35,48 +36,57 @@ function App() {
     document.documentElement.lang = i18n.language;
   }, [i18n.language]);
 
+  // ✅ جديد: scroll لما نجي من صفحة تانية عبر Navbar
+  useEffect(() => {
+    if (location.state?.scrollTo) {
+      const timer = setTimeout(() => {
+        const element = document.querySelector(location.state.scrollTo);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+        // ننظّف الـ state عشان ما يتكرر
+        window.history.replaceState({}, document.title);
+      }, 250);
+      return () => clearTimeout(timer);
+    }
+  }, [location]);
+
+  // ✅ جديد: نتحقق إذا كنا بصفحة الموقع (مش Dashboard)
+  const isWebsite = !location.pathname.startsWith("/dashboard");
+
   return (
-    <Routes>
-      <Route path="/dashboard/*" element={<DashboardRoutes />} />
+    <>
+      {/* Navbar تظهر بكل صفحات الموقع */}
+      {isWebsite && <NavBar theme={theme} setTheme={setTheme} />}
 
-      <Route path="/" element={<Layout />}>
+      <Routes>
+        <Route path="/dashboard/*" element={<DashboardRoutes />} />
 
-        {/* ── الرئيسية ── */}
-        <Route index element={
-          <>
-            <SEO />
-            <NavBar theme={theme} setTheme={setTheme} />
-            <HomePage />
-            <AiChat />
-            <BestEstate />
-            <WhyInvestors />
-            <PropertiesList />
-            <State />
-            <Contact />
-            <Footer />
-          </>
-        } />
+        <Route path="/" element={<Layout />}>
+          <Route
+            index
+            element={
+              <>
+                <SEO />
+                <section id="home"><HomePage /></section>
+                <AiChat />
+                <section id="featuredProperties"><BestEstate /></section>
+                <WhyInvestors />
+                <section id="PropertiesList"><PropertiesList /></section>
+                <State />
+                <section id="ourServices"><WhyInvestors /></section>
+                <section id="contact"><Contact /></section>
+              </>
+            }
+          />
+          <Route path="properties" element={<AllPropertiesPage />} />
+          <Route path="properties/:id" element={<PropertyDetailPage />} />
+        </Route>
+      </Routes>
 
-        {/* ── كل العقارات ── */}
-        <Route path="properties" element={
-          <>
-            <NavBar theme={theme} setTheme={setTheme} />
-            <AllPropertiesPage />
-            <Footer />
-          </>
-        } />
-
-        {/* ── تفاصيل عقار ── */}
-        <Route path="properties/:id" element={
-          <>
-            <NavBar theme={theme} setTheme={setTheme} />
-            <PropertyDetailPage />
-            <Footer />
-          </>
-        } />
-
-      </Route>
-    </Routes>
+      {/* Footer تظهر بكل صفحات الموقع */}
+      {isWebsite && <Footer />}
+    </>
   );
 }
 
