@@ -1,15 +1,21 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 const Contact = require("../models/Contact");
 const { Resend } = require("resend");
+const { protect, adminOnly } = require("../middleware");
 
-// ← الـ Resend client ينشأ مرة وحدة بس
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// --- استقبال رسالة جديدة من الزائر ---
+// ── POST / ─────────────────────────────────────────────────
+// مفتوح للزوار — إرسال رسالة تواصل
 router.post("/", async (req, res) => {
   try {
     const { name, email, phone, message } = req.body;
+
+    if (!name || !email || !message)
+      return res.status(400).json({ success: false, error: "الاسم والبريد والرسالة مطلوبة" });
+
     const contact = await Contact.create({ name, email, phone, message });
     res.status(201).json({ success: true, data: contact });
   } catch (error) {
@@ -17,8 +23,9 @@ router.post("/", async (req, res) => {
   }
 });
 
-// --- جلب كل الرسائل للأدمن ---
-router.get("/", async (req, res) => {
+// ── GET / ──────────────────────────────────────────────────
+// للأدمن فقط — جلب كل الرسائل
+router.get("/", protect, adminOnly, async (req, res) => {
   try {
     const messages = await Contact.find().sort({ createdAt: -1 });
     res.json({ success: true, data: messages });
@@ -27,9 +34,13 @@ router.get("/", async (req, res) => {
   }
 });
 
-// --- حذف رسالة ---
-router.delete("/:id", async (req, res) => {
+// ── DELETE /:id ────────────────────────────────────────────
+// للأدمن فقط — حذف رسالة
+router.delete("/:id", protect, adminOnly, async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id))
+      return res.status(400).json({ success: false, error: "ID غير صالح" });
+
     await Contact.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "تم حذف الرسالة" });
   } catch (error) {
@@ -37,24 +48,27 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// --- إرسال رد على رسالة ---
-router.post("/:id/reply", async (req, res) => {
+// ── POST /:id/reply ────────────────────────────────────────
+// للأدمن فقط — إرسال رد
+router.post("/:id/reply", protect, adminOnly, async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id))
+      return res.status(400).json({ success: false, error: "ID غير صالح" });
+
     const { replyText } = req.body;
+
+    if (!replyText)
+      return res.status(400).json({ success: false, error: "نص الرد مطلوب" });
+
     const contact = await Contact.findById(req.params.id);
-
-    if (!contact) {
+    if (!contact)
       return res.status(404).json({ success: false, error: "الرسالة غير موجودة" });
-    }
 
-    // تحديث حالة الرسالة فوراً في قاعدة البيانات
     contact.replied = true;
     await contact.save();
 
-    // الرد الفوري للواجهة
     res.json({ success: true, message: "تم إرسال الرد بنجاح" });
 
-    // إرسال الإيميل في الخلفية عبر Resend (HTTPS مش SMTP)
     resend.emails.send({
       from: "Syrian Estate <onboarding@resend.dev>",
       to: contact.email,
@@ -73,7 +87,6 @@ router.post("/:id/reply", async (req, res) => {
     }).catch(err => console.error("Mail Error:", err.message));
 
   } catch (error) {
-    console.error("Reply Error:", error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
