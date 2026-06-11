@@ -22,7 +22,6 @@ connectDB();
 // ── الأمان ───────────────────────────────────────────────
 app.use(helmet());
 
-// ✅ قائمة الـ origins المسموحة (الإنتاج + التطوير المحلي)
 const allowedOrigins = [
   "https://real-state-six-chi.vercel.app",
   "http://localhost:5173"
@@ -30,13 +29,14 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
-    // السماح لطلبات بدون origin (Postman, curl, server-to-server)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
     }
-  }
+  },
+  allowedHeaders: ["Content-Type", "Authorization"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 }));
 
 app.use("/api/", apiLimiter);
