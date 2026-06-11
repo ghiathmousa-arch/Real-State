@@ -4,7 +4,6 @@ const sharp = require("sharp");
 const { v4: uuidv4 } = require("uuid");
 const cloudinary = require("cloudinary").v2;
 
-// الحل: وضع الإعدادات داخل دالة أو التأكد من تنظيف القيم
 const configureCloudinary = () => {
   cloudinary.config({
     cloud_name: (process.env.CLOUDINARY_CLOUD_NAME || "").trim(),
@@ -17,7 +16,10 @@ const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
-  limits: { fileSize: 7 * 1024 * 1024 },
+  limits: {
+    fileSize: 7 * 1024 * 1024, // أقصى حجم للصورة الواحدة: 7 ميجا
+    files: 10                  // ✅ أقصى عدد صور بالطلب الواحد: 10
+  },
   fileFilter: (req, file, cb) => {
     const allowed = /jpeg|jpg|png|gif|webp/;
     const isMimetype = allowed.test(file.mimetype);
@@ -28,13 +30,9 @@ const upload = multer({
 });
 
 const compressImages = async (req, res, next) => {
-  // استدعاء الإعداد هنا يضمن أن متغيرات البيئة قد تم تحميلها بالفعل
   configureCloudinary();
-  console.log("Cloudinary config:", {
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET?.slice(0, 5) + "..."
-  });
+  // ✅ تم حذف الـ console.log الذي كان يكشف مفاتيح Cloudinary
+
   if (!req.files || req.files.length === 0) {
     req.compressedImages = [];
     return next();
@@ -60,7 +58,7 @@ const compressImages = async (req, res, next) => {
             },
             (error, result) => {
               if (error) {
-                console.error("Cloudinary Upload Error:", error);
+                console.error("Cloudinary Upload Error:", error.message); // ✅ بدون تفاصيل حساسة
                 reject(error);
               } else {
                 resolve(result);
@@ -75,10 +73,8 @@ const compressImages = async (req, res, next) => {
     );
     next();
   } catch (error) {
-    res.status(500).json({ error: "فشلت عملية معالجة الصور: " + error.message });
+    res.status(500).json({ error: "فشلت عملية معالجة الصور" }); // ✅ بدون تفاصيل error.message
   }
-
-
 };
 
 module.exports = { upload, compressImages };

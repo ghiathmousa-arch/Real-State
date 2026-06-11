@@ -6,7 +6,6 @@ const { upload, compressImages } = require("../middleware/upload");
 const { protect, adminOnly } = require("../middleware");
 
 // ── GET / ──────────────────────────────────────────────────
-// مفتوح — جلب العقارات مع فلترة
 router.get("/", async (req, res) => {
   try {
     const { category, city, minPrice, maxPrice, type, search } = req.query;
@@ -23,17 +22,24 @@ router.get("/", async (req, res) => {
     }
 
     if (search) {
+      if (search.length > 100) {
+        return res.status(400).json({ error: "نص البحث طويل جداً" });
+      }
+
+      const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
       query.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
-        { city: { $regex: search, $options: "i" } },
+        { title: { $regex: safeSearch, $options: "i" } },
+        { description: { $regex: safeSearch, $options: "i" } },
+        { city: { $regex: safeSearch, $options: "i" } },
       ];
     }
 
     const properties = await Property.find(query);
     res.json(properties);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Properties GET Error:", error); // ✅
+    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" }); // ✅
   }
 });
 
@@ -43,7 +49,8 @@ router.get("/featured", async (req, res) => {
     const properties = await Property.find({ isFeatured: true, status: "active" });
     res.json(properties);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Properties Featured Error:", error); // ✅
+    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" }); // ✅
   }
 });
 
@@ -57,7 +64,8 @@ router.get("/recent", async (req, res) => {
       .select("title city price status action");
     res.json(properties);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Properties Recent Error:", error); // ✅
+    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" }); // ✅
   }
 });
 
@@ -71,12 +79,12 @@ router.get("/:id", async (req, res) => {
     if (!property) return res.status(404).json({ error: "العقار غير موجود" });
     res.json(property);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Properties GetById Error:", error); // ✅
+    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" }); // ✅
   }
 });
 
 // ── POST / ─────────────────────────────────────────────────
-// للأدمن فقط — إضافة عقار
 router.post("/", protect, adminOnly, upload.any(), compressImages, async (req, res) => {
   try {
     const b = req.body;
@@ -121,12 +129,12 @@ router.post("/", protect, adminOnly, upload.any(), compressImages, async (req, r
 
     res.status(201).json(property);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Properties POST Error:", error); // ✅
+    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" }); // ✅
   }
 });
 
 // ── PUT /:id ───────────────────────────────────────────────
-// للأدمن فقط — تعديل عقار
 router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id))
@@ -184,12 +192,12 @@ router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req,
 
     res.json(updated);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Properties PUT Error:", error); // ✅
+    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" }); // ✅
   }
 });
 
 // ── DELETE /:id ────────────────────────────────────────────
-// للأدمن فقط — حذف عقار
 router.delete("/:id", protect, adminOnly, async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id))
@@ -199,7 +207,8 @@ router.delete("/:id", protect, adminOnly, async (req, res) => {
     if (!property) return res.status(404).json({ error: "العقار غير موجود" });
     res.json({ message: "تم حذف العقار بنجاح" });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Properties DELETE Error:", error); // ✅
+    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" }); // ✅
   }
 });
 

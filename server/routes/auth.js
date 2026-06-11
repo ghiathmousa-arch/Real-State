@@ -5,7 +5,6 @@ const mongoose = require("mongoose");
 const User = require("../models/User");
 const { protect, adminOnly, loginLimiter } = require("../middleware");
 
-// دالة توليد التوكن
 const signToken = (id) =>
   jwt.sign(
     { id },
@@ -14,7 +13,6 @@ const signToken = (id) =>
   );
 
 // ─── POST /api/auth/register ──────────────────────────────
-// مقفول — للأدمن فقط يضيف حسابات جديدة
 router.post("/register", protect, adminOnly, async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -37,12 +35,12 @@ router.post("/register", protect, adminOnly, async (req, res) => {
       user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Auth Register Error:", error); // ✅
+    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" }); // ✅
   }
 });
 
 // ─── POST /api/auth/login ─────────────────────────────────
-// loginLimiter = 10 محاولات فقط كل 15 دقيقة
 router.post("/login", loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -62,7 +60,8 @@ router.post("/login", loginLimiter, async (req, res) => {
       user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Auth Login Error:", error); // ✅
+    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" }); // ✅
   }
 });
 

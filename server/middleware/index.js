@@ -15,4 +15,11 @@ const loginLimiter = rateLimit({
   message: { error: "محاولات دخول كثيرة، حاول بعد 15 دقيقة" }
 });
 
-module.exports = { protect, adminOnly, apiLimiter, loginLimiter };
+// ✅ حد خاص بفورم التواصل — 5 رسائل بالساعة من نفس الـ IP
+const contactLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: { error: "أرسلت رسائل كثيرة، حاول بعد ساعة" }
+});
+
+module.exports = { protect, adminOnly, apiLimiter, loginLimiter, contactLimiter };

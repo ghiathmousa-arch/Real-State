@@ -3,13 +3,12 @@ const router = express.Router();
 const mongoose = require("mongoose");
 const Contact = require("../models/Contact");
 const { Resend } = require("resend");
-const { protect, adminOnly } = require("../middleware");
+const { protect, adminOnly, contactLimiter } = require("../middleware");
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ── POST / ─────────────────────────────────────────────────
-// مفتوح للزوار — إرسال رسالة تواصل
-router.post("/", async (req, res) => {
+router.post("/", contactLimiter, async (req, res) => {
   try {
     const { name, email, phone, message } = req.body;
 
@@ -19,23 +18,23 @@ router.post("/", async (req, res) => {
     const contact = await Contact.create({ name, email, phone, message });
     res.status(201).json({ success: true, data: contact });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    console.error("Contact POST Error:", error); // ✅ التفاصيل بالـ logs فقط
+    res.status(500).json({ success: false, error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" }); // ✅ رسالة عامة
   }
 });
 
 // ── GET / ──────────────────────────────────────────────────
-// للأدمن فقط — جلب كل الرسائل
 router.get("/", protect, adminOnly, async (req, res) => {
   try {
     const messages = await Contact.find().sort({ createdAt: -1 });
     res.json({ success: true, data: messages });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    console.error("Contact GET Error:", error); // ✅
+    res.status(500).json({ success: false, error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" }); // ✅
   }
 });
 
 // ── DELETE /:id ────────────────────────────────────────────
-// للأدمن فقط — حذف رسالة
 router.delete("/:id", protect, adminOnly, async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id))
@@ -44,12 +43,12 @@ router.delete("/:id", protect, adminOnly, async (req, res) => {
     await Contact.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "تم حذف الرسالة" });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    console.error("Contact DELETE Error:", error); // ✅
+    res.status(500).json({ success: false, error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" }); // ✅
   }
 });
 
 // ── POST /:id/reply ────────────────────────────────────────
-// للأدمن فقط — إرسال رد
 router.post("/:id/reply", protect, adminOnly, async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id))
@@ -87,7 +86,8 @@ router.post("/:id/reply", protect, adminOnly, async (req, res) => {
     }).catch(err => console.error("Mail Error:", err.message));
 
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    console.error("Contact Reply Error:", error); // ✅
+    res.status(500).json({ success: false, error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" }); // ✅
   }
 });
 

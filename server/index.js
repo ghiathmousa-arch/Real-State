@@ -22,14 +22,25 @@ connectDB();
 // ── الأمان ───────────────────────────────────────────────
 app.use(helmet());
 
+// ✅ قائمة الـ origins المسموحة (الإنتاج + التطوير المحلي)
+const allowedOrigins = [
+  "https://real-state-six-chi.vercel.app",
+  "http://localhost:5173"
+];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "https://real-state-six-chi.vercel.app"
+  origin: function (origin, callback) {
+    // السماح لطلبات بدون origin (Postman, curl, server-to-server)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  }
 }));
 
-// حد الطلبات العام على كل الـ API
 app.use("/api/", apiLimiter);
 
-// حماية من NoSQL Injection
 app.use(mongoSanitize());
 
 // ── الـ Body Parsing ──────────────────────────────────────
@@ -52,6 +63,12 @@ app.get("/api/categories", (req, res) => {
 
 app.get("/", (req, res) => {
   res.send("🚀 Server is running and healthy!");
+});
+
+// Error Handler مركزي
+app.use((err, req, res, next) => {
+  console.error("Unhandled Error:", err);
+  res.status(err.status || 500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" });
 });
 
 app.listen(PORT, "0.0.0.0", () => {
