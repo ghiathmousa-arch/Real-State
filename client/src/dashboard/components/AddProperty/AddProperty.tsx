@@ -19,7 +19,7 @@ const CITIES_EN = [
   "Suwayda", "Quneitra", "Deir ez-Zor", "Al-Hasakah", "Raqqa"
 ];
 
-const CATEGORIES = ["شقة", "منزل", "أرض","مزرعة"]
+const CATEGORIES = ["شقة", "منزل", "أرض", "مزرعة"]
 const CATEGORIES_EN = ["Apartment", "House", "Land", "Farm"]
 
 const AddProperty = () => {
@@ -69,6 +69,7 @@ const AddProperty = () => {
       const formEl = e.currentTarget
       const formData = new FormData()
 
+      // ✅ تمت إضافة videoUrl لقائمة الحقول النصية يلي عم نجمعها من الفورم
       const fields = [
         'title', 'titleEn',
         'description', 'descriptionEn',
@@ -76,7 +77,7 @@ const AddProperty = () => {
         'type', 'price', 'city', 'cityEn',
         'area', 'rooms', 'bathrooms',
         'address', 'addressEn',
-        'status', 'isFeatured'
+        'status', 'isFeatured', 'videoUrl'
       ]
       fields.forEach(f => {
         const el = formEl.elements.namedItem(f) as HTMLInputElement | HTMLSelectElement
@@ -170,16 +171,14 @@ const AddProperty = () => {
             </select>
           </div>
 
-          {/* السعر */}
-          {/* السعر */}
+          {/* السعر - ✅ صار اختياري (تم حذف required و علامة *) */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-black text-gray-400">السعر (ل.س) *</label>
+            <label className="text-xs font-black text-gray-400">السعر (ل.س)</label>
             <input
               name="price"
               type="text" // غيرناه لنص عشان يختفوا الأسهم
               inputMode="numeric" // بيفتح كيبورد الأرقام عالموبايل
-              required
-              placeholder="1,000,000"
+              placeholder="1,000,000 (اختياري)"
               onChange={(e) => {
                 // كود صغير ليمنع كتابة أي شي غير الأرقام
                 e.target.value = e.target.value.replace(/[^0-9]/g, '');
@@ -232,6 +231,13 @@ const AddProperty = () => {
             <label className="text-xs font-black text-gray-400">عدد الحمامات</label>
             <input name="bathrooms" type="number" min={0} placeholder="2"
               className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:border-blue-500 font-bold text-[#0f2d4a]" />
+          </div>
+
+          {/* ✅ رابط فيديو يوتيوب - حقل جديد */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-black text-gray-400">رابط فيديو يوتيوب (اختياري)</label>
+            <input name="videoUrl" type="url" placeholder="https://youtu.be/xxxxxxx"
+              className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:border-blue-500 font-bold text-[#0f2d4a]" dir="ltr" />
           </div>
 
           {/* الحالة والمميز */}

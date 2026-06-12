@@ -98,10 +98,11 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
       const data = new FormData()                 // إنشاء كائن FormData للتمكن من إرسال النصوص والملفات (الصور) معاً
 
       // قائمة بجميع الحقول النصية والرقمية المطلوب نقلها من النموذج إلى السيرفر
+      // ✅ تمت إضافة videoUrl لهاي القائمة
       const fields = [
         'title', 'titleEn', 'description', 'descriptionEn',
         'category', 'categoryEn', 'type', 'price', 'city', 'cityEn',
-        'area', 'rooms', 'bathrooms', 'address', 'addressEn', 'status'
+        'area', 'rooms', 'bathrooms', 'address', 'addressEn', 'status', 'videoUrl'
       ]
 
       // التكرار على الحقول وإضافتها للـ FormData في حال كانت تحتوي على قيم حقيقية
@@ -300,6 +301,14 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
               <input type="number"
                 className="w-full p-3 sm:p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:border-blue-500 font-bold text-[#0f2d4a]"
                 value={formData.bathrooms || ''} onChange={e => handleChange('bathrooms', e.target.value)} />
+            </div>
+
+            {/* ✅ حقل رابط فيديو يوتيوب - جديد */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-black text-gray-400">رابط فيديو يوتيوب (اختياري)</label>
+              <input type="url" dir="ltr" placeholder="https://youtu.be/xxxxxxx"
+                className="w-full p-3 sm:p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:border-blue-500 font-bold text-[#0f2d4a]"
+                value={formData.videoUrl || ''} onChange={e => handleChange('videoUrl', e.target.value)} />
             </div>
 
             {/* قائمة تحديد حالة ظهور العقار (نشط، مباع، معلق تحت المراجعة) */}
