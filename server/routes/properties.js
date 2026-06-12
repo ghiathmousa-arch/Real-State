@@ -38,8 +38,8 @@ router.get("/", async (req, res) => {
     const properties = await Property.find(query);
     res.json(properties);
   } catch (error) {
-    console.error("Properties GET Error:", error); // ✅
-    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" }); // ✅
+    console.error("Properties GET Error:", error);
+    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" });
   }
 });
 
@@ -49,8 +49,8 @@ router.get("/featured", async (req, res) => {
     const properties = await Property.find({ isFeatured: true, status: "active" });
     res.json(properties);
   } catch (error) {
-    console.error("Properties Featured Error:", error); // ✅
-    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" }); // ✅
+    console.error("Properties Featured Error:", error);
+    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" });
   }
 });
 
@@ -64,8 +64,8 @@ router.get("/recent", async (req, res) => {
       .select("title city price status action");
     res.json(properties);
   } catch (error) {
-    console.error("Properties Recent Error:", error); // ✅
-    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" }); // ✅
+    console.error("Properties Recent Error:", error);
+    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" });
   }
 });
 
@@ -79,8 +79,8 @@ router.get("/:id", async (req, res) => {
     if (!property) return res.status(404).json({ error: "العقار غير موجود" });
     res.json(property);
   } catch (error) {
-    console.error("Properties GetById Error:", error); // ✅
-    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" }); // ✅
+    console.error("Properties GetById Error:", error);
+    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" });
   }
 });
 
@@ -89,8 +89,9 @@ router.post("/", protect, adminOnly, upload.any(), compressImages, async (req, r
   try {
     const b = req.body;
 
-    if (!b.title || !b.price || !b.city || !b.category || !b.type)
-      return res.status(400).json({ error: "العنوان والسعر والمدينة والفئة والنوع مطلوبة" });
+    // ✅ السعر صار اختياري - تم حذفه من شرط الإلزامية
+    if (!b.title || !b.city || !b.category || !b.type)
+      return res.status(400).json({ error: "العنوان والمدينة والفئة والنوع مطلوبة" });
 
     const toNum = (v) => (v !== undefined && v !== "" ? Number(v) : null);
     const toArr = (v) => {
@@ -118,6 +119,7 @@ router.post("/", protect, adminOnly, upload.any(), compressImages, async (req, r
       images: req.compressedImages,
       features: toArr(b.features),
       featuresEn: toArr(b.featuresEn),
+      videoUrl: b.videoUrl || "", // ✅ رابط فيديو يوتيوب تبع العقار
       isFeatured: b.isFeatured === true || b.isFeatured === "true",
       status: b.status || "active",
       action: {
@@ -129,8 +131,8 @@ router.post("/", protect, adminOnly, upload.any(), compressImages, async (req, r
 
     res.status(201).json(property);
   } catch (error) {
-    console.error("Properties POST Error:", error); // ✅
-    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" }); // ✅
+    console.error("Properties POST Error:", error);
+    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" });
   }
 });
 
@@ -179,6 +181,7 @@ router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req,
         images: finalImages,
         features: b.features ? toArr(b.features) : property.features,
         featuresEn: b.featuresEn ? toArr(b.featuresEn) : property.featuresEn ?? [],
+        videoUrl: b.videoUrl ?? property.videoUrl ?? "", // ✅ تحديث رابط الفيديو
         isFeatured: b.isFeatured === "true" || b.isFeatured === true,
         status: b.status ?? property.status,
         action: {
@@ -192,8 +195,8 @@ router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req,
 
     res.json(updated);
   } catch (error) {
-    console.error("Properties PUT Error:", error); // ✅
-    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" }); // ✅
+    console.error("Properties PUT Error:", error);
+    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" });
   }
 });
 
@@ -207,8 +210,8 @@ router.delete("/:id", protect, adminOnly, async (req, res) => {
     if (!property) return res.status(404).json({ error: "العقار غير موجود" });
     res.json({ message: "تم حذف العقار بنجاح" });
   } catch (error) {
-    console.error("Properties DELETE Error:", error); // ✅
-    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" }); // ✅
+    console.error("Properties DELETE Error:", error);
+    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" });
   }
 });
 
