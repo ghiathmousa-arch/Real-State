@@ -113,9 +113,18 @@ const PropertyDetailPage: React.FC = () => {
   const nextImg = () => setActiveImg(i => (i + 1) % images.length);
 
   return (
-    <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 ${ar ? "text-right" : "text-left"}`}>
-      <FloatingWhatsApp message={`مرحباً، أنا مهتم بهذا العقار: ${title}`} position="left" />
-
+    <div
+      dir={ar ? "rtl" : "ltr"}
+      className={`min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 ${ar ? "text-right" : "text-left"}`}
+    >
+      <FloatingWhatsApp
+        message={
+          ar
+            ? `مرحباً، أنا مهتم بهذا العقار: ${title}\nرابط العقار: ${window.location.href}`
+            : `Hello, I'm interested in this property: ${title}\nLink: ${window.location.href}`
+        }
+        position={ar ? "left" : "right"}
+      />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6">
 
         {/* ── زر الرجوع ── */}
@@ -139,11 +148,11 @@ const PropertyDetailPage: React.FC = () => {
           {images.length > 1 && (
             <>
               <button onClick={prevImg}
-                className="absolute top-1/2 -translate-y-1/2 left-3 w-10 h-10 rounded-full bg-white/80 dark:bg-gray-800/80 hover:bg-white flex items-center justify-center shadow-lg transition-all">
+                className={`absolute top-1/2 -translate-y-1/2 ${ar ? "left-3" : "left-3"} w-10 h-10 rounded-full bg-white/80 dark:bg-gray-800/80 hover:bg-white flex items-center justify-center shadow-lg transition-all`}>
                 <PrevIcon size={18} className="text-gray-700 dark:text-gray-200" />
               </button>
               <button onClick={nextImg}
-                className="absolute top-1/2 -translate-y-1/2 right-3 w-10 h-10 rounded-full bg-white/80 dark:bg-gray-800/80 hover:bg-white flex items-center justify-center shadow-lg transition-all">
+                className={`absolute top-1/2 -translate-y-1/2 ${ar ? "right-3" : "right-3"} w-10 h-10 rounded-full bg-white/80 dark:bg-gray-800/80 hover:bg-white flex items-center justify-center shadow-lg transition-all`}>
                 <NextIcon size={18} className="text-gray-700 dark:text-gray-200" />
               </button>
             </>
@@ -184,7 +193,7 @@ const PropertyDetailPage: React.FC = () => {
 
         {/* Thumbnails */}
         {images.length > 1 && (
-          <div className={`flex gap-2 mb-6 overflow-x-auto pb-1 ${ar ? "flex-row-reverse" : ""}`}>
+          <div className={`flex gap-2 mb-6 overflow-x-auto pb-1 ${ar ? "flex-row-reverse" : "flex-row"}`}>
             {images.map((img, i) => (
               <button key={i} onClick={() => setActiveImg(i)}
                 className={`flex-shrink-0 w-20 h-14 rounded-xl overflow-hidden border-2 transition-all
@@ -196,28 +205,27 @@ const PropertyDetailPage: React.FC = () => {
         )}
 
 
-
         {/* ════════════════════════════════
     العنوان والسعر
 ════════════════════════════════ */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 mb-4">
-          <div className={`flex items-start justify-between gap-6 ${ar ? "flex-row" : "flex-row-reverse"}`}>
-            {/* ✅ العنوان أول شي (يمين بالعربي) */}
-            <div className={`${hasPrice ? "flex-1" : "w-full"} text-right`}>
+          <div className={`flex flex-col sm:flex-row items-start sm:justify-between gap-4 sm:gap-6 ${ar ? "sm:flex-row" : "sm:flex-row-reverse"}`}>
+            {/* العنوان */}
+            <div className={`${hasPrice ? "flex-1" : "w-full"} w-full ${ar ? "text-right" : "text-left"}`}>
               <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">{category}</p>
               <h1 className={`font-extrabold text-gray-800 dark:text-white leading-tight mb-3 ${hasPrice ? "text-2xl md:text-3xl" : "text-3xl md:text-4xl"}`}>
                 {title}
               </h1>
               {(address || city) && (
-                <div className="flex items-center gap-1.5 text-gray-400 text-sm flex-row-reverse justify-end">
+                <div className={`flex items-center gap-1.5 text-gray-400 text-sm ${ar ? "flex-row-reverse justify-end" : "flex-row justify-start"}`}>
                   <LuMapPin size={14} className="text-sky-500 shrink-0" />
-                  <span>{[address, city].filter(Boolean).join("، ")}</span>
+                  <span>{[address, city].filter(Boolean).join(ar ? "، " : ", ")}</span>
                 </div>
               )}
             </div>
-            {/* ✅ السعر آخر شي (يسار بالعربي) */}
+            {/* السعر */}
             {hasPrice && (
-              <div className="shrink-0 text-left">
+              <div className={`shrink-0 w-full sm:w-auto ${ar ? "text-left sm:text-left" : "text-right sm:text-right"}`}>
                 <p className="text-3xl font-extrabold text-sky-600 dark:text-sky-400 leading-none">
                   {property.price?.toLocaleString()}
                 </p>
@@ -229,7 +237,6 @@ const PropertyDetailPage: React.FC = () => {
             )}
           </div>
         </div>
-
         {/* ════════════════════════════════
             إحصائيات
         ════════════════════════════════ */}
@@ -273,7 +280,7 @@ const PropertyDetailPage: React.FC = () => {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {features.map((f: string, i: number) => (
-                <div key={i} className={`flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-300 ${ar ? "flex-row-reverse" : ""}`}>
+                <div key={i} className={`flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-300 ${ar ? "flex-row-reverse" : "flex-row"}`}>
                   <span className="w-5 h-5 rounded-full bg-sky-100 dark:bg-sky-900/40 flex items-center justify-center flex-shrink-0">
                     <TbCheck size={13} className="text-sky-600 dark:text-sky-400" />
                   </span>
@@ -307,23 +314,24 @@ const PropertyDetailPage: React.FC = () => {
         </div>
 
         {/* ════════════════════════════════
-            الفيديو
+            الفيديو - مصلح
         ════════════════════════════════ */}
         {property.videoUrl && (
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 mb-4">
             <h3 className="font-bold text-gray-700 dark:text-gray-300 text-sm mb-3">
               {ar ? "فيديو العقار" : "Property Video"}
             </h3>
+
             <a
               href={property.videoUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center gap-4 bg-red-50 dark:bg-red-900/20 rounded-xl p-4 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all"
+              className={`group flex items-center gap-4 bg-red-50 dark:bg-red-900/20 rounded-xl p-4 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all ${ar ? "flex-row-reverse" : "flex-row"}`}
             >
               <div className="w-14 h-14 rounded-full bg-red-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                 <LuPlay size={24} className="text-white ml-0.5" />
               </div>
-              <div className="flex-1 min-w-0">
+              <div className={`flex-1 min-w-0 ${ar ? "text-right" : "text-left"}`}>
                 <p className="font-bold text-gray-800 dark:text-white text-sm">
                   {ar ? "شاهد جولة الفيديو" : "Watch Video Tour"}
                 </p>
