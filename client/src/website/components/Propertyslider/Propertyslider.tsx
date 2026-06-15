@@ -1,3 +1,4 @@
+// PropertySlider.tsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -7,7 +8,6 @@ import { LuBedSingle } from "react-icons/lu";
 import { CiRuler } from "react-icons/ci";
 import { PiBathtub } from "react-icons/pi";
 
-// ── Types ──────────────────────────────────────────────────────────────────────
 interface Property {
   _id: string;
   title?: string; titleEn?: string;
@@ -24,7 +24,6 @@ interface Props {
   perPage?: number;
 }
 
-// ── Component ──────────────────────────────────────────────────────────────────
 const PropertySlider: React.FC<Props> = ({
   properties,
   title,
@@ -39,16 +38,15 @@ const PropertySlider: React.FC<Props> = ({
   const [index, setIndex] = useState(0);
   const [perPage, setPerPage] = useState(initialPerPage);
 
-  // ✅ التعديل 1: responsive perPage حسب عرض الشاشة
   useEffect(() => {
     const handleResize = () => {
       const w = window.innerWidth;
       if (w < 640) {
-        setPerPage(1);                          // موبايل: بطاقة واحدة
+        setPerPage(1);
       } else if (w < 1024) {
-        setPerPage(Math.min(2, initialPerPage)); // تابلت: 2 كحد أقصى
+        setPerPage(Math.min(2, initialPerPage));
       } else {
-        setPerPage(initialPerPage);              // ديسكتوب: القيمة الأصلية
+        setPerPage(initialPerPage);
       }
     };
 
@@ -57,7 +55,6 @@ const PropertySlider: React.FC<Props> = ({
     return () => window.removeEventListener("resize", handleResize);
   }, [initialPerPage]);
 
-  // ✅ التعديل 2: إعادة ضبط الـ index لما يتغير perPage
   useEffect(() => {
     const max = Math.max(0, properties.length - perPage);
     setIndex((i) => Math.min(i, max));
@@ -81,8 +78,7 @@ const PropertySlider: React.FC<Props> = ({
     ? `${(index / perPage) * 100}%`
     : `-${(index / perPage) * 100}%`;
 
-  // ✅ التعديل 3: حساب العرض مع الـ gap
-  const GAP = 16; // px
+  const GAP = 16;
   const cardWidth = `calc(${100 / perPage}% - ${((perPage - 1) * GAP) / perPage}px)`;
 
   return (
@@ -119,21 +115,19 @@ const PropertySlider: React.FC<Props> = ({
       <div className="overflow-hidden">
         <div
           className="flex transition-transform duration-500 ease-in-out"
-          style={{ transform: `translateX(${translateX})` }}
+          style={{ transform: `translateX(${translateX})`, gap: `${GAP}px` }}
         >
-          {properties.map((property, idx) => {
+          {properties.map((property) => {
             const name = ar ? property.title : (property.titleEn || property.title);
             const city = ar ? property.city : (property.cityEn || property.city);
 
             const imgSrc = property.images?.[0]
-              ? `${API_URL}${property.images[0]}`
+              ? property.images[0].startsWith("http")
+                ? property.images[0]
+                : `${API_URL}${property.images[0]}`
               : "https://placehold.co/400x280/e2e8f0/94a3b8?text=No+Image";
 
             const isBuy = property.type === "buy";
-
-            // ✅ التعديل 4: نزيل الـ margin من آخر عنصر في المصفوفة
-            const isLastItem = idx === properties.length - 1;
-            const marginEnd = isLastItem ? "0px" : `${GAP}px`;
 
             return (
               <div
@@ -142,7 +136,6 @@ const PropertySlider: React.FC<Props> = ({
                 style={{
                   minWidth: cardWidth,
                   maxWidth: cardWidth,
-                  marginInlineEnd: marginEnd,
                 }}
                 className="group bg-white dark:bg-gray-700 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-600 hover:border-sky-200 dark:hover:border-sky-700 hover:shadow-lg hover:-translate-y-1 shadow-sm transition-all duration-300 cursor-pointer flex-shrink-0"
               >
@@ -156,9 +149,8 @@ const PropertySlider: React.FC<Props> = ({
                   <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
                   <div className={`absolute top-2.5 flex gap-1.5 ${ar ? "left-2.5" : "right-2.5"}`}>
                     <span
-                      className={`text-xs font-bold px-2.5 py-1 rounded-full text-white shadow-sm ${
-                        isBuy ? "bg-sky-600" : "bg-amber-500"
-                      }`}
+                      className={`text-xs font-bold px-2.5 py-1 rounded-full text-white shadow-sm ${isBuy ? "bg-sky-600" : "bg-amber-500"
+                        }`}
                     >
                       {isBuy ? t("properties.sale") : t("properties.rent")}
                     </span>
@@ -175,18 +167,16 @@ const PropertySlider: React.FC<Props> = ({
                     {name}
                   </h3>
                   <div
-                    className={`flex items-center gap-1 text-gray-400 text-xs mb-3 ${
-                      ar ? "flex-row-reverse justify-end" : ""
-                    }`}
+                    className={`flex items-center gap-1 text-gray-400 text-xs mb-3 ${ar ? "flex-row-reverse justify-end" : ""
+                      }`}
                   >
                     <IoLocationOutline className="shrink-0" />
                     <span>{city}</span>
                   </div>
                   <div className="border-t border-gray-100 dark:border-gray-600 mb-3" />
                   <div
-                    className={`flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mb-3 ${
-                      ar ? "flex-row-reverse" : ""
-                    }`}
+                    className={`flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mb-3 ${ar ? "flex-row-reverse" : ""
+                      }`}
                   >
                     <span className="flex items-center gap-1">
                       <CiRuler className="text-sm" />
@@ -226,11 +216,10 @@ const PropertySlider: React.FC<Props> = ({
             <button
               key={i}
               onClick={() => setIndex(i)}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === index
-                  ? "w-6 bg-sky-600"
-                  : "w-1.5 bg-gray-300 dark:bg-gray-600 hover:bg-sky-300"
-              }`}
+              className={`h-1.5 rounded-full transition-all duration-300 ${i === index
+                ? "w-6 bg-sky-600"
+                : "w-1.5 bg-gray-300 dark:bg-gray-600 hover:bg-sky-300"
+                }`}
             />
           ))}
         </div>
