@@ -21,10 +21,10 @@ i18n.use(initReactI18next).init({
   },
 
   // 🌐 اللغة الحالية (محفوظة أو افتراضية)
-  lng: localStorage.getItem("lang") || "en",
+  lng: localStorage.getItem("lang") || "ar",
 
   // 🔁 fallback إذا النص غير موجود
-  fallbackLng: "en",
+  fallbackLng: "ar",
 
   // 🧹 منع مشاكل escape في النصوص
   interpolation: {
