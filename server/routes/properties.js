@@ -139,19 +139,32 @@ router.post("/", protect, adminOnly, upload.any(), compressImages, async (req, r
 // ── PUT /:id ───────────────────────────────────────────────
 router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req, res) => {
   try {
-    // ... (باقي الكود اللي فوق متل ما هو)
+    if (!mongoose.Types.ObjectId.isValid(req.params.id))
+      return res.status(400).json({ error: "ID غير صالح" });
+
+    const property = await Property.findById(req.params.id);
+    if (!property) return res.status(404).json({ error: "العقار غير موجود" });
 
     const b = req.body;
 
-    // ✅ 1. تعديل دالة toNum لترجع null إذا كان الحقل فاضي أو كلمة null
+    // ✅ تحديث دالة تحويل الأرقام لتُرجع null صريح في حال كان الحقل فارغاً أو نصوص غير صالحة
     const toNum = (v) => {
       if (v === undefined || v === "" || v === "null" || v === "undefined") return null;
       return Number(v);
     };
 
-    const toArr = (v) => { /* ... */ };
+    const toArr = (v) => {
+      if (!v) return [];
+      if (Array.isArray(v)) return v;
+      return v.split(",").map((f) => f.trim()).filter((f) => f);
+    };
 
-    // ... 
+    let finalImages;
+    if (b.replaceImages === "true" && req.compressedImages?.length > 0) {
+      finalImages = req.compressedImages;
+    } else {
+      finalImages = (property.images || []).filter(img => img && !img.includes("undefined"));
+    }
 
     const updated = await Property.findByIdAndUpdate(
       req.params.id,
@@ -159,15 +172,33 @@ router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req,
         title: b.title ?? property.title,
         titleEn: b.titleEn ?? property.titleEn ?? "",
         description: b.description ?? property.description,
-        // ... (باقي الحقول متل ما هي)
+        descriptionEn: b.descriptionEn ?? property.descriptionEn ?? "",
+        category: b.category ?? property.category,
+        categoryEn: b.categoryEn ?? property.categoryEn ?? "",
+        type: b.type ?? property.type,
 
-        // ✅ 2. التعديل الأهم هنا: 
-        // إذا كان الحقل مبعوت (سواء رقم أو فاضي)، منمرره لـ toNum اللي رح تعطيه null لو فاضي.
-        // وإذا مو مبعوت أبداً (undefined)، وقتها بس بناخد السعر القديم.
+        // ✅ التعديل هنا: إذا كان حقل السعر مبعوثاً بالطلب (حتى لو فارغ "")، منمرره لـ toNum ليعطينا null.
+        // أما إذا لم يتم إرسال الحقل أبداً (undefined)، بناخد القيمة القديمة من العقار.
         price: b.price !== undefined ? toNum(b.price) : property.price,
 
         city: b.city ?? property.city,
-        // ... (باقي الكود لآخر الـ Update)
+        cityEn: b.cityEn ?? property.cityEn ?? "",
+        area: b.area ? toNum(b.area) : property.area,
+        rooms: b.rooms ? toNum(b.rooms) : property.rooms,
+        bathrooms: b.bathrooms ? toNum(b.bathrooms) : property.bathrooms,
+        address: b.address ?? property.address ?? "",
+        addressEn: b.addressEn ?? property.addressEn ?? "",
+        images: finalImages,
+        features: b.features ? toArr(b.features) : property.features,
+        featuresEn: b.featuresEn ? toArr(b.featuresEn) : property.featuresEn ?? [],
+        videoUrl: b.videoUrl ?? property.videoUrl ?? "",
+        isFeatured: b.isFeatured === "true" || b.isFeatured === true,
+        status: b.status ?? property.status,
+        action: {
+          type: b.status === "sold" ? "sold" : "updated",
+          by: req.user.name,
+          at: new Date()
+        }
       },
       { new: true }
     );
