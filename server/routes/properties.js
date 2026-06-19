@@ -146,13 +146,7 @@ router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req,
     if (!property) return res.status(404).json({ error: "العقار غير موجود" });
 
     const b = req.body;
-
-    // ✅ تحديث دالة تحويل الأرقام لتُرجع null صريح في حال كان الحقل فارغاً أو نصوص غير صالحة
-    const toNum = (v) => {
-      if (v === undefined || v === "" || v === "null" || v === "undefined") return null;
-      return Number(v);
-    };
-
+    const toNum = (v) => (v !== undefined && v !== "" ? Number(v) : null);
     const toArr = (v) => {
       if (!v) return [];
       if (Array.isArray(v)) return v;
@@ -176,11 +170,7 @@ router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req,
         category: b.category ?? property.category,
         categoryEn: b.categoryEn ?? property.categoryEn ?? "",
         type: b.type ?? property.type,
-
-        // ✅ التعديل هنا: إذا كان حقل السعر مبعوثاً بالطلب (حتى لو فارغ "")، منمرره لـ toNum ليعطينا null.
-        // أما إذا لم يتم إرسال الحقل أبداً (undefined)، بناخد القيمة القديمة من العقار.
         price: b.price !== undefined ? toNum(b.price) : property.price,
-
         city: b.city ?? property.city,
         cityEn: b.cityEn ?? property.cityEn ?? "",
         area: b.area ? toNum(b.area) : property.area,
