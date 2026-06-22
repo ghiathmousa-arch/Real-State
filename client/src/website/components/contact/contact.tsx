@@ -22,7 +22,7 @@ const Contact: React.FC = () => {
         {
             icon: <FaPhoneAlt />,
             title: t("contact.callMe"),
-            value: "+963962840702",
+            value: "+963985148289",
             href: "https://wa.me/963962840702"
         },
         {

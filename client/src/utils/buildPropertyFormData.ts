@@ -1,3 +1,4 @@
+// مسؤول عن بناء الـ FormData اللي بتروح للسيرفر. مشترك بين الإضافة والتعديل — الإضافة بتبعتله formEl، والتعديل بتبعتله
 // price مش هون — بيتعامل معه لحالو تحت
 const FORM_FIELDS = [
   'title', 'titleEn', 'description', 'descriptionEn',

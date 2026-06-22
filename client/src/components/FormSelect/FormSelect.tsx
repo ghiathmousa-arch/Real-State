@@ -1,3 +1,4 @@
+// مسؤول عن كل قائمة منسدلة dropdown بالفورم. نفس مبدأ FormInput.
 interface Option {
   value: string
   label: string

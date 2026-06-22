@@ -1,3 +1,5 @@
+// مسؤول عن كل حقل إدخال نصي أو رقمي أو textarea بالفورم. يشتغل بوضعين — uncontrolled بالإضافة وcontrolled بالتعديل.
+
 interface Props {
   label: string
   name: string
