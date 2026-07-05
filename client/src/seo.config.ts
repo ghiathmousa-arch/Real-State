@@ -1,4 +1,4 @@
-const SEO = {
+const SEO_CONFIG = {
   siteName: "Syrian Real Estate",
   titleAr: "Syrian Real Estate | عقارات سوريا",
   descriptionAr: "أفضل منصة لبيع وإيجار العقارات في سوريا",
@@ -7,9 +7,9 @@ const SEO = {
   image: "/og-image.jpg",
 
   social: {
-    // facebook: "https://facebook.com/SyrianRealEstate",
-    // instagram: "https://instagram.com/SyrianRealEstate",
+    facebook: "https://www.facebook.com/share/1DB4FcDQKW/",
+    instagram: "https://www.instagram.com/syrianestate0",
   }
 }
 
-export default SEO
+export default SEO_CONFIG

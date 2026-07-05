@@ -12,6 +12,7 @@ const apiLimiter = rateLimit({
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
+  // 
   message: { error: "محاولات دخول كثيرة، حاول بعد 15 دقيقة" }
 });
 

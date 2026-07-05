@@ -14,6 +14,17 @@ const SEO = ({ title, description }: Props) => {
 
   const desc = description || SEO_CONFIG.descriptionAr
 
+  const socialLinks = Object.values(SEO_CONFIG.social).filter(Boolean)
+
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: SEO_CONFIG.siteName,
+    url: SEO_CONFIG.url,
+    logo: SEO_CONFIG.image,
+    sameAs: socialLinks
+  }
+
   return (
     <Helmet>
       <title>{fullTitle}</title>
@@ -30,6 +41,12 @@ const SEO = ({ title, description }: Props) => {
       <meta property="og:locale" content="ar_SY" />
 
       <meta name="description" lang="en" content={SEO_CONFIG.descriptionEn} />
+
+      {socialLinks.length > 0 && (
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
+      )}
     </Helmet>
   )
 }
