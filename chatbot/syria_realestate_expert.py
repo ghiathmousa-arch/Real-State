@@ -1,10 +1,46 @@
+import time
+import uuid
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 app = Flask(__name__)
-CORS(app)
 
-sessions = {}
+# نفس قائمة النطاقات المسموحة المستخدمة بالـ Node API (server/index.js)
+ALLOWED_ORIGINS = [
+    "https://real-state-six-chi.vercel.app",
+    "http://localhost:5173",
+]
+CORS(app, origins=ALLOWED_ORIGINS, methods=["GET", "POST", "OPTIONS"])
+
+limiter = Limiter(
+    key_func=get_remote_address,
+    app=app,
+    default_limits=["60 per minute"],
+    storage_uri="memory://",
+)
+
+# ── حماية الجلسات: سقف أقصى + انتهاء صلاحية (TTL) ─────────
+SESSION_TTL_SECONDS = 30 * 60   # الجلسة تنتهي بعد 30 دقيقة بدون نشاط
+MAX_SESSIONS = 2000             # سقف أقصى للجلسات المتزامنة بالذاكرة
+
+sessions = {}  # session_id -> {"bot": SyriaRealEstateBot, "last_active": float}
+
+
+def _cleanup_sessions():
+    """يحذف الجلسات المنتهية الصلاحية، وإذا تجاوزنا السقف يحذف الأقدم نشاطاً."""
+    now = time.time()
+    expired = [sid for sid, s in sessions.items() if now - s["last_active"] > SESSION_TTL_SECONDS]
+    for sid in expired:
+        del sessions[sid]
+
+    overflow = len(sessions) - MAX_SESSIONS
+    if overflow > 0:
+        oldest = sorted(sessions.items(), key=lambda kv: kv[1]["last_active"])[:overflow]
+        for sid, _ in oldest:
+            del sessions[sid]
 
 # =============================================
 # بيانات المحافظات والمناطق
@@ -206,24 +242,28 @@ class SyriaRealEstateBot:
 # =============================================
 
 @app.route('/chatbot', methods=['POST'])
+@limiter.limit("20 per minute")
 def chatbot():
-    data = request.get_json()
-    session_id = data.get('session_id')
-    user_input  = data.get('user_input', '')
+    _cleanup_sessions()
 
-    # جلسة جديدة
+    data = request.get_json(silent=True) or {}
+    session_id = data.get('session_id')
+    user_input = data.get('user_input', '')
+
+    # جلسة جديدة — دائماً بمعرّف يولّده السيرفر (uuid4)، ما منوثق بمعرّف يبعته العميل
     if not session_id or session_id not in sessions:
-        session_id = session_id or "user_" + str(len(sessions) + 1)
+        session_id = uuid.uuid4().hex
         bot = SyriaRealEstateBot()
-        sessions[session_id] = bot
+        sessions[session_id] = {"bot": bot, "last_active": time.time()}
         response = bot.process()
         return jsonify({
             "session_id": session_id,
             "response": response
         })
 
-    bot = sessions[session_id]
-    response = bot.process(user_input)
+    entry = sessions[session_id]
+    entry["last_active"] = time.time()
+    response = entry["bot"].process(user_input)
 
     return jsonify({
         "session_id": session_id,
@@ -232,8 +272,9 @@ def chatbot():
 
 
 @app.route('/reset', methods=['POST'])
+@limiter.limit("20 per minute")
 def reset_session():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     session_id = data.get('session_id')
     if session_id and session_id in sessions:
         del sessions[session_id]
