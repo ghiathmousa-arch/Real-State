@@ -7,6 +7,16 @@ const { protect, adminOnly, contactLimiter } = require("../middleware");
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// ننظّف أي نص جاي من المستخدم قبل حقنه بقالب HTML بالإيميل (منع HTML injection)
+const escapeHtml = (str) =>
+  String(str ?? "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  }[c]));
+
 // ── POST / ─────────────────────────────────────────────────
 router.post("/", contactLimiter, async (req, res) => {
   try {
@@ -75,12 +85,12 @@ router.post("/:id/reply", protect, adminOnly, async (req, res) => {
       html: `
         <div dir="rtl" style="font-family:sans-serif;line-height:1.7;padding:20px;max-width:600px;margin:auto">
           <h3 style="color:#004e80;border-bottom:2px solid #e3e8f9;padding-bottom:10px">Syrian Estate</h3>
-          <p>مرحباً ${contact.name}،</p>
+          <p>مرحباً ${escapeHtml(contact.name)}،</p>
           <p style="background:#f9f9ff;padding:15px;border-radius:8px;border-right:4px solid #004e80">
             ${replyText}
           </p>
           <hr style="border:1px solid #e3e8f9;margin:16px 0"/>
-          <p style="color:#888;font-size:12px">رسالتك الأصلية: ${contact.message}</p>
+          <p style="color:#888;font-size:12px">رسالتك الأصلية: ${escapeHtml(contact.message)}</p>
         </div>
       `,
     }).catch(err => console.error("Mail Error:", err.message));
