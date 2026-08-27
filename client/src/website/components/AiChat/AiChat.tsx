@@ -16,11 +16,19 @@ const AiChat = () => {
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   // تمرير للأسفل عند كل رسالة جديدة
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
+
+  // إرجاع الفوكس لحقل الكتابة بعد فتح الشات أو استلام رد
+  useEffect(() => {
+    if (isOpen && !isLoading) {
+      inputRef.current?.focus()
+    }
+  }, [isOpen, isLoading])
 
   // بدء جلسة جديدة عند فتح الشات
   useEffect(() => {
@@ -145,6 +153,7 @@ const AiChat = () => {
           {/* الإدخال */}
           <div className="p-3 border-t border-[#e3e8f9] flex items-center gap-2 bg-white" dir="rtl">
             <input
+              ref={inputRef}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === "Enter" && handleSend()}
