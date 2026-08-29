@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -72,7 +72,6 @@ const AllPropertiesPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [allProperties, setAllProperties] = useState<any[]>([]);
-  const [filtered, setFiltered] = useState<any[]>([]);
   const [featured, setFeatured] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -90,7 +89,6 @@ const AllPropertiesPage: React.FC = () => {
         const res = await axios.get(`${API_URL}/api/properties`);
         const data = Array.isArray(res.data) ? res.data : [];
         setAllProperties(data);
-        setFiltered(data);
         setFeatured(data.filter((p: any) => p.isFeatured));
       } catch (e) {
         console.error(e);
@@ -101,8 +99,8 @@ const AllPropertiesPage: React.FC = () => {
     fetchData();
   }, []);
 
-  // ── فلترة محلية ──
-  useEffect(() => {
+  // ── فلترة محلية ── محسوبة أثناء الـ render (بدل useState+useEffect) بدل ما نعمل render إضافي بلا داعي
+  const filtered = useMemo(() => {
     let result = [...allProperties];
     if (search.trim()) {
       const q = search.trim().toLowerCase();
@@ -115,11 +113,18 @@ const AllPropertiesPage: React.FC = () => {
     }
     if (typeFilter) result = result.filter(p => p.type === typeFilter);
     if (cityFilter) result = result.filter(p => p.city === cityFilter || p.cityEn === cityFilter);
-    setFiltered(result);
+    return result;
+  }, [search, typeFilter, cityFilter, allProperties]);
+
+  // إعادة الصفحة للأولى عند تغيّر الفلتر — side-effect حقيقي، لازم يضل بـ useEffect منفصل
+  useEffect(() => {
     setPage(1);
   }, [search, typeFilter, cityFilter, allProperties]);
 
-  const cities = [...new Set(allProperties.map(p => p.city).filter(Boolean))];
+  const cities = useMemo(
+    () => [...new Set(allProperties.map(p => p.city).filter(Boolean))],
+    [allProperties]
+  );
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
   const currentItems = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
