@@ -54,11 +54,15 @@ app.use("/api/properties", propertiesRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/contact", contactRouter);
 
+// بيانات ثابتة بالكود (server/constants/property.js) — ما بتتغيّر إلا بـ deploy جديد،
+// فكاش يوم كامل آمن 100% وبيوفر أكتر endpoint مضروب بالموقع
 app.get("/api/cities", (req, res) => {
+  res.set("Cache-Control", "public, max-age=86400");
   res.json(CITIES);
 });
 
 app.get("/api/categories", (req, res) => {
+  res.set("Cache-Control", "public, max-age=86400");
   res.json(CATEGORIES);
 });
 
