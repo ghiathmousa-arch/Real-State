@@ -5,10 +5,34 @@ const Property = require("../models/Property");
 const { upload, compressImages } = require("../middleware/upload");
 const { protect, adminOnly } = require("../middleware");
 
+// ── كاش بسيط بالذاكرة ────────────────────────────────────────
+// نكاش القائمة الكاملة (بدون فلاتر)، المميزة، وتفاصيل كل عقار لفترة قصيرة
+// (تخفيف الضغط عن الأكتر endpoints استدعاءً)، ونصفّرها فوراً عند أي
+// إضافة/تعديل/حذف بنفس الراوتر — عشان الأدمن ما يشوف بيانات قديمة بعد أي تغيير
+const CACHE_TTL_MS = 30 * 1000;
+const cache = {
+  list: null,
+  featured: null,
+  byId: new Map(),
+};
+const isFresh = (entry) => !!entry && entry.expiresAt > Date.now();
+const invalidatePropertiesCache = () => {
+  cache.list = null;
+  cache.featured = null;
+  cache.byId.clear();
+};
+
 // ── GET / ──────────────────────────────────────────────────
 router.get("/", async (req, res) => {
   try {
     const { category, city, minPrice, maxPrice, type, search } = req.query;
+    const hasFilters = Boolean(category || city || minPrice || maxPrice || type || search);
+
+    // القائمة الكاملة (بدون فلاتر) هي الأكتر استدعاءً — كاشها لوحدها كافي
+    if (!hasFilters && isFresh(cache.list)) {
+      return res.json(cache.list.data);
+    }
+
     let query = {};
 
     if (category) query.category = category;
@@ -36,6 +60,11 @@ router.get("/", async (req, res) => {
     }
 
     const properties = await Property.find(query);
+
+    if (!hasFilters) {
+      cache.list = { data: properties, expiresAt: Date.now() + CACHE_TTL_MS };
+    }
+
     res.json(properties);
   } catch (error) {
     console.error("Properties GET Error:", error);
@@ -46,7 +75,12 @@ router.get("/", async (req, res) => {
 // ── GET /featured ──────────────────────────────────────────
 router.get("/featured", async (req, res) => {
   try {
+    if (isFresh(cache.featured)) {
+      return res.json(cache.featured.data);
+    }
+
     const properties = await Property.find({ isFeatured: true, status: "active" });
+    cache.featured = { data: properties, expiresAt: Date.now() + CACHE_TTL_MS };
     res.json(properties);
   } catch (error) {
     console.error("Properties Featured Error:", error);
@@ -75,8 +109,15 @@ router.get("/:id", async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id))
       return res.status(400).json({ error: "ID غير صالح" });
 
+    const cached = cache.byId.get(req.params.id);
+    if (isFresh(cached)) {
+      return res.json(cached.data);
+    }
+
     const property = await Property.findById(req.params.id);
     if (!property) return res.status(404).json({ error: "العقار غير موجود" });
+
+    cache.byId.set(req.params.id, { data: property, expiresAt: Date.now() + CACHE_TTL_MS });
     res.json(property);
   } catch (error) {
     console.error("Properties GetById Error:", error);
@@ -129,6 +170,7 @@ router.post("/", protect, adminOnly, upload.any(), compressImages, async (req, r
       }
     });
 
+    invalidatePropertiesCache();
     res.status(201).json(property);
   } catch (error) {
     console.error("Properties POST Error:", error);
@@ -193,6 +235,7 @@ router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req,
       { new: true }
     );
 
+    invalidatePropertiesCache();
     res.json(updated);
   } catch (error) {
     console.error("Properties PUT Error:", error);
@@ -208,6 +251,8 @@ router.delete("/:id", protect, adminOnly, async (req, res) => {
 
     const property = await Property.findByIdAndDelete(req.params.id);
     if (!property) return res.status(404).json({ error: "العقار غير موجود" });
+
+    invalidatePropertiesCache();
     res.json({ message: "تم حذف العقار بنجاح" });
   } catch (error) {
     console.error("Properties DELETE Error:", error);
