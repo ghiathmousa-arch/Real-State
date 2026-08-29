@@ -1,7 +1,7 @@
 // مسؤول عن كل القيم الثابتة بالمشروع — المدن والفئات بيجيبهن usePropertyOptions من الباك اند
 // (المصدر الوحيد: server/constants/property.js) بدل ما يكونوا مكررين هون كمان.
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import axios from "axios"
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000"
@@ -48,13 +48,15 @@ export const usePropertyOptions = () => {
     return () => { cancelled = true }
   }, [])
 
-  return {
+  // ملفوفة بـ useMemo عشان تبقى نفس الـ reference بين الـ renders طالما cities/categories/loading ما تغيّروا
+  // (بدونها، أي useMemo تانية بمكونات مستهلكة زي PropertiesTable/AddProperty/EditPropertyModal بتصير معطّلة عملياً)
+  return useMemo(() => ({
     cities: cities.map(c => c.ar),
     citiesEn: cities.map(c => c.en),
     categories: categories.map(c => c.ar),
     categoriesEn: categories.map(c => c.en),
     loading,
-  }
+  }), [cities, categories, loading])
 }
 
 export const PROPERTY_TYPES = [
