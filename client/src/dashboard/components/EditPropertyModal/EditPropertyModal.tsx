@@ -93,7 +93,6 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
     e.preventDefault()
     setLoading(true)
     try {
-      const token = localStorage.getItem("token")
       const data = buildPropertyFormData({
         formData: { ...formData, price: priceInput },
         features,
@@ -108,7 +107,8 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
       }
 
       await axios.put(`${BASE_URL}/api/properties/${property._id}`, data, {
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+        withCredentials: true,
+        headers: { 'Content-Type': 'multipart/form-data' }
       })
       setShowSuccess(true)
     } catch (error: any) {

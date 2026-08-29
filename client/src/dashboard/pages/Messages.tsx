@@ -28,19 +28,10 @@ const Messages = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [successPopup, setSuccessPopup] = useState(false);
 
-  // ✅ إضافة Authorization header لكل الطلبات المحمية
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem("token");
-    return {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {})
-    };
-  };
-
   const fetchMessages = async () => {
     try {
       const res = await fetch(`${BASE_URL}/api/contact`, {
-        headers: getAuthHeaders() // ✅ مضاف
+        credentials: "include" // كوكي الجلسة httpOnly بيُرسل تلقائياً
       })
 
       if (!res.ok) {
@@ -74,7 +65,7 @@ const Messages = () => {
     try {
       await fetch(`${BASE_URL}/api/contact/${id}`, {
         method: "DELETE",
-        headers: getAuthHeaders() // ✅ مضاف
+        credentials: "include"
       })
       setMessages(prev => prev.filter(m => m._id !== id))
       if (selected?._id === id) setSelected(null)
@@ -92,7 +83,8 @@ const Messages = () => {
     try {
       const res = await fetch(`${BASE_URL}/api/contact/${selected._id}/reply`, {
         method: "POST",
-        headers: getAuthHeaders(), // ✅ معدل (كان فيه Content-Type بس)
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ replyText })
       })
       const data = await res.json()

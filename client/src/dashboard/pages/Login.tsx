@@ -25,15 +25,15 @@ const Login = () => {
       const res = await fetch(`${BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include", // عشان كوكي الجلسة (httpOnly) ينحفظ بالمتصفح
         body: JSON.stringify(formData)
       })
       const json = await res.json()
 
-      if (!json.token) return alert(json.error || "بيانات خاطئة")
+      if (!res.ok) return alert(json.error || "بيانات خاطئة")
       if (json.user.role !== "admin") return alert("ليس لديك صلاحية")
 
-      // حفظ التوكن وبيانات المستخدم كاملة
-      localStorage.setItem("token", json.token)
+      // نخزّن بيانات العرض فقط (اسم/دور) — الجلسة الفعلية بكوكي httpOnly غير قابل للقراءة من JS
       localStorage.setItem("user", JSON.stringify({
         id: json.user.id,
         name: json.user.name,

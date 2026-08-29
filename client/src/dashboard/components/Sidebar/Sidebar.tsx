@@ -3,12 +3,20 @@ import { NavLink, useNavigate } from "react-router-dom"
 import { MdDashboard, MdOutlineBusiness, MdLogout, MdClose, MdEmail } from "react-icons/md"
 import { IoMdAdd } from "react-icons/io"
 
+const API_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = API_URL?.replace("/api", "");
+
 const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   const navigate = useNavigate()
   const [showLogoutPopup, setShowLogoutPopup] = useState(false)
 
-  const handleConfirmLogout = () => {
-    localStorage.removeItem("token")
+  const handleConfirmLogout = async () => {
+    try {
+      // يمسح كوكي الجلسة httpOnly من طرف السيرفر — localStorage.removeItem لا يكفي لأنه ما بيوصلها أصلاً
+      await fetch(`${BASE_URL}/api/auth/logout`, { method: "POST", credentials: "include" })
+    } catch {
+      // حتى لو فشل الطلب (مثلاً الشبكة)، نكمّل تسجيل الخروج محلياً
+    }
     localStorage.removeItem("user")
     navigate("/dashboard/login")
   }

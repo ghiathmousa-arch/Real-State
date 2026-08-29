@@ -3,18 +3,21 @@ const User = require("../models/User");
 
 // ─── protect: يتحقق هل المستخدم مسجل دخول ───────────────
 const protect = async (req, res, next) => {
-  // نقرأ الـ Header من الطلب
-  // الفرونت يرسل: Authorization: Bearer eyJhbGci...
+  // المصدر الأساسي: كوكي httpOnly (token) اللي بيرسلها المتصفح تلقائياً
+  // نقبل كمان Authorization: Bearer لأي استخدام مباشر للـ API خارج المتصفح
+  let token;
   const header = req.headers.authorization;
 
-  // لو ما في header أو ما يبدأ بـ Bearer، نرفض الطلب
-  if (!header || !header.startsWith("Bearer "))
+  if (header && header.startsWith("Bearer ")) {
+    token = header.split(" ")[1];
+  } else if (req.cookies?.token) {
+    token = req.cookies.token;
+  }
+
+  if (!token)
     return res.status(401).json({ error: "غير مصرح — يرجى تسجيل الدخول" });
 
   try {
-    // نأخذ التوكن فقط بدون كلمة Bearer
-    const token = header.split(" ")[1];
-
     // نفك تشفير التوكن ونتحقق منه باستخدام الـ Secret
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 

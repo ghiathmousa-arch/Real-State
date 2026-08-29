@@ -28,12 +28,9 @@ const PropertyActions = ({ propertyId, propertyTitle, propertyData, onActionSucc
   // دالة الحذف المركزية المحدثة لتعمل ديناميكياً على السيرفر المحلي والمرفوع (Railway)
   const handleDelete = async () => {
     try {
-      // جلب توكن التحقق (JWT) المخزن في المتصفح لتوثيق صلاحية الأدمن في الحذف
-      const token = localStorage.getItem("token");
-      // إرسال طلب حذف آمن (DELETE) إلى السيرفر باستخدام الرابط الموحد مع تمرير الـ ID للعقار المستهدف
+      // إرسال طلب حذف آمن (DELETE) إلى السيرفر — كوكي الجلسة httpOnly بيثبت صلاحية الأدمن تلقائياً
       await axios.delete(`${BASE_URL}/api/properties/${propertyId}`, {
-        // تمرير توكن الحماية داخل هيدر الطلب لاعتماد العملية من الـ Backend
-        headers: { Authorization: `Bearer ${token}` }
+        withCredentials: true
       });
       // استدعاء دالة التحديث لإعادة جلب (Fetch) البيانات الجديدة وتحديث السجلات في الجدول الرئيسي
       onActionSuccess();

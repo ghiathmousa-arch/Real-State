@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
 const path = require("path");
 const helmet = require("helmet");
 const mongoSanitize = require("express-mongo-sanitize");
@@ -20,6 +21,10 @@ const PORT = process.env.PORT || 5000;
 
 connectDB();
 
+// Render يستقبل الطلبات عبر بروكسي داخلي (TLS ينتهي عنده) — بدون هاد السطر
+// req.secure بيضل false دائماً فبتنكسر كوكي الجلسة (secure+SameSite=None) وrate limiting
+app.set("trust proxy", 1);
+
 // ── الأمان ───────────────────────────────────────────────
 app.use(helmet());
 
@@ -37,16 +42,23 @@ app.use(cors({
     }
   },
   allowedHeaders: ["Content-Type", "Authorization"],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true // لازم عشان كوكي الجلسة (httpOnly) ينبعث ويُقبل عبر النطاقات
 }));
 
 app.use("/api/", apiLimiter);
 
-app.use(mongoSanitize());
+app.use(cookieParser());
 
 // ── الـ Body Parsing ──────────────────────────────────────
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// مع حد أقصى لحجم الجسم لمنع إساءة استخدام نماذج الإدخال العامة (تواصل، تسجيل دخول)
+// mongoSanitize لازم يجي بعد الـ body parsers، لأنه بيفحص req.body وقت التسجيل
+// وإلا بيكون لسا مش موجود فبيصير no-op على كل بيانات POST/PUT
+app.use(bodyParser.json({ limit: "10kb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "10kb" }));
+
+app.use(mongoSanitize());
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ── الراوتات ──────────────────────────────────────────────

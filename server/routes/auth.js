@@ -12,6 +12,17 @@ const signToken = (id) =>
     { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
   );
 
+// كوكي httpOnly بدل إرجاع التوكن بالـ body — غير قابل للقراءة من JS فبيوقف سرقته عبر XSS
+// secure/sameSite ديناميكيين حسب req.secure: production (https, نطاقات مختلفة) لازم secure+None،
+// وdev المحلي (http، نفس الـ host بس بورت مختلف) بيشتغل عادي بـ Lax بدون secure
+const cookieOptions = (req) => ({
+  httpOnly: true,
+  secure: req.secure,
+  sameSite: req.secure ? "none" : "lax",
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+  path: "/",
+});
+
 // ─── POST /api/auth/register ──────────────────────────────
 router.post("/register", protect, adminOnly, async (req, res) => {
   try {
@@ -30,8 +41,8 @@ router.post("/register", protect, adminOnly, async (req, res) => {
     const user = await User.create({ name, email, password });
     const token = signToken(user._id);
 
+    res.cookie("token", token, cookieOptions(req));
     res.status(201).json({
-      token,
       user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (error) {
@@ -55,8 +66,8 @@ router.post("/login", loginLimiter, async (req, res) => {
 
     const token = signToken(user._id);
 
+    res.cookie("token", token, cookieOptions(req));
     res.json({
-      token,
       user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (error) {
@@ -73,6 +84,12 @@ router.get("/me", protect, (req, res) => {
     email: req.user.email,
     role: req.user.role,
   });
+});
+
+// ─── POST /api/auth/logout ────────────────────────────────
+router.post("/logout", (req, res) => {
+  res.clearCookie("token", { path: "/" });
+  res.json({ success: true });
 });
 
 module.exports = router;

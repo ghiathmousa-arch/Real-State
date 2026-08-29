@@ -82,13 +82,12 @@ const AddProperty = () => {
     e.preventDefault()
     setLoading(true)
     try {
-      const token = localStorage.getItem("token")
       const formData = buildPropertyFormData({ formEl: e.currentTarget, features, featuresEn })
       files.forEach(file => formData.append('images', file))
 
       const res = await fetch(`${BASE_URL}/api/properties`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
         body: formData
       })
       const data = await res.json()
