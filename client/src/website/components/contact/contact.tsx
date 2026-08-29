@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { WHATSAPP_NUMBER } from "../../../constants/contact";
 
 const Contact: React.FC = () => {
     const { t, i18n } = useTranslation();
@@ -22,8 +23,8 @@ const Contact: React.FC = () => {
         {
             icon: <FaPhoneAlt />,
             title: t("contact.callMe"),
-            value: "+963985148289",
-            href: "https://wa.me/963962840702"
+            value: `+${WHATSAPP_NUMBER}`,
+            href: `https://wa.me/${WHATSAPP_NUMBER}`
         },
         {
             icon: <FaEnvelope />,

@@ -1,4 +1,5 @@
 import React from "react";
+import { WHATSAPP_NUMBER } from "../../../constants/contact";
 
 const WhatsAppIcon = ({ size = 28 }: { size?: number }) => (
   <img src="/img/whatsapp.svg" width={size} height={size} alt="WhatsApp" />
@@ -13,7 +14,6 @@ const FloatingWhatsApp: React.FC<FloatingWhatsAppProps> = ({
   message = "مرحباً، أنا مهتم بأحد العقارات",
   position = "left"
 }) => {
-  const WHATSAPP_NUMBER = "963985148289";
   const link = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 
   return (
