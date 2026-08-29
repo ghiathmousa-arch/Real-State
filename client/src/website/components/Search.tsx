@@ -1,28 +1,14 @@
 import { FaSearch } from "react-icons/fa";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { searchContext } from "../Layout/Layout";
+import { usePropertyOptions } from "../../constants/property";
 
 const Search = () => {
     const { t } = useTranslation();
     const { setSearch } = useContext(searchContext);
     const [localOptions, setLocalOptions] = useState({ location: '', type: '', price: '' });
-    const [cities, setCities] = useState<string[]>([]);
-    const [categories, setCategories] = useState<string[]>([]);
-
-    const API_BASE_URL = import.meta.env.VITE_API_URL;
-
-    useEffect(() => {
-        fetch(`${API_BASE_URL}/api/cities`)
-            .then(res => res.json())
-            .then(data => setCities(data))
-            .catch(err => console.error("Error fetching cities:", err));
-
-        fetch(`${API_BASE_URL}/api/categories`)
-            .then(res => res.json())
-            .then(data => setCategories(data))
-            .catch(err => console.error("Error fetching categories:", err));
-    }, [API_BASE_URL]);
+    const { cities, categories } = usePropertyOptions();
 
     const searchFields = [
         { name: 'location', label: t('search.location_label'), icon: '📍', options: cities },

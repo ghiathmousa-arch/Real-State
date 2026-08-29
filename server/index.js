@@ -9,6 +9,7 @@ require("dotenv").config({ path: __dirname + "/.env" });
 
 const connectDB = require("./config/db");
 const { apiLimiter } = require("./middleware");
+const { CITIES, CATEGORIES } = require("./constants/property");
 
 const propertiesRouter = require("./routes/properties");
 const authRouter = require("./routes/auth");
@@ -54,11 +55,11 @@ app.use("/api/auth", authRouter);
 app.use("/api/contact", contactRouter);
 
 app.get("/api/cities", (req, res) => {
-  res.json(["دمشق", "ريف دمشق", "حلب", "ريف حلب", "حمص", "حماة", "اللاذقية", "طرطوس", "دير الزور", "الحسكة", "الرقة"]);
+  res.json(CITIES);
 });
 
 app.get("/api/categories", (req, res) => {
-  res.json(["شقة", "منزل", "أرض", "مكتب", "متجر", "مستودع"]);
+  res.json(CATEGORIES);
 });
 
 app.get("/", (req, res) => {

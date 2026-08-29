@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MdCloudUpload, MdClose, MdSave } from 'react-icons/md'
 import Header from '../Header/Header'
@@ -8,8 +8,7 @@ import FormSelect from '../../../components/FormSelect/FormSelect'
 import FeatureInput from '../FeatureInput/FeatureInput'
 import { buildPropertyFormData } from '../../../utils/buildPropertyFormData'
 import {
-  CITIES, CITIES_EN,
-  CATEGORIES, CATEGORIES_EN,
+  usePropertyOptions,
   PROPERTY_TYPES, PROPERTY_STATUS, FEATURED_OPTIONS
 } from '../../../constants/property'
 
@@ -34,18 +33,20 @@ const ADDRESS_FIELDS = [
   { name: "addressEn", label: "Address (EN)", placeholder: "District, Street...", dir: "ltr" as const },
 ]
 
-const SELECT_FIELDS = [
-  { name: "category", label: "الفئة", required: true, placeholder: "اختر الفئة", options: CATEGORIES.map(c => ({ value: c, label: c })) },
-  { name: "categoryEn", label: "Category (EN)", required: true, placeholder: "Select Category", dir: "ltr" as const, options: CATEGORIES_EN.map(c => ({ value: c, label: c })) },
-  { name: "type", label: "النوع", required: true, placeholder: "اختر النوع", options: PROPERTY_TYPES },
-  { name: "city", label: "المدينة", required: true, placeholder: "اختر المدينة", options: CITIES.map(c => ({ value: c, label: c })) },
-  { name: "cityEn", label: "City (EN)", required: true, placeholder: "Select City", dir: "ltr" as const, options: CITIES_EN.map(c => ({ value: c, label: c })) },
-  { name: "status", label: "الحالة", options: PROPERTY_STATUS },
-  { name: "isFeatured", label: "عقار مميز؟", options: FEATURED_OPTIONS },
-]
-
 const AddProperty = () => {
   const navigate = useNavigate()
+  const { cities, citiesEn, categories, categoriesEn } = usePropertyOptions()
+
+  const SELECT_FIELDS = useMemo(() => [
+    { name: "category", label: "الفئة", required: true, placeholder: "اختر الفئة", options: categories.map(c => ({ value: c, label: c })) },
+    { name: "categoryEn", label: "Category (EN)", required: true, placeholder: "Select Category", dir: "ltr" as const, options: categoriesEn.map(c => ({ value: c, label: c })) },
+    { name: "type", label: "النوع", required: true, placeholder: "اختر النوع", options: PROPERTY_TYPES },
+    { name: "city", label: "المدينة", required: true, placeholder: "اختر المدينة", options: cities.map(c => ({ value: c, label: c })) },
+    { name: "cityEn", label: "City (EN)", required: true, placeholder: "Select City", dir: "ltr" as const, options: citiesEn.map(c => ({ value: c, label: c })) },
+    { name: "status", label: "الحالة", options: PROPERTY_STATUS },
+    { name: "isFeatured", label: "عقار مميز؟", options: FEATURED_OPTIONS },
+  ], [cities, citiesEn, categories, categoriesEn])
+
   const [loading, setLoading] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [previews, setPreviews] = useState<string[]>([])

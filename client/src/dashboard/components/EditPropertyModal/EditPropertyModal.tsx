@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { MdClose, MdSave, MdCloudUpload } from "react-icons/md"
 import axios from 'axios'
 import SuccessModal from '../SuccessModal/SuccessModal'
@@ -7,8 +7,7 @@ import FormSelect from "../../../components/FormSelect/FormSelect"
 import FeatureInput from '../FeatureInput/FeatureInput'
 import { buildPropertyFormData } from '../../../utils/buildPropertyFormData'
 import {
-  CITIES, CITIES_EN,
-  CATEGORIES, CATEGORIES_EN,
+  usePropertyOptions,
   PROPERTY_TYPES, PROPERTY_STATUS, FEATURED_OPTIONS
 } from '../../../constants/property'
 
@@ -40,17 +39,8 @@ const ADDRESS_FIELDS = [
   { name: "addressEn", label: "Address (EN)", placeholder: "District, Street...", dir: "ltr" as const },
 ]
 
-const SELECT_FIELDS = [
-  { name: "category", label: "الفئة", placeholder: "اختر الفئة", options: CATEGORIES.map(c => ({ value: c, label: c })) },
-  { name: "categoryEn", label: "Category (EN)", placeholder: "Select Category", dir: "ltr" as const, options: CATEGORIES_EN.map(c => ({ value: c, label: c })) },
-  { name: "type", label: "النوع", options: PROPERTY_TYPES },
-  { name: "city", label: "المدينة", placeholder: "اختر المدينة", options: CITIES.map(c => ({ value: c, label: c })) },
-  { name: "cityEn", label: "City (EN)", placeholder: "Select City", dir: "ltr" as const, options: CITIES_EN.map(c => ({ value: c, label: c })) },
-  { name: "status", label: "الحالة", options: PROPERTY_STATUS },
-  { name: "isFeatured", label: "مميز؟", options: FEATURED_OPTIONS },
-]
-
 const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
+  const { cities, citiesEn, categories, categoriesEn } = usePropertyOptions()
   const [formData, setFormData] = useState<any>({})
   const [priceInput, setPriceInput] = useState("")
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null)
@@ -73,6 +63,16 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
       setSelectedFiles(null)
     }
   }, [property])
+
+  const SELECT_FIELDS = useMemo(() => [
+    { name: "category", label: "الفئة", placeholder: "اختر الفئة", options: categories.map(c => ({ value: c, label: c })) },
+    { name: "categoryEn", label: "Category (EN)", placeholder: "Select Category", dir: "ltr" as const, options: categoriesEn.map(c => ({ value: c, label: c })) },
+    { name: "type", label: "النوع", options: PROPERTY_TYPES },
+    { name: "city", label: "المدينة", placeholder: "اختر المدينة", options: cities.map(c => ({ value: c, label: c })) },
+    { name: "cityEn", label: "City (EN)", placeholder: "Select City", dir: "ltr" as const, options: citiesEn.map(c => ({ value: c, label: c })) },
+    { name: "status", label: "الحالة", options: PROPERTY_STATUS },
+    { name: "isFeatured", label: "مميز؟", options: FEATURED_OPTIONS },
+  ], [cities, citiesEn, categories, categoriesEn])
 
   if (!isOpen) return null
 

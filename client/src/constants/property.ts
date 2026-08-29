@@ -1,19 +1,61 @@
-// مسؤول عن كل القيم الثابتة بالمشروع — المدن، الفئات، أنواع العمليات، الحالات، خيار المميز. أي تعديل على هاي القيم بيتطبق على كل المشروع من مكان وحد
+// مسؤول عن كل القيم الثابتة بالمشروع — المدن والفئات بيجيبهن usePropertyOptions من الباك اند
+// (المصدر الوحيد: server/constants/property.js) بدل ما يكونوا مكررين هون كمان.
 
-export const CITIES = [
-  "دمشق", "ريف دمشق", "حلب", "ريف حلب", "حمص",
-  "حماة", "اللاذقية", "طرطوس", "إدلب", "درعا",
-  "السويداء", "القنيطرة", "دير الزور", "الحسكة", "الرقة"
-]
+import { useEffect, useState } from "react"
+import axios from "axios"
 
-export const CITIES_EN = [
-  "Damascus", "Rif Dimashq", "Aleppo", "Rif Aleppo", "Homs",
-  "Hama", "Latakia", "Tartus", "Idlib", "Daraa",
-  "Suwayda", "Quneitra", "Deir ez-Zor", "Al-Hasakah", "Raqqa"
-]
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000"
 
-export const CATEGORIES = ["شقة", "منزل", "أرض", "مزرعة"]
-export const CATEGORIES_EN = ["Apartment", "House", "Land", "Farm"]
+interface Option {
+  ar: string
+  en: string
+}
+
+// كاش بسيط عالمستوى الموديول حتى كل المكونات يلي بتستخدم usePropertyOptions
+// بنفس الوقت يشاركوا نفس طلب الـ fetch بدل ما كل وحدة تطلبه لحالها
+let citiesPromise: Promise<Option[]> | null = null
+let categoriesPromise: Promise<Option[]> | null = null
+
+const fetchCities = () => {
+  if (!citiesPromise) {
+    citiesPromise = axios.get<Option[]>(`${BASE_URL}/api/cities`).then(res => res.data)
+  }
+  return citiesPromise
+}
+
+const fetchCategories = () => {
+  if (!categoriesPromise) {
+    categoriesPromise = axios.get<Option[]>(`${BASE_URL}/api/categories`).then(res => res.data)
+  }
+  return categoriesPromise
+}
+
+export const usePropertyOptions = () => {
+  const [cities, setCities] = useState<Option[]>([])
+  const [categories, setCategories] = useState<Option[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    Promise.all([fetchCities(), fetchCategories()])
+      .then(([c, cat]) => {
+        if (cancelled) return
+        setCities(c)
+        setCategories(cat)
+      })
+      .catch(err => console.error("تعذر جلب المدن والفئات:", err))
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [])
+
+  return {
+    cities: cities.map(c => c.ar),
+    citiesEn: cities.map(c => c.en),
+    categories: categories.map(c => c.ar),
+    categoriesEn: categories.map(c => c.en),
+    loading,
+  }
+}
 
 export const PROPERTY_TYPES = [
   { value: "buy", label: "بيع" },

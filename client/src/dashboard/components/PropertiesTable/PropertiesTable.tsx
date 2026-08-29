@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { MdSearch, MdChevronLeft, MdChevronRight, MdHomeWork } from "react-icons/md"
 import PropertyActions from '../PropertyActions/PropertyActions'
 import { getImgSrc, formatPrice } from '../../../utils/format'
-import { CITIES } from '../../../constants/property'
+import { usePropertyOptions } from '../../../constants/property'
 
 interface Property {
   _id: string
@@ -22,13 +22,15 @@ interface Props {
   refreshData: () => void
 }
 
-const FILTER_CITIES = ["الكل", ...CITIES]
 const ITEMS_PER_PAGE = 5
 
 const PropertiesTable = ({ data, loading, refreshData }: Props) => {
+  const { cities } = usePropertyOptions()
   const [searchTerm, setSearchTerm] = useState("")
   const [filterCity, setFilterCity] = useState("الكل")
   const [currentPage, setCurrentPage] = useState(1)
+
+  const FILTER_CITIES = useMemo(() => ["الكل", ...cities], [cities])
 
   const filteredData = useMemo(() => {
     return (data || []).filter(item => {
