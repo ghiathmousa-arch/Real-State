@@ -35,7 +35,7 @@ const PropertySlider: React.FC<Props> = ({
 
   const API_URL = import.meta.env.VITE_API_URL;
 
-  const [index, setIndex] = useState(0);
+  const [rawIndex, setIndex] = useState(0);
   const [perPage, setPerPage] = useState(initialPerPage);
 
   useEffect(() => {
@@ -55,19 +55,15 @@ const PropertySlider: React.FC<Props> = ({
     return () => window.removeEventListener("resize", handleResize);
   }, [initialPerPage]);
 
-  useEffect(() => {
-    const max = Math.max(0, properties.length - perPage);
-    setIndex((i) => Math.min(i, max));
-  }, [perPage, properties.length]);
-
   if (!properties?.length) return null;
 
   const maxIndex = Math.max(0, properties.length - perPage);
+  const index = Math.min(rawIndex, maxIndex);
   const canPrev = index > 0;
   const canNext = index < maxIndex;
 
-  const prev = () => setIndex((i) => Math.max(0, i - 1));
-  const next = () => setIndex((i) => Math.min(maxIndex, i + 1));
+  const prev = () => setIndex(Math.max(0, index - 1));
+  const next = () => setIndex(Math.min(maxIndex, index + 1));
 
   const onLeft = ar ? next : prev;
   const onRight = ar ? prev : next;
