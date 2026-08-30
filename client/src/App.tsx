@@ -1,7 +1,6 @@
 import { Routes, Route, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
-import DashboardRoutes from "./dashboard/DashboardRoutes";
 import Layout from "./website/Layout/Layout";
 import NavBar from "./website/components/NavBar/NavBar";
 import Footer from "./website/components/Footer";
@@ -16,6 +15,10 @@ import PropertiesList from "./website/components/PropertiesList/PropertiesList";
 import State from "./website/components/State";
 import WhyInvestors from "./website/components/WhyInvestors";
 import Contact from "./website/components/contact/contact";
+
+// كل لوحة التحكم (تسجيل دخول، عقارات، رسائل، recharts...) بحزمة منفصلة تُحمَّل بس لما حد يزور /dashboard
+// بدل ما تنشحن مع كل زيارة عادية للموقع العام
+const DashboardRoutes = lazy(() => import("./dashboard/DashboardRoutes"));
 
 type Theme = "light" | "dark";
 
@@ -60,7 +63,14 @@ function App() {
       {isWebsite && <NavBar theme={theme} setTheme={setTheme} />}
 
       <Routes>
-        <Route path="/dashboard/*" element={<DashboardRoutes />} />
+        <Route
+          path="/dashboard/*"
+          element={
+            <Suspense fallback={<div className="flex items-center justify-center h-screen text-[#004e80] font-bold">جاري التحميل...</div>}>
+              <DashboardRoutes />
+            </Suspense>
+          }
+        />
 
         <Route path="/" element={<Layout />}>
           <Route
