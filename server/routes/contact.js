@@ -29,6 +29,15 @@ router.post("/", contactLimiter, async (req, res) => {
     res.status(201).json({ success: true, data: contact });
   } catch (error) {
     console.error("Contact POST Error:", error); // ✅ التفاصيل بالـ logs فقط
+
+    // أخطاء التحقق (إيميل بصيغة غلط، نص أطول من الحد) غلط من المستخدم مو من السيرفر —
+    // لازم ترجع 400 برسالة مفهومة، مش 500 "خطأ بالسيرفر" يلي بيخلي الزائر ما يعرف شو يصلّح
+    if (error.name === "ValidationError")
+      return res.status(400).json({
+        success: false,
+        error: "تأكد من صحة البيانات: البريد الإلكتروني بصيغة صحيحة، والرسالة أقصر من 5000 حرف",
+      });
+
     res.status(500).json({ success: false, error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" }); // ✅ رسالة عامة
   }
 });
