@@ -18,14 +18,19 @@ let categoriesPromise: Promise<Option[]> | null = null
 
 const fetchCities = () => {
   if (!citiesPromise) {
-    citiesPromise = axios.get<Option[]>(`${BASE_URL}/api/cities`).then(res => res.data)
+    // لو الطلب فشل، نصفّر الكاش عشان أي محاولة جاية تقدر تعيد الطلب بدل ما تضل عالقة على وعد مرفوض للأبد
+    citiesPromise = axios.get<Option[]>(`${BASE_URL}/api/cities`)
+      .then(res => res.data)
+      .catch(err => { citiesPromise = null; throw err })
   }
   return citiesPromise
 }
 
 const fetchCategories = () => {
   if (!categoriesPromise) {
-    categoriesPromise = axios.get<Option[]>(`${BASE_URL}/api/categories`).then(res => res.data)
+    categoriesPromise = axios.get<Option[]>(`${BASE_URL}/api/categories`)
+      .then(res => res.data)
+      .catch(err => { categoriesPromise = null; throw err })
   }
   return categoriesPromise
 }
