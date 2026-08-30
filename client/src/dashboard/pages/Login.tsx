@@ -30,7 +30,8 @@ const Login = () => {
       })
       const json = await res.json()
 
-      if (!res.ok) return alert(json.error || "بيانات خاطئة")
+      // نعرض رسالة السيرفر بس لو قصيرة ومتوقعة (رسائل الباك اند دايماً عربية قصيرة) — احتياط لو يوماً رجّع نص أطول
+      if (!res.ok) return alert(json.error && json.error.length < 200 ? json.error : "بيانات خاطئة")
       if (json.user.role !== "admin") return alert("ليس لديك صلاحية")
 
       // نخزّن بيانات العرض فقط (اسم/دور) — الجلسة الفعلية بكوكي httpOnly غير قابل للقراءة من JS

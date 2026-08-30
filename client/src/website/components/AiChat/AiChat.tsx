@@ -7,7 +7,9 @@ interface Message {
   text: string
 }
 
-const FLASK_URL = import.meta.env.VITE_CHATBOT_URL || "http://127.0.0.1:5001"
+// الافتراضي هو رابط الإنتاج الحقيقي — لو VITE_CHATBOT_URL ما انضبط بـ Vercel، الشات بوت يضل شغال
+// بدل ما يرجع لـ localhost وينكسر بصمت بالإنتاج (كانت هيك المشكلة سابقاً)
+const FLASK_URL = import.meta.env.VITE_CHATBOT_URL || "https://real-state-chatbot.onrender.com"
 
 const AiChat = () => {
   const [isOpen, setIsOpen] = useState(false)

@@ -2,7 +2,6 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
-const path = require("path");
 const helmet = require("helmet");
 const mongoSanitize = require("express-mongo-sanitize");
 
@@ -59,7 +58,8 @@ app.use(bodyParser.urlencoded({ extended: true, limit: "10kb" }));
 
 app.use(mongoSanitize());
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// ملاحظة: مسار /uploads المحلي انحذف — كل صور العقارات الحية (تحقّقنا من الـ33 عقار المنشور)
+// عم تنخدم من Cloudinary، والمجلد المحلي أصلاً فاضي على Render (uploads/* مو متتبَّع بـ git)
 
 // ── الراوتات ──────────────────────────────────────────────
 app.use("/api/properties", propertiesRouter);
