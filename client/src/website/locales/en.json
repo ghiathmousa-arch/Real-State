@@ -12,7 +12,8 @@
     "sale": "Sale",
     "rent": "For Rent",
     "squareMeter": "m²",
-    "currency": "S.P"
+    "currency": "S.P",
+    "month": "month"
   },
   "contact": {
     "title": "Contact Us",
@@ -28,6 +29,7 @@
     "sendBTN": "Send"
   },
   "bestEstate": {
+    "subtitle": "Premium Selection",
     "title": "Carefully Selected Properties",
     "description": "A premium selection of properties inspected and verified by our engineering team to ensure the highest investment quality.",
     "prev": "Prev",

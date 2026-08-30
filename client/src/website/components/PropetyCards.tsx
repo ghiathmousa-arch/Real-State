@@ -21,8 +21,8 @@ const PropertyCard: React.FC<{ property: any }> = ({ property }) => {
 
     // نصوص ثابتة بسيطة
     const labels = {
-        rooms: isAr ? "غرف" : "Rooms",
-        baths: isAr ? "حمام" : "Baths",
+        rooms: isAr ? "غرف" : (property.rooms === 1 ? "Room" : "Rooms"),
+        baths: isAr ? "حمام" : (property.bathrooms === 1 ? "Bath" : "Baths"),
         area: isAr ? "م٢" : "m²",
         price: isAr ? "السعر" : "Price",
         currency: isAr ? "ل.س" : "SYP",
@@ -95,7 +95,9 @@ const PropertyCard: React.FC<{ property: any }> = ({ property }) => {
                     <div>
                         <span className="text-[10px] text-gray-400 font-black block uppercase">{labels.price}</span>
                         <div className="text-xl font-black text-sky-700 dark:text-sky-400">
-                            {property.price?.toLocaleString()} <span className="text-xs">{labels.currency}</span>
+                            {property.price
+                                ? <>{property.price.toLocaleString()} <span className="text-xs">{labels.currency}</span></>
+                                : <span className="text-sm">{isAr ? "السعر عند الطلب" : "Price on request"}</span>}
                         </div>
                     </div>
                     <div className="bg-sky-50 dark:bg-gray-700 text-sky-600 p-3 rounded-2xl group-hover:bg-sky-600 group-hover:text-white transition-colors">
