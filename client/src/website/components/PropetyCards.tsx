@@ -35,19 +35,21 @@ const PropertyCard: React.FC<{ property: any }> = ({ property }) => {
     // 💠 التعديل 2: معالجة رابط الصورة بشكل ديناميكي
     const imageSrc = property.images?.[0]
         ? (property.images[0].startsWith("http") ? property.images[0] : `${API_BASE_URL}${property.images[0]}`)
-        : "https://via.placeholder.com/400x300";
+        : null;
 
     return (
         <div
             onClick={() => navigate(`/properties/${property._id}`)}
             className="group bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700 flex flex-col h-full cursor-pointer"
         >
-            <div className="relative h-64 overflow-hidden">
-                <img
-                    src={imageSrc}
-                    alt={title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
+            <div className="relative h-64 overflow-hidden bg-gray-100 dark:bg-gray-700">
+                {imageSrc && (
+                    <img
+                        src={imageSrc}
+                        alt={title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                )}
 
                 <div className={`absolute top-4 ${isAr ? 'right-4' : 'left-4'} flex flex-col gap-2`}>
                     <span className={`text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-lg ${isSale ? "bg-sky-600" : "bg-amber-500"}`}>

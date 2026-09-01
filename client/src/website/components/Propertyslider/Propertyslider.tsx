@@ -70,12 +70,17 @@ const PropertySlider: React.FC<Props> = ({
   const disableLeft = ar ? !canNext : !canPrev;
   const disableRight = ar ? !canPrev : !canNext;
 
-  const translateX = ar
-    ? `${(index / perPage) * 100}%`
-    : `-${(index / perPage) * 100}%`;
-
   const GAP = 16;
   const cardWidth = `calc(${100 / perPage}% - ${((perPage - 1) * GAP) / perPage}px)`;
+
+  // مسافة التحريك = (عرض الكرت + الفجوة) × رقم الخطوة.
+  // عرض الكرت بينقّص حصته من الفجوة، فلازم نرجّع نضيفها بالتحريك —
+  // بدونها كل خطوة بتنقص GAP/perPage والفرق بيتراكم لحد ما آخر كرت يطلع مقصوص.
+  const shiftPct = (index * 100) / perPage;
+  const shiftPx = (index * GAP) / perPage;
+  const translateX = ar
+    ? `calc(${shiftPct}% + ${shiftPx}px)`
+    : `calc(-${shiftPct}% - ${shiftPx}px)`;
 
   return (
     <div>
@@ -121,7 +126,7 @@ const PropertySlider: React.FC<Props> = ({
               ? property.images[0].startsWith("http")
                 ? property.images[0]
                 : `${API_URL}${property.images[0]}`
-              : "https://placehold.co/400x280/e2e8f0/94a3b8?text=No+Image";
+              : null;
 
             const isBuy = property.type === "buy";
 
@@ -136,12 +141,14 @@ const PropertySlider: React.FC<Props> = ({
                 className="group bg-white dark:bg-gray-700 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-600 hover:border-sky-200 dark:hover:border-sky-700 hover:shadow-lg hover:-translate-y-1 shadow-sm transition-all duration-300 cursor-pointer flex-shrink-0"
               >
                 <div className="relative h-44 overflow-hidden bg-gray-100 dark:bg-gray-600">
-                  <img
-                    src={imgSrc}
-                    alt={name}
-                    loading="lazy"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+                  {imgSrc && (
+                    <img
+                      src={imgSrc}
+                      alt={name}
+                      loading="lazy"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
                   <div className={`absolute top-2.5 flex gap-1.5 ${ar ? "left-2.5" : "right-2.5"}`}>
                     <span

@@ -29,11 +29,12 @@ const PropertyDetailsModal = ({ isOpen, onClose, property, onEditClick }: Props)
 
   if (!isOpen || !property) return null
 
+  // ما في صور؟ مصفوفة فاضية — ما بنعرض صورة افتراضية إطلاقاً، بتضل الخلفية الرمادية فاضية
   const images: string[] = property.images?.length
     ? property.images.map((img: string) =>
       img.startsWith("http") ? img : `${BASE_URL}/${img.replace(/^\//, "")}`
     )
-    : ["https://placehold.co/800x600/e2e8f0/94a3b8?text=No+Image"]
+    : []
 
   const stats = buildStats(property)
   const features = property.features || []
@@ -50,7 +51,9 @@ const PropertyDetailsModal = ({ isOpen, onClose, property, onEditClick }: Props)
 
         {/* ── معرض الصور ── */}
         <div className="relative h-56 sm:h-72 w-full shrink-0 bg-gray-100 dark:bg-gray-800">
-          <img src={images[activeImg]} className="w-full h-full object-cover" alt={property.title} />
+          {images.length > 0 && (
+            <img src={images[activeImg]} className="w-full h-full object-cover" alt={property.title} />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
           <button onClick={onClose}

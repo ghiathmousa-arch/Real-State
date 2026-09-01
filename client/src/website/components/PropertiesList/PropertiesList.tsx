@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useMemo } from "react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
 import { useNavigate, Link } from "react-router-dom";
@@ -7,6 +7,7 @@ import { LuBedSingle, LuArrowLeft, LuArrowRight, LuArrowUpRight } from "react-ic
 import { CiRuler } from "react-icons/ci";
 import { PiBathtub } from "react-icons/pi";
 import { searchContext } from "../../Layout/Layout";
+import { withImagesFirst } from "../../../utils/format";
 
 
 const PER_PAGE = 8;
@@ -80,7 +81,11 @@ const PropertiesList: React.FC = () => {
     const isFiltered = search.location !== "" || search.type !== "" || search.price !== "";
 
     // العقارات المعروضة: إذا في فلتر نشط نعرض filteredData، وإلا نعرض الكل
-    const properties = isFiltered ? filteredData : allProperties;
+    // مرتّبة: يلي معها صور أول — قبل تقسيم الصفحات حتى يكون الترتيب شامل
+    const properties = useMemo(
+        () => withImagesFirst(isFiltered ? filteredData : allProperties),
+        [isFiltered, filteredData, allProperties]
+    );
     const loading = isFiltered ? filterLoading : loadingAll;
 
     // جلب كل العقارات مرة واحدة عند أول تحميل
@@ -156,7 +161,7 @@ const PropertiesList: React.FC = () => {
                             const title = ar ? property.title : (property.titleEn || property.title);
                             const city = ar ? property.city : (property.cityEn || property.city);
 
-                            let imgSrc = "https://placehold.co/400x280/e2e8f0/94a3b8?text=No+Image";
+                            let imgSrc: string | null = null;
                             if (property.images && property.images.length > 0) {
                                 const firstImg = property.images[0];
                                 imgSrc = firstImg.startsWith("http") ? firstImg : `${API_URL}${firstImg}`;
@@ -171,8 +176,10 @@ const PropertiesList: React.FC = () => {
                                     className="group bg-white dark:bg-gray-700 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-600 hover:border-sky-200 dark:hover:border-sky-700 hover:shadow-xl hover:-translate-y-1 shadow-sm transition-all duration-300 cursor-pointer"
                                 >
                                     <div className="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-600">
-                                        <img src={imgSrc} alt={title} loading="lazy"
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                        {imgSrc && (
+                                            <img src={imgSrc} alt={title} loading="lazy"
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                        )}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                                         <div className={`absolute top-3 flex gap-1.5 ${ar ? "left-3" : "right-3"}`}>
                                             <span className={`text-xs font-bold px-2.5 py-1 rounded-full text-white shadow-sm ${isBuy ? "bg-sky-600" : "bg-amber-500"}`}>

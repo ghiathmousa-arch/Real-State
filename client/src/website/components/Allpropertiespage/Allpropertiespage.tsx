@@ -7,6 +7,7 @@ import { LuBedSingle, LuArrowLeft, LuArrowRight, LuSearch } from "react-icons/lu
 import { CiRuler } from "react-icons/ci";
 import { PiBathtub } from "react-icons/pi";
 import PropertySlider from "../Propertyslider/Propertyslider";
+import { withImagesFirst } from "../../../utils/format";
 
 const PER_PAGE = 12;
 
@@ -113,7 +114,8 @@ const AllPropertiesPage: React.FC = () => {
     }
     if (typeFilter) result = result.filter(p => p.type === typeFilter);
     if (cityFilter) result = result.filter(p => p.city === cityFilter || p.cityEn === cityFilter);
-    return result;
+    // الترتيب قبل تقسيم الصفحات، حتى يكون ترتيب شامل مش داخل كل صفحة لحالها
+    return withImagesFirst(result);
   }, [search, typeFilter, cityFilter, allProperties]);
 
   // إعادة الصفحة للأولى عند تغيّر الفلتر — side-effect حقيقي، لازم يضل بـ useEffect منفصل
@@ -202,7 +204,7 @@ const AllPropertiesPage: React.FC = () => {
                   ? firstImg.startsWith("http")
                     ? firstImg
                     : `${BASE_URL}${firstImg}`
-                  : "https://placehold.co/400x280/e2e8f0/94a3b8?text=No+Image";
+                  : null;
 
                 const isBuy = property.type === "buy";
 
@@ -211,8 +213,10 @@ const AllPropertiesPage: React.FC = () => {
                     onClick={() => navigate(`/properties/${property._id}`)}
                     className="group bg-white dark:bg-gray-700 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-600 hover:border-sky-200 dark:hover:border-sky-700 hover:shadow-xl hover:-translate-y-1 shadow-sm transition-all duration-300 cursor-pointer">
                     <div className="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-600">
-                      <img src={imgSrc} alt={title} loading="lazy"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      {imgSrc && (
+                        <img src={imgSrc} alt={title} loading="lazy"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                       <div className={`absolute top-3 flex gap-1.5 ${ar ? "left-3" : "right-3"}`}>
                         <span className={`text-xs font-bold px-2.5 py-1 rounded-full text-white shadow-sm ${isBuy ? "bg-sky-600" : "bg-amber-500"}`}>

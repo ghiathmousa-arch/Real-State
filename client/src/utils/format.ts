@@ -11,6 +11,15 @@ export const getImgSrc = (images: string[]): string | null => {
   return first.startsWith('http') ? first : `${BASE_URL}/${first.replace(/^\//, '')}`
 }
 
+// ── ترتيب العقارات ───────────────────────────────────────
+// العقارات يلي معها صور بتظهر أول، ويلي بلا صور بتنزل لآخر القائمة.
+// Array.prototype.sort ثابت (stable) من ES2019، فالترتيب الأصلي بيضل محفوظ جوّا كل مجموعة.
+export const hasImage = (property: any): boolean =>
+  Boolean(property?.images?.[0])
+
+export const withImagesFirst = <T,>(properties: T[]): T[] =>
+  [...properties].sort((a, b) => Number(hasImage(b)) - Number(hasImage(a)))
+
 // ── السعر ────────────────────────────────────────────────
 export const formatPrice = (price: number | null | undefined): string => {
   if (price == null) return "—"

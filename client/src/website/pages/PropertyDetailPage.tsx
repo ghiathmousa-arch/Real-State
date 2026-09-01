@@ -103,7 +103,7 @@ const PropertyDetailPage: React.FC = () => {
 
   const images: string[] = property.images?.length
     ? property.images.map((img: string) => img.startsWith("http") ? img : `${BASE_URL}${img}`)
-    : ["https://placehold.co/800x500/e2e8f0/94a3b8?text=No+Image"];
+    : [];
 
   const BackIcon = ar ? LuArrowRight : LuArrowLeft;
   const PrevIcon = ar ? LuChevronRight : LuChevronLeft;
@@ -141,8 +141,10 @@ const PropertyDetailPage: React.FC = () => {
         ════════════════════════════════ */}
         <div className="relative rounded-2xl overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800"
           style={{ height: "420px" }}>
-          <img src={images[activeImg]} alt={title}
-            className="w-full h-full object-cover transition-opacity duration-300" />
+          {images.length > 0 && (
+            <img src={images[activeImg]} alt={title}
+              className="w-full h-full object-cover transition-opacity duration-300" />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
           {images.length > 1 && (
