@@ -11,6 +11,9 @@ import {
   PROPERTY_TYPES, PROPERTY_STATUS, FEATURED_OPTIONS
 } from '../../../constants/property'
 
+const MAX_IMAGES = 12
+const MAX_IMAGE_MB = 7
+
 const API_URL = import.meta.env.VITE_API_URL || ""
 const BASE_URL = API_URL.replace(/\/api\/?$/, "")
 
@@ -44,6 +47,8 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
   const [formData, setFormData] = useState<any>({})
   const [priceInput, setPriceInput] = useState("")
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null)
+  const [imageError, setImageError] = useState("")
+  const [submitError, setSubmitError] = useState("")
   const [features, setFeatures] = useState<string[]>([])
   const [featuresEn, setFeaturesEn] = useState<string[]>([])
   const [featureInput, setFeatureInput] = useState("")
@@ -89,9 +94,30 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
     if (val && !featuresEn.includes(val)) { setFeaturesEn(prev => [...prev, val]); setFeatureInputEn("") }
   }
 
+  const handleImages = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(e.target.files || [])
+
+    if (selected.length > MAX_IMAGES) {
+      setImageError(`الحد الأقصى ${MAX_IMAGES} صورة — اخترت ${selected.length}`)
+      e.target.value = ""
+      return
+    }
+
+    const tooBig = selected.find(f => f.size > MAX_IMAGE_MB * 1024 * 1024)
+    if (tooBig) {
+      setImageError(`"${tooBig.name}" أكبر من ${MAX_IMAGE_MB} ميجابايت`)
+      e.target.value = ""
+      return
+    }
+
+    setImageError("")
+    setSelectedFiles(e.target.files)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setSubmitError("")
     try {
       const data = buildPropertyFormData({
         formData: { ...formData, price: priceInput },
@@ -112,7 +138,7 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
       })
       setShowSuccess(true)
     } catch (error: any) {
-      console.error("فشل التعديل:", error.response?.data?.error || "خطأ في السيرفر")
+      setSubmitError(error.response?.data?.error || "تعذّر حفظ التعديلات، حاول مرة تانية")
     } finally {
       setLoading(false)
     }
@@ -208,7 +234,7 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
               <div className="relative group">
                 <input type="file" multiple accept="image/*"
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                  onChange={e => setSelectedFiles(e.target.files)} />
+                  onChange={handleImages} />
                 <div className={`p-5 sm:p-6 border-2 border-dashed rounded-[2rem] flex flex-col items-center gap-2 transition-all
                   ${selectedFiles ? "border-blue-400 bg-blue-50" : "border-gray-200 group-hover:border-blue-400"}`}>
                   <MdCloudUpload size={30} className={selectedFiles ? "text-blue-500" : "text-gray-300 group-hover:text-blue-500"} />
@@ -217,9 +243,20 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
                   </span>
                 </div>
               </div>
+              {imageError && (
+                <p className="text-xs font-bold text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+                  {imageError}
+                </p>
+              )}
             </div>
 
           </div>
+
+          {submitError && (
+            <p className="mt-6 text-sm font-bold text-red-600 bg-red-50 border border-red-200 rounded-2xl px-4 py-3">
+              {submitError}
+            </p>
+          )}
 
           <button type="submit" disabled={loading}
             className="w-full mt-6 sm:mt-8 py-4 sm:py-5 bg-[#0f2d4a] text-white rounded-[1.5rem] font-black flex items-center justify-center gap-3 hover:bg-blue-900 shadow-xl transition-all disabled:opacity-50">

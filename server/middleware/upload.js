@@ -18,7 +18,7 @@ const upload = multer({
   storage,
   limits: {
     fileSize: 7 * 1024 * 1024, // أقصى حجم للصورة الواحدة: 7 ميجا
-    files: 10                  // ✅ أقصى عدد صور بالطلب الواحد: 10
+    files: 12                  // ✅ أقصى عدد صور بالطلب الواحد: 12
   },
   fileFilter: (req, file, cb) => {
     const allowed = /jpeg|jpg|png|gif|webp/;

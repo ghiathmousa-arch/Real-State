@@ -12,6 +12,9 @@ import {
   PROPERTY_TYPES, PROPERTY_STATUS, FEATURED_OPTIONS
 } from '../../../constants/property'
 
+const MAX_IMAGES = 12
+const MAX_IMAGE_MB = 7
+
 const API_URL = import.meta.env.VITE_API_URL
 const BASE_URL = API_URL?.replace("/api", "")
 
@@ -49,6 +52,8 @@ const AddProperty = () => {
 
   const [loading, setLoading] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [imageError, setImageError] = useState("")
+  const [submitError, setSubmitError] = useState("")
   const [previews, setPreviews] = useState<string[]>([])
   const [files, setFiles] = useState<File[]>([])
   const [features, setFeatures] = useState<string[]>([])
@@ -59,6 +64,22 @@ const AddProperty = () => {
 
   const handleImages = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files || [])
+
+    // نوقف الاختيار هون بدل ما نخلي السيرفر يرفضه بعد رفع كامل — أسرع وأوضح للمستخدم
+    if (selected.length > MAX_IMAGES) {
+      setImageError(`الحد الأقصى ${MAX_IMAGES} صورة — اخترت ${selected.length}`)
+      e.target.value = ""
+      return
+    }
+
+    const tooBig = selected.find(f => f.size > MAX_IMAGE_MB * 1024 * 1024)
+    if (tooBig) {
+      setImageError(`"${tooBig.name}" أكبر من ${MAX_IMAGE_MB} ميجابايت`)
+      e.target.value = ""
+      return
+    }
+
+    setImageError("")
     setFiles(selected)
     setPreviews(selected.map(f => URL.createObjectURL(f)))
   }
@@ -81,6 +102,7 @@ const AddProperty = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
+    setSubmitError("")
     try {
       const formData = buildPropertyFormData({ formEl: e.currentTarget, features, featuresEn })
       files.forEach(file => formData.append('images', file))
@@ -91,10 +113,10 @@ const AddProperty = () => {
         body: formData
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
+      if (!res.ok) throw new Error(data.error || "تعذّر إضافة العقار")
       setShowSuccess(true)
     } catch (err: any) {
-      console.error("فشل:", err.message)
+      setSubmitError(err.message || "تعذّر الاتصال بالسيرفر، حاول مرة تانية")
     } finally {
       setLoading(false)
     }
@@ -102,6 +124,8 @@ const AddProperty = () => {
 
   const resetForm = () => {
     setShowSuccess(false)
+    setImageError("")
+    setSubmitError("")
     setPreviews([])
     setFiles([])
     setFeatures([])
@@ -154,10 +178,15 @@ const AddProperty = () => {
                   ${files.length > 0 ? "border-blue-400 bg-blue-50" : "border-gray-200 group-hover:border-blue-400"}`}>
                 <MdCloudUpload size={36} className={files.length > 0 ? "text-blue-500" : "text-gray-300"} />
                 <span className="text-sm font-bold text-gray-400">
-                  {files.length > 0 ? `${files.length} صور مختارة` : "اسحب الصور هنا أو اضغط للاختيار"}
+                  {files.length > 0 ? `${files.length} صور مختارة` : `اسحب الصور هنا أو اضغط للاختيار (حتى ${MAX_IMAGES})`}
                 </span>
               </div>
             </div>
+            {imageError && (
+              <p className="text-xs font-bold text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2 mt-2">
+                {imageError}
+              </p>
+            )}
             {previews.length > 0 && (
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 mt-3">
                 {previews.map((src, i) => (
@@ -174,6 +203,12 @@ const AddProperty = () => {
           </div>
 
         </div>
+
+        {submitError && (
+          <p className="mt-8 text-sm font-bold text-red-600 bg-red-50 border border-red-200 rounded-2xl px-4 py-3">
+            {submitError}
+          </p>
+        )}
 
         <div className="flex gap-4 mt-10">
           <button type="submit" disabled={loading}

@@ -85,6 +85,23 @@ app.get("/", (req, res) => {
 // Error Handler مركزي
 app.use((err, req, res, next) => {
   console.error("Unhandled Error:", err);
+
+  // أخطاء رفع الصور غلط من المستخدم مو من السيرفر — لازم 400 برسالة تقول شو صار بالضبط،
+  // مش 500 "خطأ بالسيرفر" يلي بيخلي المستخدم ما يعرف إنه تجاوز الحد
+  if (err.name === "MulterError") {
+    const messages = {
+      LIMIT_FILE_COUNT: "الحد الأقصى 12 صورة للعقار الواحد",
+      LIMIT_FILE_SIZE: "حجم الصورة الواحدة لازم يكون أقل من 7 ميجابايت",
+      LIMIT_UNEXPECTED_FILE: "حقل صور غير متوقع",
+    };
+    return res.status(400).json({ error: messages[err.code] || "تعذّر رفع الصور" });
+  }
+
+  // فلتر نوع الملف بـ upload.js بيرمي Error عادي برسالة عربية جاهزة
+  if (err.message && err.message.includes("يرجى رفع صور فقط")) {
+    return res.status(400).json({ error: err.message });
+  }
+
   res.status(err.status || 500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" });
 });
 
