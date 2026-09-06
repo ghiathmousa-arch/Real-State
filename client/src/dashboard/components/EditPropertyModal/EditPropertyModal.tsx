@@ -6,6 +6,7 @@ import FormInput from '../../../components/FormInput/FormInput'
 import FormSelect from "../../../components/FormSelect/FormSelect"
 import FeatureInput from '../FeatureInput/FeatureInput'
 import { buildPropertyFormData } from '../../../utils/buildPropertyFormData'
+import { cdn } from '../../../utils/format'
 import {
   usePropertyOptions,
   PROPERTY_TYPES, PROPERTY_STATUS, FEATURED_OPTIONS
@@ -146,7 +147,7 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
 
   const currentImg = property?.images?.[0]
   const imgSrc = currentImg
-    ? (currentImg.startsWith('http') ? currentImg : `${BASE_URL}/${currentImg.replace(/^\//, '')}`)
+    ? cdn(currentImg.startsWith('http') ? currentImg : `${BASE_URL}/${currentImg.replace(/^\//, '')}`)
     : null
 
   return (

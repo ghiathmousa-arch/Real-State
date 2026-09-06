@@ -50,7 +50,7 @@ const Footer = () => {
                     {/* Logo & Copyright — يظهر في المنتصف على الديسكتوب فقط */}
                     <div className="hidden lg:flex flex-col items-center gap-4">
                         <img
-                            src="/img/real_state_logo-removebg-preview.png"
+                            src="/img/logo-mark.webp"
                             alt="Logo"
                             className="h-20 object-contain dark:brightness-125"
                         />
@@ -92,7 +92,7 @@ const Footer = () => {
                 {/* Logo على الموبايل والتابلت — يظهر تحت */}
                 <div className="flex lg:hidden flex-col items-center gap-3 pt-6 border-t border-gray-100 dark:border-slate-800">
                     <img
-                        src="/img/real_state_logo-removebg-preview.png"
+                        src="/img/logo-mark.webp"
                         alt="Logo"
                         className="h-16 object-contain dark:brightness-125"
                     />

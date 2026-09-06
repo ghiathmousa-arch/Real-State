@@ -1,9 +1,6 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Helmet as HelmetComponent } from "react-helmet-async";
 import { LuChevronDown } from "react-icons/lu";
-
-const Helmet = HelmetComponent as any;
 
 // الأسئلة كلها من ملفات الترجمة تحت المفتاح faq.items
 // راجع الأجوبة وتأكد إنها تطابق سياستكم الفعلية — بتظهر بنتائج جوجل.
@@ -14,18 +11,9 @@ const Faq = () => {
     const items = t("faq.items", { returnObjects: true });
     const list = Array.isArray(items) ? items : [];
 
-    // نفس المصدر للنص المعروض وللـ structured data، فما بينحرفوا عن بعض أبداً
-    // (جوجل بترفض FAQ schema إذا ما كان الجواب ظاهر على الصفحة)
-    const structuredData = useMemo(() => ({
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        mainEntity: list.map((item: any) => ({
-            "@type": "Question",
-            name: item.question,
-            acceptedAnswer: { "@type": "Answer", text: item.answer }
-        }))
-    }), [list]);
-
+    // ملاحظة: الـ FAQPage structured data مبنية من نفس مفاتيح الترجمة هاي
+    // ومحقونة ثابتة بالـ HTML وقت البناء (شوف client/vite.config.ts)، حتى تكون
+    // موجودة قبل ما يشتغل JavaScript.
     if (list.length === 0) return null;
 
     return (
@@ -33,12 +21,6 @@ const Faq = () => {
             id="faq"
             className="py-16 px-6 bg-gray-50 dark:bg-gray-900/50 transition-colors"
         >
-            <Helmet>
-                <script type="application/ld+json">
-                    {JSON.stringify(structuredData)}
-                </script>
-            </Helmet>
-
             <div className="container mx-auto">
                 {/* الرأس — بنفس نمط باقي أقسام الصفحة */}
                 <div className="text-center mb-12">

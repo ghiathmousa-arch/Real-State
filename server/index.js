@@ -28,17 +28,22 @@ app.set("trust proxy", 1);
 app.use(helmet());
 
 const allowedOrigins = [
-  "https://real-state-six-chi.vercel.app",
-  "http://localhost:5173"
+  "https://real-state-six-chi.vercel.app"
 ];
+
+// بالتطوير المحلي Vite بيقفز لبورت تاني (5174، 5175…) إذا 5173 مشغول، فبتنكسر كل الطلبات.
+// منسمح بأي بورت على localhost بس لما ALLOW_LOCAL_CORS مضبوط بـ server/.env — والـ .env
+// متجاهَل بـ git وRender بياخد متغيراته من الداشبورد، فهاد الباب مستحيل ينفتح بالإنتاج.
+const allowLocalOrigins = process.env.ALLOW_LOCAL_CORS === "true";
+const LOCALHOST_ORIGIN = /^http:\/\/(localhost|127\.0\.0\.1):\d+$/;
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    if (allowLocalOrigins && LOCALHOST_ORIGIN.test(origin)) return callback(null, true);
+    // منرفض بـ false مش برمي Error: المتصفح بيمنع الطلب نفس الشي، بس بدون ما
+    // كل طلب مرفوض يطبع stack trace كامل ويغرق اللوغ
+    return callback(null, false);
   },
   allowedHeaders: ["Content-Type", "Authorization"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],

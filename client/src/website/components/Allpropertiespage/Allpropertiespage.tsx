@@ -7,7 +7,7 @@ import { LuBedSingle, LuArrowLeft, LuArrowRight, LuSearch } from "react-icons/lu
 import { CiRuler } from "react-icons/ci";
 import { PiBathtub } from "react-icons/pi";
 import PropertySlider from "../Propertyslider/Propertyslider";
-import { withImagesFirst } from "../../../utils/format";
+import { withImagesFirst, cdn } from "../../../utils/format";
 
 const PER_PAGE = 12;
 
@@ -207,9 +207,7 @@ const AllPropertiesPage: React.FC = () => {
                 // وإذا كان رابط محلي (/uploads/...) ندمجه مع BASE_URL
                 const firstImg = property.images?.[0];
                 const imgSrc = firstImg
-                  ? firstImg.startsWith("http")
-                    ? firstImg
-                    : `${BASE_URL}${firstImg}`
+                  ? cdn(firstImg.startsWith("http") ? firstImg : `${BASE_URL}${firstImg}`)
                   : null;
 
                 const isBuy = property.type === "buy";

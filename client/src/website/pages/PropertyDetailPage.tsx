@@ -14,6 +14,7 @@ import { PiBathtub } from "react-icons/pi";
 import { TbCheck } from "react-icons/tb";
 import PropertySlider from "../components/Propertyslider/Propertyslider";
 import FloatingWhatsApp from "../components/FloatingWhatsApp/FloatingWhatsApp";
+import { cdn } from "../../utils/format";
 
 const PropertyDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -102,7 +103,7 @@ const PropertyDetailPage: React.FC = () => {
   const hasPrice = property.price != null && property.price > 0;
 
   const images: string[] = property.images?.length
-    ? property.images.map((img: string) => img.startsWith("http") ? img : `${BASE_URL}${img}`)
+    ? property.images.map((img: string) => cdn(img.startsWith("http") ? img : `${BASE_URL}${img}`))
     : [];
 
   const BackIcon = ar ? LuArrowRight : LuArrowLeft;

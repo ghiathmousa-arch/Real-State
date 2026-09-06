@@ -14,16 +14,8 @@ const SEO = ({ title, description }: Props) => {
 
   const desc = description || SEO_CONFIG.descriptionAr
 
-  const socialLinks = Object.values(SEO_CONFIG.social).filter(Boolean)
-
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: SEO_CONFIG.siteName,
-    url: SEO_CONFIG.url,
-    logo: SEO_CONFIG.image,
-    sameAs: socialLinks
-  }
+  // ملاحظة: Organization structured data محقونة ثابتة بالـ HTML وقت البناء
+  // (شوف client/vite.config.ts) بدل ما تنحقن هون بعد ما يشتغل JavaScript.
 
   return (
     <Helmet>
@@ -41,12 +33,6 @@ const SEO = ({ title, description }: Props) => {
       <meta property="og:locale" content="ar_SY" />
 
       <meta name="description" lang="en" content={SEO_CONFIG.descriptionEn} />
-
-      {socialLinks.length > 0 && (
-        <script type="application/ld+json">
-          {JSON.stringify(structuredData)}
-        </script>
-      )}
     </Helmet>
   )
 }

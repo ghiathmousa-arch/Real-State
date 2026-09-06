@@ -5,7 +5,7 @@ import {
   MdInfoOutline, MdChevronLeft, MdChevronRight, MdBathtub,
   MdCalendarToday, MdUpdate, MdStar, MdHome, MdSell
 } from "react-icons/md"
-import { getImgSrc, formatPrice, BASE_URL } from '../../../utils/format'
+import { getImgSrc, formatPrice, BASE_URL, cdn } from '../../../utils/format'
 
 interface Props {
   isOpen: boolean
@@ -32,7 +32,7 @@ const PropertyDetailsModal = ({ isOpen, onClose, property, onEditClick }: Props)
   // ما في صور؟ مصفوفة فاضية — ما بنعرض صورة افتراضية إطلاقاً، بتضل الخلفية الرمادية فاضية
   const images: string[] = property.images?.length
     ? property.images.map((img: string) =>
-      img.startsWith("http") ? img : `${BASE_URL}/${img.replace(/^\//, "")}`
+      cdn(img.startsWith("http") ? img : `${BASE_URL}/${img.replace(/^\//, "")}`)
     )
     : []
 

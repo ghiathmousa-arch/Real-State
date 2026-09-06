@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
 import PropertyCard from "../PropetyCards";
+import { cdn } from "../../../utils/format";
 
 const BestEstate: React.FC = () => {
     const { t, i18n } = useTranslation();
@@ -59,7 +60,7 @@ const BestEstate: React.FC = () => {
                             {properties.slice(0, 3).map((item: any) => {
                                 // 🛠️ الفحص الذكي للروابط قبل تمريرها للمكوّن لضمان عدم تشوه الرابط
                                 const processedImages = item.images?.map((img: string) =>
-                                    img.startsWith("http") ? img : `${BASE_URL}${img}`
+                                    cdn(img.startsWith("http") ? img : `${BASE_URL}${img}`)
                                 ) || [];
 
                                 // نمرر البيانات للكرت مع مصفوفة الصور بعد معالجتها وتصحيحها

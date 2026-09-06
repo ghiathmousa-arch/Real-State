@@ -38,7 +38,7 @@ const WhyInvestors = () => {
 
             <div className="relative flex-1 flex justify-center w-full mt-10 lg:mt-0">
                 <img
-                    src="/img/investors.png"
+                    src="/img/investors.webp"
                     alt="Investors"
                     className="rounded-[40px] shadow-2xl max-w-full h-auto object-cover"
                 />

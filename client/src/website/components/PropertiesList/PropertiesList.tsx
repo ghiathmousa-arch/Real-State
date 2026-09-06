@@ -7,7 +7,7 @@ import { LuBedSingle, LuArrowLeft, LuArrowRight, LuArrowUpRight } from "react-ic
 import { CiRuler } from "react-icons/ci";
 import { PiBathtub } from "react-icons/pi";
 import { searchContext } from "../../Layout/Layout";
-import { withImagesFirst } from "../../../utils/format";
+import { withImagesFirst, cdn } from "../../../utils/format";
 
 
 const PER_PAGE = 8;
@@ -164,7 +164,7 @@ const PropertiesList: React.FC = () => {
                             let imgSrc: string | null = null;
                             if (property.images && property.images.length > 0) {
                                 const firstImg = property.images[0];
-                                imgSrc = firstImg.startsWith("http") ? firstImg : `${API_URL}${firstImg}`;
+                                imgSrc = cdn(firstImg.startsWith("http") ? firstImg : `${API_URL}${firstImg}`);
                             }
 
                             const isBuy = property.type === "buy";

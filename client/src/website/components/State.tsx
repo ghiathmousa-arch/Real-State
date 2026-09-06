@@ -8,7 +8,7 @@ const State = () => {
     return (
         <div className="relative min-h-screen w-full flex flex-col items-center justify-center">
             <img 
-                src="/img/bg-stateSection.png" 
+                src="/img/bg-stateSection.webp" 
                 alt="Background" 
                 className="absolute w-full h-full object-cover" 
             />

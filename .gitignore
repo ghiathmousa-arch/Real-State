@@ -16,3 +16,9 @@ server/uploads/*
 
 # ملفات النظام
 .DS_Store
+
+# ملف أوامر التشغيل المحلي (لا يرفع على git)
+RUN_COMMANDS.md
+
+# نسخة محلية من بيانات العقارات (dump) — لا ترفع على git
+props.json

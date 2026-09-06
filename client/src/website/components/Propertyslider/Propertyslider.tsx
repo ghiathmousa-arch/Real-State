@@ -7,6 +7,7 @@ import { IoLocationOutline } from "react-icons/io5";
 import { LuBedSingle } from "react-icons/lu";
 import { CiRuler } from "react-icons/ci";
 import { PiBathtub } from "react-icons/pi";
+import { cdn } from "../../../utils/format";
 
 interface Property {
   _id: string;
@@ -123,9 +124,7 @@ const PropertySlider: React.FC<Props> = ({
             const city = ar ? property.city : (property.cityEn || property.city);
 
             const imgSrc = property.images?.[0]
-              ? property.images[0].startsWith("http")
-                ? property.images[0]
-                : `${API_URL}${property.images[0]}`
+              ? cdn(property.images[0].startsWith("http") ? property.images[0] : `${API_URL}${property.images[0]}`)
               : null;
 
             const isBuy = property.type === "buy";
