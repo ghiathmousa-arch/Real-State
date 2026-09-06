@@ -31,7 +31,7 @@ const SectionHead = ({ title, subTitle, variant }: props) => {
                             : variant == 'hero' 
                             ? 'm-0 text-white text-5xl lg:text-6xl min-[500px]:max-[768px]:text-[40px] min-[300px]:max-[500px]:text-[30px]' 
                             // تنسيق العنوان في حالة الـ state
-                            : 'text-4xl text-white w-full'
+                            : 'text-white w-full text-2xl sm:text-3xl lg:text-4xl'
                     }`}>
                         {title}
                     </h1>

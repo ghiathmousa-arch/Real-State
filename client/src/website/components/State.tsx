@@ -21,7 +21,7 @@ const State = () => {
                     variant="state"
                 />
 
-                <div className="mt-20 w-full">
+                <div className="mt-10 lg:mt-14 w-full">
                     <InfoStats />
                 </div>
             </div>

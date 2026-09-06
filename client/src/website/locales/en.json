@@ -124,5 +124,72 @@
     "typing": "Typing...",
     "close": "Close",
     "coming_soon": "Thanks! AI will be connected soon 🚀"
+  },
+  "testimonials": {
+    "subtitle": "Client Stories",
+    "title": "What Our Clients Say",
+    "description": "Investors and buyers who closed their deals with us, from inside Syria and abroad.",
+    "rating_label": "Rating: {{rating}} out of 5",
+    "items": [
+      {
+        "name": "Ahmad Al-Halabi",
+        "role": "Property Investor — Dubai",
+        "rating": 5,
+        "quote": "I bought an apartment in Damascus entirely remotely from Dubai. They sent me a detailed video tour and followed the title deed process step by step until the papers reached me."
+      },
+      {
+        "name": "Reem Al-Khatib",
+        "role": "Buyer — Latakia",
+        "rating": 5,
+        "quote": "What I liked most was the transparency on pricing: no surprises, no hidden commissions. They showed me three options within my budget and explained the drawbacks of each before the upsides."
+      },
+      {
+        "name": "Ziad Mansour",
+        "role": "Expat — Germany",
+        "rating": 5,
+        "quote": "I was hesitant about the legal power of attorney, but their lawyer walked me through every document before I signed. We completed the whole process in three weeks while I was abroad."
+      }
+    ]
+  },
+  "browse_cities": {
+    "subtitle": "Browse by Area",
+    "title": "Where Are You Looking?",
+    "description": "Pick a city and see every available property in it right away.",
+    "count_one": "{{count}} property",
+    "count_other": "{{count}} properties",
+    "view_all": "Browse all properties"
+  },
+  "faq": {
+    "subtitle": "FAQ",
+    "title": "Questions Before You Start",
+    "description": "The questions clients ask us most about our properties and how we work.",
+    "more": "Didn't find your answer?",
+    "more_link": "Contact us directly",
+    "items": [
+      {
+        "question": "How can I view a property from outside Syria?",
+        "answer": "We arrange a live video tour inside the property at a time that fits your timezone, and send you detailed footage of the rooms, the view and the entrance, along with shots of the neighbourhood and nearby amenities. Anything you want to see up close, we cover during the tour."
+      },
+      {
+        "question": "Are the listed prices final or negotiable?",
+        "answer": "The price shown is the owner's asking price. Most deals close below it, and we handle the negotiation on your behalf based on actual sale prices in the same area."
+      },
+      {
+        "question": "What is your commission, and are there extra fees?",
+        "answer": "We agree the commission and put it in writing before any step, and add nothing on top of it afterwards. Any other cost related to the deal is laid out for you in detail before you decide."
+      },
+      {
+        "question": "Are the listed properties actually available?",
+        "answer": "We update the list continuously and remove anything sold or reserved. If an update lags and you ask about a property that is no longer available, we tell you straight away and offer close alternatives in specification and price."
+      },
+      {
+        "question": "I couldn't find a property that suits me. What now?",
+        "answer": "Send us your requirements: city, area, number of rooms and budget. We register your request, search our network beyond what is listed on the site, and contact you as soon as a match comes up."
+      },
+      {
+        "question": "Do you offer services after the purchase is complete?",
+        "answer": "Yes. We follow up on fitting out and maintaining the property, and if it is an investment we handle letting it, managing it and collecting the rent, sending you regular reports on its status."
+      }
+    ]
   }
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { IoLocationOutline } from "react-icons/io5";
 import { LuBedSingle, LuArrowLeft, LuArrowRight, LuSearch } from "react-icons/lu";
 import { CiRuler } from "react-icons/ci";
@@ -71,6 +71,7 @@ const AllPropertiesPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const ar = i18n.language === "ar";
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [allProperties, setAllProperties] = useState<any[]>([]);
   const [featured, setFeatured] = useState<any[]>([]);
@@ -79,7 +80,7 @@ const AllPropertiesPage: React.FC = () => {
 
   const [search, setSearch] = useState("");
   const [typeFilter, setType] = useState("");
-  const [cityFilter, setCity] = useState("");
+  const [cityFilter, setCity] = useState(searchParams.get("city") || "");
 
   // ── جلب البيانات ──
   useEffect(() => {
@@ -117,6 +118,11 @@ const AllPropertiesPage: React.FC = () => {
     // الترتيب قبل تقسيم الصفحات، حتى يكون ترتيب شامل مش داخل كل صفحة لحالها
     return withImagesFirst(result);
   }, [search, typeFilter, cityFilter, allProperties]);
+
+  // مزامنة فلتر المدينة مع الرابط (?city=) — لما نجي من قسم "تصفّح حسب المنطقة"
+  useEffect(() => {
+    setCity(searchParams.get("city") || "");
+  }, [searchParams]);
 
   // إعادة الصفحة للأولى عند تغيّر الفلتر — side-effect حقيقي، لازم يضل بـ useEffect منفصل
   useEffect(() => {

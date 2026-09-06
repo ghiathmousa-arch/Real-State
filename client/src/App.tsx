@@ -14,6 +14,9 @@ import BestEstate from "./website/components/BestEstate/BestEstate";
 import PropertiesList from "./website/components/PropertiesList/PropertiesList";
 import State from "./website/components/State";
 import WhyInvestors from "./website/components/WhyInvestors";
+import BrowseByCity from "./website/components/BrowseByCity";
+import Testimonials from "./website/components/Testimonials";
+import Faq from "./website/components/Faq";
 import Contact from "./website/components/contact/contact";
 
 // كل لوحة التحكم (تسجيل دخول، عقارات، رسائل، recharts...) بحزمة منفصلة تُحمَّل بس لما حد يزور /dashboard
@@ -78,14 +81,17 @@ function App() {
             element={
               <>
                 <SEO />
-                <section id="home"><HomePage /></section>
+                <HomePage />
                 <AiChat />
-                <section id="featuredProperties"><BestEstate /></section>
-                <WhyInvestors />
-                <section id="PropertiesList"><PropertiesList /></section>
+                <BestEstate />
+                <BrowseByCity />
+                <PropertiesList />
                 <State />
-                <section id="ourServices"><WhyInvestors /></section>
-                <section id="contact"><Contact /></section>
+                {/* كل مكوّن حامل الـ id تبعه داخلياً، فما في wrapper بيكرّره */}
+                <WhyInvestors />
+                <Testimonials />
+                <Faq />
+                <Contact />
               </>
             }
           />
