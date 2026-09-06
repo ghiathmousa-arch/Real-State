@@ -3,8 +3,12 @@ const SEO_CONFIG = {
   titleAr: "Syrian Real Estate | عقارات سوريا",
   descriptionAr: "أفضل منصة لبيع وإيجار العقارات في سوريا",
   descriptionEn: "The best platform for buying and renting properties in Syria",
-  url: "https://syrianrealestate.com",
-  image: "/og-image.jpg",
+  // الدومين الحي الفعلي. بيدخل بالـ canonical وبالـ structured data، فلازم يكون
+  // العنوان يلي الموقع منشور عليه فعلاً — إذا اشتريت دومين خاص، غيّره هون بس.
+  url: "https://real-state-six-chi.vercel.app",
+  // og:image و schema.org logo لازم يكونا رابط مطلق، النسبي بينتجاهل من كراولرات
+  // السوشال ميديا ومن جوجل
+  image: "https://real-state-six-chi.vercel.app/og-image.jpg",
 
   social: {
     facebook: "https://www.facebook.com/share/1DB4FcDQKW/",
