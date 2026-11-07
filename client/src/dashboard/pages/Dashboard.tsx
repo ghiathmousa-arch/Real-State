@@ -57,7 +57,8 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`${BASE_URL}/api/properties`)
+    // قائمة الأدمن (كل الحالات) — القائمة العامة صارت بترجّع النشط بس
+    fetch(`${BASE_URL}/api/properties/admin/all`, { credentials: "include" })
       .then(res => res.json())
       .then(data => setProperties(Array.isArray(data) ? data : data.data || []))
       .catch(err => console.error(err))

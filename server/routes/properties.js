@@ -6,18 +6,20 @@ const { upload, compressImages } = require("../middleware/upload");
 const { protect, adminOnly } = require("../middleware");
 
 // ── كاش بسيط بالذاكرة ────────────────────────────────────────
-// نكاش القائمة الكاملة (بدون فلاتر)، المميزة، وتفاصيل كل عقار لفترة قصيرة
+// نكاش القائمة العامة (بدون فلاتر)، قائمة الأدمن، المميزة، وتفاصيل كل عقار لفترة قصيرة
 // (تخفيف الضغط عن الأكتر endpoints استدعاءً)، ونصفّرها فوراً عند أي
 // إضافة/تعديل/حذف بنفس الراوتر — عشان الأدمن ما يشوف بيانات قديمة بعد أي تغيير
 const CACHE_TTL_MS = 30 * 1000;
 const cache = {
-  list: null,
+  list: null,      // القائمة العامة — النشط بس
+  adminList: null, // قائمة الأدمن — كل الحالات (منفصلة عشان ما يتسرّب المعلّق/المباع للعام)
   featured: null,
   byId: new Map(),
 };
 const isFresh = (entry) => !!entry && entry.expiresAt > Date.now();
 const invalidatePropertiesCache = () => {
   cache.list = null;
+  cache.adminList = null;
   cache.featured = null;
   cache.byId.clear();
 };
@@ -38,6 +40,7 @@ const parsePrice = (v) => {
 };
 
 // ── GET / ──────────────────────────────────────────────────
+// القائمة العامة: بترجّع العقارات النشطة بس (status: "active") — المعلّق والمباع ما بيظهروا بالموقع
 router.get("/", async (req, res) => {
   try {
     const { category, city, minPrice, maxPrice, type, search } = req.query;
@@ -48,7 +51,7 @@ router.get("/", async (req, res) => {
       return res.json(cache.list.data);
     }
 
-    let query = {};
+    let query = { status: "active" };
 
     if (category) query.category = category;
     if (city) query.city = city;
@@ -103,6 +106,23 @@ router.get("/featured", async (req, res) => {
   }
 });
 
+// ── GET /admin/all ─────────────────────────────────────────
+// لوحة التحكم: كل العقارات بكل الحالات. لازم يجي قبل /:id وإلا "admin" بينقرا كـ id
+router.get("/admin/all", protect, adminOnly, async (req, res) => {
+  try {
+    if (isFresh(cache.adminList)) {
+      return res.json(cache.adminList.data);
+    }
+
+    const properties = await Property.find().sort({ createdAt: -1 });
+    cache.adminList = { data: properties, expiresAt: Date.now() + CACHE_TTL_MS };
+    res.json(properties);
+  } catch (error) {
+    console.error("Properties Admin GET Error:", error);
+    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" });
+  }
+});
+
 // ── GET /recent ────────────────────────────────────────────
 router.get("/recent", async (req, res) => {
   try {
@@ -119,6 +139,8 @@ router.get("/recent", async (req, res) => {
 });
 
 // ── GET /:id ───────────────────────────────────────────────
+// بترجّع العقار مهما كانت حالته (حتى المباع) عشان الروابط القديمة تضل تفتح —
+// والواجهة بتعرض شارة "مباع" أو "معلّق" واضحة
 router.get("/:id", async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id))

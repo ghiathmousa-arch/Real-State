@@ -102,6 +102,15 @@ const PropertyDetailPage: React.FC = () => {
   const isBuy = property.type === "buy";
   const hasPrice = property.price != null && property.price > 0;
 
+  // حالة العقار: المباع والمعلّق ما بيظهروا بالقوائم العامة، بس صفحتهم بتفتح من الروابط القديمة
+  const isActive = !property.status || property.status === "active";
+  const statusBadge =
+    property.status === "sold"
+      ? { label: ar ? "مباع" : "Sold", note: ar ? "هذا العقار لم يعد متاحاً" : "This property is no longer available", color: "bg-red-600" }
+      : property.status === "pending"
+        ? { label: ar ? "معلّق" : "Pending", note: ar ? "هذا العقار محجوز حالياً وقيد المراجعة" : "This property is currently on hold", color: "bg-amber-500" }
+        : null;
+
   const images: string[] = property.images?.length
     ? property.images.map((img: string) => cdn(img.startsWith("http") ? img : `${BASE_URL}${img}`))
     : [];
@@ -136,6 +145,13 @@ const PropertyDetailPage: React.FC = () => {
           <BackIcon size={16} className="group-hover:-translate-x-0.5 transition-transform" />
           {ar ? "العودة للقائمة" : "Back to listings"}
         </button>
+
+        {/* تنبيه العقار غير المتاح (مباع / معلّق) — الصفحة بتضل تفتح عشان الروابط القديمة */}
+        {statusBadge && (
+          <div className={`mb-3 rounded-2xl px-4 py-3 text-sm font-bold text-white ${statusBadge.color}`}>
+            {statusBadge.label} — {statusBadge.note}
+          </div>
+        )}
 
         {/* ════════════════════════════════
             معرض الصور
@@ -174,9 +190,14 @@ const PropertyDetailPage: React.FC = () => {
                             ${isBuy ? "bg-sky-600" : "bg-amber-500"}`}>
               {isBuy ? t("properties.sale") : t("properties.rent")}
             </span>
-            {property.isFeatured && (
+            {property.isFeatured && isActive && (
               <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-500 text-white shadow">
                 ★ {ar ? "مميز" : "Featured"}
+              </span>
+            )}
+            {statusBadge && (
+              <span className={`text-xs font-black px-3 py-1.5 rounded-full text-white shadow ${statusBadge.color}`}>
+                {statusBadge.label}
               </span>
             )}
           </div>

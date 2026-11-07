@@ -23,7 +23,8 @@ const Properties = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${BASE_URL}/api/properties`);
+      // قائمة الأدمن (كل الحالات) — القائمة العامة صارت بترجّع النشط بس
+      const res = await fetch(`${BASE_URL}/api/properties/admin/all`, { credentials: "include" });
       const data = await res.json();
 
       // التأكد من أن البيانات مصفوفة
