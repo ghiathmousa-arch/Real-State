@@ -77,4 +77,51 @@ const compressImages = async (req, res, next) => {
   }
 };
 
-module.exports = { upload, compressImages };
+// ── حذف الصور من Cloudinary ─────────────────────────────────
+// رابط Cloudinary بالصيغة: https://res.cloudinary.com/<cloud>/image/upload/[تحويلات/]v123/real-state/<id>.webp
+// والـ public_id هو "real-state/<id>" (بدون الإصدار v123 وبدون الامتداد)
+const CLOUDINARY_FOLDER = "real-state";
+
+const getCloudinaryPublicId = (url) => {
+  if (typeof url !== "string" || !url.includes("res.cloudinary.com")) return null;
+
+  const afterUpload = url.split("?")[0].split("/upload/")[1];
+  if (!afterUpload) return null;
+
+  const segments = afterUpload.split("/");
+  // منشيل أي تحويلات (f_auto,q_auto...) والإصدار v123 من البداية
+  const versionIdx = segments.findIndex((s) => /^v\d+$/.test(s));
+  const rest = versionIdx >= 0
+    ? segments.slice(versionIdx + 1)
+    : segments.slice(segments.findIndex((s) => s === CLOUDINARY_FOLDER));
+
+  const publicId = rest.join("/").replace(/\.[a-z0-9]+$/i, "");
+
+  // أمان: منحذف بس صور مجلد العقارات تبعنا — ما منلمس أي شي تاني بالحساب
+  return publicId.startsWith(`${CLOUDINARY_FOLDER}/`) ? publicId : null;
+};
+
+// بتحذف مجموعة صور من Cloudinary. ما بترمي أبداً — الفشل بينسجّل بالـ log بس،
+// عشان حذف صورة ما يفشّل طلب الحذف أو التعديل نفسه
+const deleteCloudinaryImages = async (urls) => {
+  const publicIds = [...new Set((urls || []).map(getCloudinaryPublicId).filter(Boolean))];
+  if (publicIds.length === 0) return;
+
+  try {
+    configureCloudinary();
+    const results = await Promise.allSettled(
+      publicIds.map((id) => cloudinary.uploader.destroy(id, { resource_type: "image" }))
+    );
+
+    results.forEach((r, i) => {
+      if (r.status === "rejected")
+        console.error("Cloudinary Delete Error:", publicIds[i], r.reason?.message || r.reason);
+      else if (r.value?.result !== "ok")
+        console.warn("Cloudinary Delete:", publicIds[i], r.value?.result); // مثلاً "not found"
+    });
+  } catch (error) {
+    console.error("Cloudinary Delete Error:", error.message);
+  }
+};
+
+module.exports = { upload, compressImages, deleteCloudinaryImages, getCloudinaryPublicId };

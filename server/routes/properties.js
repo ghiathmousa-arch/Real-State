@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const Property = require("../models/Property");
-const { upload, compressImages } = require("../middleware/upload");
+const { upload, compressImages, deleteCloudinaryImages } = require("../middleware/upload");
 const { protect, adminOnly } = require("../middleware");
 
 // ── كاش بسيط بالذاكرة ────────────────────────────────────────
@@ -22,6 +22,15 @@ const invalidatePropertiesCache = () => {
   cache.adminList = null;
   cache.featured = null;
   cache.byId.clear();
+};
+
+// الصور بتنرفع على Cloudinary (compressImages) قبل ما نوصل للتحقق — فإذا الطلب فشل
+// لأي سبب (400/404/500) منحذف الصور الجديدة يلي انرفعت عشان ما تضل يتيمة بالحساب
+const discardUploadsOnError = (req, res) => {
+  res.on("finish", () => {
+    if (res.statusCode >= 400 && req.compressedImages?.length)
+      deleteCloudinaryImages(req.compressedImages);
+  });
 };
 
 const MAX_IMAGES = 12; // الحد الأقصى لصور العقار الواحد (نفس حد multer بـ upload.js)
@@ -166,6 +175,7 @@ router.get("/:id", async (req, res) => {
 
 // ── POST / ─────────────────────────────────────────────────
 router.post("/", protect, adminOnly, upload.any(), compressImages, async (req, res) => {
+  discardUploadsOnError(req, res);
   try {
     const b = req.body;
 
@@ -222,6 +232,7 @@ router.post("/", protect, adminOnly, upload.any(), compressImages, async (req, r
 
 // ── PUT /:id ───────────────────────────────────────────────
 router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req, res) => {
+  discardUploadsOnError(req, res);
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id))
       return res.status(400).json({ error: "ID غير صالح" });
@@ -314,6 +325,10 @@ router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req,
 
     invalidatePropertiesCache();
     res.json(updated);
+
+    // الصور يلي انشالت بالتعديل منحذفها من Cloudinary بعد نجاح الحفظ —
+    // الدالة ما بترمي، والفشل بينسجّل بالـ log بس
+    deleteCloudinaryImages(removedImages);
   } catch (error) {
     console.error("Properties PUT Error:", error);
     res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" });
@@ -330,6 +345,9 @@ router.delete("/:id", protect, adminOnly, async (req, res) => {
     if (!property) return res.status(404).json({ error: "العقار غير موجود" });
 
     invalidatePropertiesCache();
+
+    // صور العقار المحذوف ما إلها لزمة على Cloudinary — الفشل ما بيفشّل الطلب
+    deleteCloudinaryImages(property.images);
     res.json({ message: "تم حذف العقار بنجاح" });
   } catch (error) {
     console.error("Properties DELETE Error:", error);
