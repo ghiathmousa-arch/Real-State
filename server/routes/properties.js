@@ -22,6 +22,21 @@ const invalidatePropertiesCache = () => {
   cache.byId.clear();
 };
 
+// ── التحقق من السعر ────────────────────────────────────────
+// كل الأسعار بالمنصة بالدولار الأمريكي (USD). القيمة الفاضية = null ("السعر عند الطلب")
+const MAX_PRICE_USD = 100_000_000;
+const parsePrice = (v) => {
+  if (v === undefined || v === null || String(v).trim() === "") return { value: null };
+  const n = Number(v);
+  if (!Number.isFinite(n))
+    return { error: "السعر لازم يكون رقم (بالدولار الأمريكي)" };
+  if (n < 0)
+    return { error: "السعر ما بيصير يكون سالب" };
+  if (n > MAX_PRICE_USD)
+    return { error: "السعر أكبر من 100,000,000 دولار — تأكد إنك كاتبه بالدولار مو بالليرة" };
+  return { value: n };
+};
+
 // ── GET / ──────────────────────────────────────────────────
 router.get("/", async (req, res) => {
   try {
@@ -134,6 +149,9 @@ router.post("/", protect, adminOnly, upload.any(), compressImages, async (req, r
     if (!b.title || !b.city || !b.category || !b.type)
       return res.status(400).json({ error: "العنوان والمدينة والفئة والنوع مطلوبة" });
 
+    const price = parsePrice(b.price);
+    if (price.error) return res.status(400).json({ error: price.error });
+
     const toNum = (v) => (v !== undefined && v !== "" ? Number(v) : null);
     const toArr = (v) => {
       if (!v) return [];
@@ -149,7 +167,7 @@ router.post("/", protect, adminOnly, upload.any(), compressImages, async (req, r
       category: b.category,
       categoryEn: b.categoryEn || "",
       type: b.type,
-      price: toNum(b.price),
+      price: price.value,
       city: b.city,
       cityEn: b.cityEn || "",
       area: toNum(b.area),
@@ -188,6 +206,15 @@ router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req,
     if (!property) return res.status(404).json({ error: "العقار غير موجود" });
 
     const b = req.body;
+
+    // السعر ما انبعت = منخلّي القديم؛ انبعت = لازم يكون صالح
+    let price = property.price;
+    if (b.price !== undefined) {
+      const parsed = parsePrice(b.price);
+      if (parsed.error) return res.status(400).json({ error: parsed.error });
+      price = parsed.value;
+    }
+
     const toNum = (v) => (v !== undefined && v !== "" ? Number(v) : null);
     const toArr = (v) => {
       if (!v) return [];
@@ -212,7 +239,7 @@ router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req,
         category: b.category ?? property.category,
         categoryEn: b.categoryEn ?? property.categoryEn ?? "",
         type: b.type ?? property.type,
-        price: b.price !== undefined ? toNum(b.price) : property.price,
+        price,
         city: b.city ?? property.city,
         cityEn: b.cityEn ?? property.cityEn ?? "",
         area: b.area ? toNum(b.area) : property.area,

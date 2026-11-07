@@ -3,6 +3,7 @@ import Header from "../components/Header/Header"
 import { useEffect, useState, useMemo, useCallback } from "react"
 import StatCard from "../components/StatCard/StatCard"
 import PropertiesTable from "../components/PropertiesTable/PropertiesTable"
+import { formatPrice } from "../../utils/format"
 
 const API_URL = import.meta.env.VITE_API_URL;
 const BASE_URL = API_URL?.replace("/api", "");
@@ -14,7 +15,7 @@ const Properties = () => {
   const [stats, setStats] = useState({
     total: 0,
     available: 0,
-    marketValue: "0.0",
+    marketValue: "$0",
     pending: 0,
   });
 
@@ -32,11 +33,8 @@ const Properties = () => {
       // حساب الإحصائيات بذكاء
       const totalValue = properties.reduce((acc: number, p: any) => acc + (Number(p.price) || 0), 0);
 
-      // تنسيق القيمة السوقية (مثلاً مليار ل.س)
-      const formattedMarketValue = new Intl.NumberFormat('en-US', {
-        minimumFractionDigits: 1,
-        maximumFractionDigits: 1,
-      }).format(totalValue / 1000000000);
+      // تنسيق القيمة السوقية بالدولار (مثلاً $1.2M) — نفس formatPrice المستخدمة بكل المشروع
+      const formattedMarketValue = formatPrice(totalValue);
 
       setStats({
         total: properties.length,
@@ -79,8 +77,8 @@ const Properties = () => {
       title: "القيمة السوقية",
       value: loading ? "..." : (
         <div className="flex flex-row-reverse items-baseline gap-1 font-black">
-          <span>{stats.marketValue}B</span>
-          <span className="text-[10px] text-gray-400 uppercase">ل.س</span>
+          <span dir="ltr">{stats.marketValue}</span>
+          <span className="text-[10px] text-gray-400 uppercase">USD</span>
         </div>
       ),
       change: "تقريبي",

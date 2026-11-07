@@ -193,8 +193,8 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
 
             {/* السعر — state منفصل عشان ما يتأثر بالـ useEffect */}
             <FormInput
-              name="price" label="السعر (ل.س)" inputMode="numeric"
-              placeholder="اختياري"
+              name="price" label="السعر (بالدولار $)" inputMode="numeric" dir="ltr"
+              placeholder="مثال: 85000 (اختياري)"
               value={priceInput}
               onChange={e => setPriceInput(e.target.value.replace(/[^0-9]/g, ''))} />
 

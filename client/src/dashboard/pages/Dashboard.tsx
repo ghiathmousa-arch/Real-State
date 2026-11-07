@@ -4,6 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import Header from "../components/Header/Header"
 import StatCard from "../components/StatCard/StatCard"
 import RecentActivities from "../components/RecentActivities/RecentActivities"
+import { formatPrice } from "../../utils/format"
 
 interface Property {
   type: 'buy' | 'rent'
@@ -41,7 +42,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     <div className="bg-white border border-gray-100 rounded-xl shadow-lg px-4 py-3 text-right" dir="rtl">
       <p className="text-xs text-gray-400 mb-1">{label}</p>
       <p className="text-sm font-black text-[#0f2d4a]">
-        {payload[0].value.toLocaleString()} <span className="text-[10px] font-bold text-gray-400">ل.س</span>
+        {formatPrice(payload[0].value)} <span className="text-[10px] font-bold text-gray-400">USD</span>
       </p>
     </div>
   )
@@ -104,7 +105,7 @@ const Dashboard = () => {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-4" dir="rtl">
           <div className="text-right">
             <h2 className="text-lg font-black text-[#0f2d4a]">اتجاهات أسعار السوق</h2>
-            <p className="text-xs text-gray-400 mt-0.5">متوسط سعر العقار (ليرة سورية) — آخر 6 أشهر</p>
+            <p className="text-xs text-gray-400 mt-0.5">متوسط السعر بالدولار ($) — آخر 6 أشهر</p>
           </div>
 
           {loading ? (

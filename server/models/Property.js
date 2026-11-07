@@ -9,7 +9,7 @@ const PropertySchema = new mongoose.Schema({
   category: String,       // الفئة بالعربي (شقة، منزل...)
   categoryEn: String,     // الفئة بالإنجليزي
   type: String,           // نوع العملية: buy أو rent
-  price: Number,          // السعر (اختياري - ممكن ما يكون موجود)
+  price: Number,          // السعر بالدولار الأمريكي (USD) فقط — اختياري، null = "السعر عند الطلب"
   city: String,           // المدينة بالعربي
   cityEn: String,         // المدينة بالإنجليزي
   area: Number,           // المساحة بالمتر المربع

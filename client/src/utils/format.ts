@@ -34,8 +34,15 @@ export const withImagesFirst = <T,>(properties: T[]): T[] =>
   [...properties].sort((a, b) => Number(hasImage(b)) - Number(hasImage(a)))
 
 // ── السعر ────────────────────────────────────────────────
+// كل الأسعار بالمنصة بالدولار الأمريكي (USD) — هي الدالة الوحيدة لعرض السعر بكل المشروع.
+// "$250,000" عادةً، "$1.2M" من المليون وطالع، و"—" إذا ما في سعر.
+// الأرقام دايماً بصيغة en-US (مش أرقام عربية) عشان تضل متطابقة مع رمز $.
 export const formatPrice = (price: number | null | undefined): string => {
-  if (price == null) return "—"
-  if (price > 1000000) return (price / 1000000).toFixed(1) + 'M'
-  return price.toLocaleString()
+  if (price == null || !Number.isFinite(Number(price))) return "—"
+  const n = Number(price)
+  if (n >= 1_000_000) {
+    const millions = (n / 1_000_000).toFixed(1).replace(/\.0$/, "")
+    return `$${millions}M`
+  }
+  return `$${Math.round(n).toLocaleString("en-US")}`
 }

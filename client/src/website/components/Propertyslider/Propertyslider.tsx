@@ -7,13 +7,13 @@ import { IoLocationOutline } from "react-icons/io5";
 import { LuBedSingle } from "react-icons/lu";
 import { CiRuler } from "react-icons/ci";
 import { PiBathtub } from "react-icons/pi";
-import { cdn } from "../../../utils/format";
+import { cdn, formatPrice } from "../../../utils/format";
 
 interface Property {
   _id: string;
   title?: string; titleEn?: string;
   city?: string; cityEn?: string;
-  price?: number; area?: number;
+  price?: number | null; area?: number;
   rooms?: number; bathrooms?: number;
   type?: string; images?: string[];
   isFeatured?: boolean;
@@ -198,11 +198,10 @@ const PropertySlider: React.FC<Props> = ({
                     )}
                   </div>
                   <p className="text-sky-700 dark:text-sky-400 font-bold text-base leading-none">
-                    {property.price?.toLocaleString() ?? "0"}
-                    <span className="text-xs font-normal text-gray-400 ms-1">
-                      {t("properties.currency")}
-                      {!isBuy && <> / {t("properties.month")}</>}
-                    </span>
+                    <span dir="ltr">{formatPrice(property.price)}</span>
+                    {!isBuy && property.price != null && (
+                      <span className="text-xs font-normal text-gray-400 ms-1">/ {t("properties.month")}</span>
+                    )}
                   </p>
                 </div>
               </div>

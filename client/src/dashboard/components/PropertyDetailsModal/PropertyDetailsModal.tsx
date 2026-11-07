@@ -16,7 +16,7 @@ interface Props {
 
 // ── إحصائيات العقار — array بدل تكرار JSX ──────────────
 const buildStats = (property: any) => [
-  { label: "السعر", value: property.price != null ? `${formatPrice(property.price)} ل.س` : "—", icon: <MdAttachMoney size={20} />, color: "text-green-600", bg: "bg-green-50" },
+  { label: "السعر", value: formatPrice(property.price), icon: <MdAttachMoney size={20} />, color: "text-green-600", bg: "bg-green-50" },
   { label: "المساحة", value: `${property.area} م²`, icon: <MdSquareFoot size={20} />, color: "text-blue-600", bg: "bg-blue-50" },
   { label: "الغرف", value: property.rooms || "—", icon: <MdOutlineMeetingRoom size={20} />, color: "text-purple-600", bg: "bg-purple-50" },
   { label: "الحمامات", value: property.bathrooms || "—", icon: <MdBathtub size={20} />, color: "text-cyan-600", bg: "bg-cyan-50" },

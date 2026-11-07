@@ -11,7 +11,7 @@ interface Property {
   area: number
   city: string
   address: string
-  price: number
+  price: number | null
   status: string
   images: string[]
 }
@@ -98,7 +98,6 @@ const PropertiesTable = ({ data, loading, refreshData }: Props) => {
                   <p className="text-[9px] text-gray-400 font-bold truncate mt-0.5">{p.city} • {p.category}</p>
                   <div className="flex items-center gap-2 mt-1.5">
                     <span className="text-[11px] font-black text-blue-600">{formatPrice(p.price)}</span>
-                    {p.price != null && <span className="text-[8px] text-gray-400 font-bold">ل.س</span>}
                     <span className={`w-1.5 h-1.5 rounded-full ${p.status === 'active' ? 'bg-green-500' : 'bg-gray-300'}`} />
                   </div>
                 </div>
@@ -142,7 +141,6 @@ const PropertiesTable = ({ data, loading, refreshData }: Props) => {
                     </td>
                     <td className="px-2 py-4 text-center">
                       <span className="text-[11px] font-black text-blue-600">{formatPrice(p.price)}</span>
-                      {p.price != null && <span className="block text-[7px] text-gray-400 font-bold uppercase">ل.س</span>}
                     </td>
                     <td className="px-2 py-4 text-center">
                       <span className={`w-1.5 h-1.5 inline-block rounded-full ${p.status === 'active' ? 'bg-green-500' : 'bg-gray-300'}`} />

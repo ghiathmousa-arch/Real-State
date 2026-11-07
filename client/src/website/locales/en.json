@@ -12,7 +12,7 @@
     "sale": "Sale",
     "rent": "For Rent",
     "squareMeter": "m²",
-    "currency": "S.P",
+    "currency": "US Dollar",
     "month": "month"
   },
   "contact": {
@@ -94,8 +94,8 @@
     "type_label": "Type",
     "price_label": "Price",
     "price_options": {
-      "low": "100M - 500M",
-      "high": "500M+"
+      "low": "< $100K",
+      "high": "$100K+"
     }
   },
   "why_us": {

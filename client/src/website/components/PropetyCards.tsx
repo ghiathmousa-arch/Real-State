@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { IoLocationOutline } from "react-icons/io5";
 import { LuBedSingle, LuBath, LuArrowUpLeft, LuArrowUpRight } from "react-icons/lu";
 import { CiRuler } from "react-icons/ci";
-import { cdn } from "../../utils/format";
+import { cdn, formatPrice } from "../../utils/format";
 
 // 💠 التعديل 1: استخدام رابط الـ API من متغيرات البيئة بدلاً من localhost الثابت
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -26,7 +26,7 @@ const PropertyCard: React.FC<{ property: any }> = ({ property }) => {
         baths: isAr ? "حمام" : (property.bathrooms === 1 ? "Bath" : "Baths"),
         area: isAr ? "م٢" : "m²",
         price: isAr ? "السعر" : "Price",
-        currency: isAr ? "ل.س" : "SYP",
+        month: isAr ? "شهرياً" : "month",
         sale: isAr ? "للبيع" : "For Sale",
         rent: isAr ? "للإيجار" : "For Rent"
     };
@@ -99,7 +99,7 @@ const PropertyCard: React.FC<{ property: any }> = ({ property }) => {
                         <span className="text-[10px] text-gray-400 font-black block uppercase">{labels.price}</span>
                         <div className="text-xl font-black text-sky-700 dark:text-sky-400">
                             {property.price
-                                ? <>{property.price.toLocaleString()} <span className="text-xs">{labels.currency}</span></>
+                                ? <>{formatPrice(property.price)}{property.type === "rent" && <span className="text-xs"> / {labels.month}</span>}</>
                                 : <span className="text-sm">{isAr ? "السعر عند الطلب" : "Price on request"}</span>}
                         </div>
                     </div>

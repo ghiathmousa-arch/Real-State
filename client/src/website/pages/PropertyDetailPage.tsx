@@ -14,7 +14,7 @@ import { PiBathtub } from "react-icons/pi";
 import { TbCheck } from "react-icons/tb";
 import PropertySlider from "../components/Propertyslider/Propertyslider";
 import FloatingWhatsApp from "../components/FloatingWhatsApp/FloatingWhatsApp";
-import { cdn } from "../../utils/format";
+import { cdn, formatPrice } from "../../utils/format";
 
 const PropertyDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -229,8 +229,8 @@ const PropertyDetailPage: React.FC = () => {
             {/* السعر */}
             {hasPrice && (
               <div className={`shrink-0 w-full sm:w-auto ${ar ? "text-left sm:text-left" : "text-right sm:text-right"}`}>
-                <p className="text-3xl font-extrabold text-sky-600 dark:text-sky-400 leading-none">
-                  {property.price?.toLocaleString()}
+                <p dir="ltr" className="text-3xl font-extrabold text-sky-600 dark:text-sky-400 leading-none">
+                  {formatPrice(property.price)}
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
                   {t("properties.currency")}

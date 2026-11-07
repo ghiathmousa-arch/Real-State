@@ -145,7 +145,7 @@ const AddProperty = () => {
           {SELECT_FIELDS.map(f => <FormSelect key={f.name} {...f} />)}
 
           <FormInput
-            name="price" label="السعر (ل.س)" placeholder="1,000,000 (اختياري)" inputMode="numeric"
+            name="price" label="السعر (بالدولار $)" placeholder="مثال: 85000 (اختياري)" inputMode="numeric" dir="ltr"
             onChange={e => { (e.target as HTMLInputElement).value = e.target.value.replace(/[^0-9]/g, '') }}
           />
 

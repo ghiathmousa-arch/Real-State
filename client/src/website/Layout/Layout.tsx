@@ -37,13 +37,12 @@ const Layout = () => {
             if (filters.type && filters.type !== "")
                 params.append('category', filters.type);
 
-            // السعر
+            // السعر — كل الأسعار بالدولار: "< $100K" أو "$100K+" (نفس النص بالعربي والإنجليزي)
             if (filters.price) {
-                if (filters.price.includes("500M+")) {
-                    params.append('minPrice', '500000000');
-                } else if (filters.price.includes("-")) {
-                    params.append('minPrice', '100000000');
-                    params.append('maxPrice', '500000000');
+                if (filters.price.includes("+")) {
+                    params.append('minPrice', '100000');
+                } else if (filters.price.includes("<")) {
+                    params.append('maxPrice', '100000');
                 }
             }
 

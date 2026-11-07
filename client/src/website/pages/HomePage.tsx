@@ -31,7 +31,7 @@ export const searchData: FilterSearch[] = [
         name: 'price',
         label: 'نطاق السعر',
         icon: <FaMoneyBills className="text-[#004E80]" />,
-        options: ['حدد السعر', '100M - 500M', '500M+']
+        options: ['حدد السعر', '< $100K', '$100K+']
     }
 ];
 

@@ -12,7 +12,7 @@
     "sale": "بيع",
     "rent": "للإيجار",
     "squareMeter": "م²",
-    "currency": "ل.س",
+    "currency": "دولار أمريكي",
     "month": "شهرياً"
   },
   "contact": {
@@ -94,8 +94,8 @@
     "type_label": "النوع",
     "price_label": "السعر",
     "price_options": {
-      "low": "100M - 500M",
-      "high": "500M+"
+      "low": "< $100K",
+      "high": "$100K+"
     }
   },
   "why_us": {

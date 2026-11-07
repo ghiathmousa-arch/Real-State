@@ -7,7 +7,7 @@ import { LuBedSingle, LuArrowLeft, LuArrowRight, LuArrowUpRight } from "react-ic
 import { CiRuler } from "react-icons/ci";
 import { PiBathtub } from "react-icons/pi";
 import { searchContext } from "../../Layout/Layout";
-import { withImagesFirst, cdn } from "../../../utils/format";
+import { withImagesFirst, cdn, formatPrice } from "../../../utils/format";
 
 
 const PER_PAGE = 8;
@@ -203,10 +203,10 @@ const PropertiesList: React.FC = () => {
                                             {(property.bathrooms ?? 0) > 0 && <span className="flex items-center gap-1"><PiBathtub className="text-sm" />{property.bathrooms}</span>}
                                         </div>
                                         <p className="text-sky-700 dark:text-sky-400 font-bold text-lg leading-none">
-                                            {property.price?.toLocaleString() ?? "0"}
-                                            <span className="text-xs font-normal text-gray-400 ms-1">
-                                                {t("properties.currency")}{!isBuy && <> / {t("properties.month")}</>}
-                                            </span>
+                                            <span dir="ltr">{formatPrice(property.price)}</span>
+                                            {!isBuy && property.price != null && (
+                                                <span className="text-xs font-normal text-gray-400 ms-1">/ {t("properties.month")}</span>
+                                            )}
                                         </p>
                                     </div>
                                 </div>
