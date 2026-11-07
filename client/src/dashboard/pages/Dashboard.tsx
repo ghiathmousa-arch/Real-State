@@ -16,21 +16,24 @@ interface Property {
 
 // ── دالة تجميع متوسط الأسعار حسب الشهر ──────────
 const buildChartData = (properties: Property[]) => {
-  const months: Record<string, { total: number; count: number }> = {}
+  // المفتاح "YYYY-MM" عشان نرتّب زمنياً — ما منعتمد على ترتيب العقارات الجاية من السيرفر
+  const months: Record<string, { label: string; total: number; count: number }> = {}
 
   properties.forEach(p => {
     if (!p.price || !p.createdAt) return
     const date = new Date(p.createdAt)
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
     const label = date.toLocaleDateString('ar-SY', { month: 'short', year: '2-digit' })
-    if (!months[label]) months[label] = { total: 0, count: 0 }
-    months[label].total += p.price
-    months[label].count += 1
+    if (!months[key]) months[key] = { label, total: 0, count: 0 }
+    months[key].total += p.price
+    months[key].count += 1
   })
 
-  return Object.entries(months)
-    .map(([month, { total, count }]) => ({
-      month,
-      avg: Math.round(total / count)
+  return Object.keys(months)
+    .sort()
+    .map(key => ({
+      month: months[key].label,
+      avg: Math.round(months[key].total / months[key].count)
     }))
     .slice(-6) // آخر 6 أشهر
 }
@@ -75,10 +78,11 @@ const Dashboard = () => {
   const chartData = useMemo(() => buildChartData(properties), [properties])
 
   const cards = useMemo(() => [
-    { title: "إجمالي العقارات", value: loading ? "..." : stats.total.toLocaleString(), change: "12%+", badgeColor: "bg-green-50", badgeTextColor: "text-green-600", icon: <MdOutlineBusiness />, iconBg: "bg-blue-50 text-blue-600" },
-    { title: "عقارات للبيع", value: loading ? "..." : stats.forSale.toLocaleString(), change: "5.2%+", badgeColor: "bg-green-50", badgeTextColor: "text-green-600", icon: <MdSell />, iconBg: "bg-green-50 text-green-600" },
-    { title: "عقارات للإيجار", value: loading ? "..." : stats.forRent.toLocaleString(), change: "2%-", badgeColor: "bg-red-50", badgeTextColor: "text-red-500", icon: <MdTrendingUp />, iconBg: "bg-orange-50 text-orange-500" },
-    { title: "العقارات المميزة", value: loading ? "..." : stats.featured.toLocaleString(), change: "18%+", badgeColor: "bg-purple-50", badgeTextColor: "text-purple-500", icon: <MdStar />, iconBg: "bg-purple-50 text-purple-500" },
+    // بدون نسب تغيير — كانت أرقام وهمية مكتوبة يدوياً، وما عنا بيانات تاريخية نحسبها منها
+    { title: "إجمالي العقارات", value: loading ? "..." : stats.total.toLocaleString(), icon: <MdOutlineBusiness />, iconBg: "bg-blue-50 text-blue-600" },
+    { title: "عقارات للبيع", value: loading ? "..." : stats.forSale.toLocaleString(), icon: <MdSell />, iconBg: "bg-green-50 text-green-600" },
+    { title: "عقارات للإيجار", value: loading ? "..." : stats.forRent.toLocaleString(), icon: <MdTrendingUp />, iconBg: "bg-orange-50 text-orange-500" },
+    { title: "العقارات المميزة", value: loading ? "..." : stats.featured.toLocaleString(), icon: <MdStar />, iconBg: "bg-purple-50 text-purple-500" },
   ], [loading, stats])
 
   // ألوان الشارت من الفاتح للغامق
@@ -105,8 +109,8 @@ const Dashboard = () => {
         {/* الشارت */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-4" dir="rtl">
           <div className="text-right">
-            <h2 className="text-lg font-black text-[#0f2d4a]">اتجاهات أسعار السوق</h2>
-            <p className="text-xs text-gray-400 mt-0.5">متوسط السعر بالدولار ($) — آخر 6 أشهر</p>
+            <h2 className="text-lg font-black text-[#0f2d4a]">متوسط السعر بالدولار</h2>
+            <p className="text-xs text-gray-400 mt-0.5">متوسط سعر العقار بالدولار الأمريكي ($) حسب شهر الإضافة — آخر 6 أشهر</p>
           </div>
 
           {loading ? (
