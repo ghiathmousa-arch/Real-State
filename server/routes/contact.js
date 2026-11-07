@@ -78,32 +78,51 @@ router.post("/:id/reply", protect, adminOnly, async (req, res) => {
     if (!replyText)
       return res.status(400).json({ success: false, error: "نص الرد مطلوب" });
 
+    // عنوان المرسل من البيئة — onboarding@resend.dev ما بيبعت إلا لإيميل صاحب حساب Resend،
+    // فلازم دومين موثّق بـ Resend (مثال: "Syrian Estate <noreply@yourdomain.com>")
+    const mailFrom = (process.env.MAIL_FROM || "").trim();
+    if (!mailFrom) {
+      console.error("Contact Reply Error: MAIL_FROM is not set");
+      return res.status(500).json({ success: false, error: "إعداد البريد غير مكتمل" });
+    }
+
     const contact = await Contact.findById(req.params.id);
     if (!contact)
       return res.status(404).json({ success: false, error: "الرسالة غير موجودة" });
+
+    // منستنّى الإرسال فعلياً — وما منعلّم الرسالة replied إلا إذا نجح
+    // (Resend SDK ما بيرمي عند الفشل، بيرجّع { error } — فلازم نفحصه)
+    let sendResult;
+    try {
+      sendResult = await resend.emails.send({
+        from: mailFrom,
+        to: contact.email,
+        subject: "ردّ على رسالتك - Syrian Estate",
+        html: `
+          <div dir="rtl" style="font-family:sans-serif;line-height:1.7;padding:20px;max-width:600px;margin:auto">
+            <h3 style="color:#004e80;border-bottom:2px solid #e3e8f9;padding-bottom:10px">Syrian Estate</h3>
+            <p>مرحباً ${escapeHtml(contact.name)}،</p>
+            <p style="background:#f9f9ff;padding:15px;border-radius:8px;border-right:4px solid #004e80">
+              ${escapeHtml(replyText)}
+            </p>
+            <hr style="border:1px solid #e3e8f9;margin:16px 0"/>
+            <p style="color:#888;font-size:12px">رسالتك الأصلية: ${escapeHtml(contact.message)}</p>
+          </div>
+        `,
+      });
+    } catch (err) {
+      sendResult = { error: err };
+    }
+
+    if (!sendResult || sendResult.error) {
+      console.error("Mail Error:", sendResult?.error?.message || sendResult?.error);
+      return res.status(502).json({ success: false, error: "تعذّر إرسال الرد بالبريد — لم يتم تعليم الرسالة كمردود عليها، حاول مرة تانية" });
+    }
 
     contact.replied = true;
     await contact.save();
 
     res.json({ success: true, message: "تم إرسال الرد بنجاح" });
-
-    resend.emails.send({
-      from: "Syrian Estate <onboarding@resend.dev>",
-      to: contact.email,
-      subject: "ردّ على رسالتك - Syrian Estate",
-      html: `
-        <div dir="rtl" style="font-family:sans-serif;line-height:1.7;padding:20px;max-width:600px;margin:auto">
-          <h3 style="color:#004e80;border-bottom:2px solid #e3e8f9;padding-bottom:10px">Syrian Estate</h3>
-          <p>مرحباً ${escapeHtml(contact.name)}،</p>
-          <p style="background:#f9f9ff;padding:15px;border-radius:8px;border-right:4px solid #004e80">
-            ${escapeHtml(replyText)}
-          </p>
-          <hr style="border:1px solid #e3e8f9;margin:16px 0"/>
-          <p style="color:#888;font-size:12px">رسالتك الأصلية: ${escapeHtml(contact.message)}</p>
-        </div>
-      `,
-    }).catch(err => console.error("Mail Error:", err.message));
-
   } catch (error) {
     console.error("Contact Reply Error:", error); // ✅
     res.status(500).json({ success: false, error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" }); // ✅

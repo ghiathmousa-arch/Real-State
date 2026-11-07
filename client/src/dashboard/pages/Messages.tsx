@@ -93,9 +93,13 @@ const Messages = () => {
         setReplyText("")
         setMessages(prev => prev.map(m => m._id === selected._id ? { ...m, replied: true } : m))
         setSelected(prev => prev ? { ...prev, replied: true } : null)
+      } else {
+        // فشل الإرسال (أو إعداد البريد ناقص) — الرسالة ما انعلّمت replied
+        alert(data.error || "تعذّر إرسال الرد")
       }
     } catch (error) {
       console.error("Error sending reply:", error)
+      alert("تعذّر الاتصال بالسيرفر")
     } finally {
       setSending(false)
     }
