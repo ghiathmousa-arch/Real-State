@@ -87,8 +87,12 @@ router.get("/me", protect, (req, res) => {
 });
 
 // ─── POST /api/auth/logout ────────────────────────────────
+// clearCookie لازم ياخد نفس خيارات الكوكي الأصلية (secure + sameSite: none بالإنتاج)
+// وإلا المتصفح بيعتبرها كوكي تانية وما بيمسح كوكي الجلسة cross-site.
+// maxAge منشيلو — Express بيضبط تاريخ انتهاء بالماضي لحالو.
 router.post("/logout", (req, res) => {
-  res.clearCookie("token", { path: "/" });
+  const { maxAge, ...clearOptions } = cookieOptions(req);
+  res.clearCookie("token", clearOptions);
   res.json({ success: true });
 });
 
