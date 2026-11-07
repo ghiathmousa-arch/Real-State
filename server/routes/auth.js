@@ -23,13 +23,22 @@ const cookieOptions = (req) => ({
   path: "/",
 });
 
+// صيغة إيميل بسيطة (نفس المستخدمة بموديل Contact)
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 // ─── POST /api/auth/register ──────────────────────────────
+// الأدمن هو اللي بينشئ المستخدمين — فما منعطي كوكي جلسة للمستخدم الجديد،
+// وإلا جلسة الأدمن نفسه بتتبدّل بجلسة المستخدم الجديد. منرجّع بياناته بس.
 router.post("/register", protect, adminOnly, async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, password } = req.body;
+    const email = typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
 
     if (!name || !email || !password)
       return res.status(400).json({ error: "جميع الحقول مطلوبة" });
+
+    if (!EMAIL_RE.test(email))
+      return res.status(400).json({ error: "صيغة البريد الإلكتروني غير صحيحة" });
 
     if (password.length < 6)
       return res.status(400).json({ error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" });
@@ -39,9 +48,7 @@ router.post("/register", protect, adminOnly, async (req, res) => {
       return res.status(400).json({ error: "البريد الإلكتروني مسجل مسبقاً" });
 
     const user = await User.create({ name, email, password });
-    const token = signToken(user._id);
 
-    res.cookie("token", token, cookieOptions(req));
     res.status(201).json({
       user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
