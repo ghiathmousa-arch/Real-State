@@ -47,7 +47,10 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
   const { cities, citiesEn, categories, categoriesEn } = usePropertyOptions()
   const [formData, setFormData] = useState<any>({})
   const [priceInput, setPriceInput] = useState("")
-  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null)
+  // الصور: القديمة اللي لسا محفوظة (روابط) + الجديدة المختارة (ملفات ومعاينات)
+  const [existingImages, setExistingImages] = useState<string[]>([])
+  const [newFiles, setNewFiles] = useState<File[]>([])
+  const [newPreviews, setNewPreviews] = useState<string[]>([])
   const [imageError, setImageError] = useState("")
   const [submitError, setSubmitError] = useState("")
   const [features, setFeatures] = useState<string[]>([])
@@ -59,6 +62,12 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
   const lastIdRef = useRef<string | null>(null)
 
   useEffect(() => {
+    // لما المودال يتسكّر منصفّر الـ ID — عشان أي فتح جاي يبلّش من بيانات العقار الحقيقية
+    // (مثلاً صور انشالت بدون حفظ ما لازم تضل مخفية وتنحذف بالحفظ الجاي)
+    if (!isOpen) {
+      lastIdRef.current = null
+      return
+    }
     // يشتغل بس لما يتغير الـ ID — مش كل re-render
     if (property && property._id !== lastIdRef.current) {
       lastIdRef.current = property._id
@@ -66,9 +75,13 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
       setPriceInput(property.price != null ? String(property.price) : "")
       setFeatures(property.features || [])
       setFeaturesEn(property.featuresEn || [])
-      setSelectedFiles(null)
+      setExistingImages((property.images || []).filter((img: string) => img && !img.includes('undefined')))
+      setNewFiles([])
+      setNewPreviews([])
+      setImageError("")
+      setSubmitError("")
     }
-  }, [property])
+  }, [property, isOpen])
 
   const SELECT_FIELDS = useMemo(() => [
     { name: "category", label: "الفئة", placeholder: "اختر الفئة", options: categories.map(c => ({ value: c, label: c })) },
@@ -95,25 +108,43 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
     if (val && !featuresEn.includes(val)) { setFeaturesEn(prev => [...prev, val]); setFeatureInputEn("") }
   }
 
+  const totalImages = existingImages.length + newFiles.length
+
+  // الصور الجديدة بتنضاف فوق الموجودة (مش بدالها) — والمجموع ما بيتجاوز MAX_IMAGES
   const handleImages = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files || [])
+    e.target.value = "" // عشان نقدر نختار نفس الملف مرة تانية بعد حذفه
 
-    if (selected.length > MAX_IMAGES) {
-      setImageError(`الحد الأقصى ${MAX_IMAGES} صورة — اخترت ${selected.length}`)
-      e.target.value = ""
+    if (totalImages + selected.length > MAX_IMAGES) {
+      setImageError(`الحد الأقصى ${MAX_IMAGES} صورة — عندك ${totalImages} واخترت ${selected.length}`)
       return
     }
 
     const tooBig = selected.find(f => f.size > MAX_IMAGE_MB * 1024 * 1024)
     if (tooBig) {
       setImageError(`"${tooBig.name}" أكبر من ${MAX_IMAGE_MB} ميجابايت`)
-      e.target.value = ""
       return
     }
 
     setImageError("")
-    setSelectedFiles(e.target.files)
+    setNewFiles(prev => [...prev, ...selected])
+    setNewPreviews(prev => [...prev, ...selected.map(f => URL.createObjectURL(f))])
   }
+
+  const removeExistingImage = (url: string) => {
+    setExistingImages(prev => prev.filter(img => img !== url))
+    setImageError("")
+  }
+
+  const removeNewImage = (index: number) => {
+    URL.revokeObjectURL(newPreviews[index])
+    setNewFiles(prev => prev.filter((_, i) => i !== index))
+    setNewPreviews(prev => prev.filter((_, i) => i !== index))
+    setImageError("")
+  }
+
+  const toImgSrc = (img: string) =>
+    cdn(img.startsWith('http') ? img : `${BASE_URL}/${img.replace(/^\//, '')}`)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -124,14 +155,9 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
         formData: { ...formData, price: priceInput },
         features,
         featuresEn,
+        keepImages: existingImages,
+        newImages: newFiles,
       })
-
-      if (selectedFiles && selectedFiles.length > 0) {
-        data.append('replaceImages', 'true')
-        Array.from(selectedFiles).forEach(file => data.append('images', file))
-      } else {
-        data.append('replaceImages', 'false')
-      }
 
       await axios.put(`${BASE_URL}/api/properties/${property._id}`, data, {
         withCredentials: true,
@@ -144,11 +170,6 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
       setLoading(false)
     }
   }
-
-  const currentImg = property?.images?.[0]
-  const imgSrc = currentImg
-    ? cdn(currentImg.startsWith('http') ? currentImg : `${BASE_URL}/${currentImg.replace(/^\//, '')}`)
-    : null
 
   return (
     <>
@@ -169,13 +190,6 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
               <MdClose size={22} />
             </button>
           </div>
-
-          {imgSrc && !selectedFiles && (
-            <div className="mb-5">
-              <p className="text-xs font-black text-gray-400 mb-2">الصورة الحالية</p>
-              <img src={imgSrc} className="w-full h-36 sm:h-40 object-cover rounded-2xl border border-gray-100" alt="current" />
-            </div>
-          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
@@ -230,20 +244,50 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
 
             <div className="sm:col-span-2 space-y-1.5">
               <label className="block text-xs font-black text-gray-400">
-                استبدال الصور {selectedFiles ? `— تم اختيار ${selectedFiles.length} صور` : "(اختياري)"}
+                الصور — {totalImages} من {MAX_IMAGES}
               </label>
-              <div className="relative group">
-                <input type="file" multiple accept="image/*"
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                  onChange={handleImages} />
-                <div className={`p-5 sm:p-6 border-2 border-dashed rounded-[2rem] flex flex-col items-center gap-2 transition-all
-                  ${selectedFiles ? "border-blue-400 bg-blue-50" : "border-gray-200 group-hover:border-blue-400"}`}>
-                  <MdCloudUpload size={30} className={selectedFiles ? "text-blue-500" : "text-gray-300 group-hover:text-blue-500"} />
-                  <span className="text-xs font-bold text-gray-400 text-center">
-                    {selectedFiles ? `${selectedFiles.length} صور جاهزة — ستحل محل القديمة` : "اسحب الصور هنا أو اضغط للاختيار"}
-                  </span>
+
+              {/* الصور الحالية + الجديدة — كل وحدة إلها زر حذف */}
+              {totalImages > 0 && (
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-3">
+                  {existingImages.map(img => (
+                    <div key={img} className="relative">
+                      <img src={toImgSrc(img)} className="w-full h-20 object-cover rounded-2xl border border-gray-100" alt="" />
+                      <button type="button" onClick={() => removeExistingImage(img)} title="حذف الصورة"
+                        className="absolute top-1 left-1 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow">
+                        <MdClose size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  {newPreviews.map((src, i) => (
+                    <div key={src} className="relative">
+                      <img src={src} className="w-full h-20 object-cover rounded-2xl border-2 border-blue-400" alt="" />
+                      <span className="absolute bottom-1 right-1 text-[9px] font-black bg-blue-500 text-white px-1.5 rounded-md">جديدة</span>
+                      <button type="button" onClick={() => removeNewImage(i)} title="إزالة الصورة"
+                        className="absolute top-1 left-1 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow">
+                        <MdClose size={14} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              </div>
+              )}
+
+              {totalImages < MAX_IMAGES && (
+                <div className="relative group">
+                  <input type="file" multiple accept="image/*"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    onChange={handleImages} />
+                  <div className={`p-5 sm:p-6 border-2 border-dashed rounded-[2rem] flex flex-col items-center gap-2 transition-all
+                    ${newFiles.length > 0 ? "border-blue-400 bg-blue-50" : "border-gray-200 group-hover:border-blue-400"}`}>
+                    <MdCloudUpload size={30} className={newFiles.length > 0 ? "text-blue-500" : "text-gray-300 group-hover:text-blue-500"} />
+                    <span className="text-xs font-bold text-gray-400 text-center">
+                      {newFiles.length > 0
+                        ? `${newFiles.length} صور جديدة — بتنضاف للموجودة. اضغط لإضافة المزيد`
+                        : "أضف صور جديدة — اسحبها هنا أو اضغط للاختيار"}
+                    </span>
+                  </div>
+                </div>
+              )}
               {imageError && (
                 <p className="text-xs font-bold text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
                   {imageError}

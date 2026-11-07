@@ -24,6 +24,8 @@ const invalidatePropertiesCache = () => {
   cache.byId.clear();
 };
 
+const MAX_IMAGES = 12; // الحد الأقصى لصور العقار الواحد (نفس حد multer بـ upload.js)
+
 // ── التحقق من السعر ────────────────────────────────────────
 // كل الأسعار بالمنصة بالدولار الأمريكي (USD). القيمة الفاضية = null ("السعر عند الطلب")
 const MAX_PRICE_USD = 100_000_000;
@@ -244,12 +246,33 @@ router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req,
       return v.split(",").map((f) => f.trim()).filter((f) => f);
     };
 
-    let finalImages;
-    if (b.replaceImages === "true" && req.compressedImages?.length > 0) {
-      finalImages = req.compressedImages;
-    } else {
-      finalImages = (property.images || []).filter(img => img && !img.includes("undefined"));
+    // ── الصور ──
+    // الواجهة بتبعت keepImages (JSON array لروابط الصور القديمة اللي لازم تضل) + الصور الجديدة.
+    // finalImages = keepImages (بس الروابط الموجودة فعلاً بالعقار) + الجديدة المرفوعة.
+    // إذا keepImages ما انبعت أبداً، منخلّي كل الصور القديمة ومنضيف الجديدة عليها.
+    const existingImages = (property.images || []).filter(img => img && !img.includes("undefined"));
+    const newImages = req.compressedImages || [];
+
+    let keptImages = existingImages;
+    if (b.keepImages !== undefined) {
+      let requested;
+      try {
+        requested = JSON.parse(b.keepImages);
+      } catch {
+        requested = null;
+      }
+      if (!Array.isArray(requested))
+        return res.status(400).json({ error: "قائمة الصور المحفوظة (keepImages) غير صالحة" });
+
+      // منحافظ على الترتيب اللي بعتته الواجهة، ومنتجاهل أي رابط مش تابع لهالعقار أو مكرر
+      keptImages = [...new Set(requested)].filter(url => existingImages.includes(url));
     }
+
+    const finalImages = [...keptImages, ...newImages];
+    if (finalImages.length > MAX_IMAGES)
+      return res.status(400).json({ error: `الحد الأقصى ${MAX_IMAGES} صورة للعقار — المجموع صار ${finalImages.length}` });
+
+    const removedImages = existingImages.filter(url => !keptImages.includes(url));
 
     const updated = await Property.findByIdAndUpdate(
       req.params.id,
@@ -264,16 +287,21 @@ router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req,
         price,
         city: b.city ?? property.city,
         cityEn: b.cityEn ?? property.cityEn ?? "",
-        area: b.area ? toNum(b.area) : property.area,
-        rooms: b.rooms ? toNum(b.rooms) : property.rooms,
-        bathrooms: b.bathrooms ? toNum(b.bathrooms) : property.bathrooms,
+        // انبعت = منحدّثه (و"" بيصير null عشان الأدمن يقدر يمسحه)، ما انبعت = منخلّي القديم
+        area: b.area !== undefined ? toNum(b.area) : property.area,
+        rooms: b.rooms !== undefined ? toNum(b.rooms) : property.rooms,
+        bathrooms: b.bathrooms !== undefined ? toNum(b.bathrooms) : property.bathrooms,
         address: b.address ?? property.address ?? "",
         addressEn: b.addressEn ?? property.addressEn ?? "",
         images: finalImages,
-        features: b.features ? toArr(b.features) : property.features,
-        featuresEn: b.featuresEn ? toArr(b.featuresEn) : property.featuresEn ?? [],
+        // انبعتوا فاضيين ("") = منصفّرهم، ما انبعتوا = منخلّي القديم
+        features: b.features !== undefined ? toArr(b.features) : property.features,
+        featuresEn: b.featuresEn !== undefined ? toArr(b.featuresEn) : property.featuresEn ?? [],
         videoUrl: b.videoUrl ?? property.videoUrl ?? "",
-        isFeatured: b.isFeatured === "true" || b.isFeatured === true,
+        // ما انبعت = منخلّي القيمة القديمة بدل ما نصفّرها
+        isFeatured: b.isFeatured !== undefined
+          ? b.isFeatured === "true" || b.isFeatured === true
+          : property.isFeatured,
         status: b.status ?? property.status,
         action: {
           type: b.status === "sold" ? "sold" : "updated",

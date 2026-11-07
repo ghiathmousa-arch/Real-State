@@ -104,8 +104,7 @@ const AddProperty = () => {
     setLoading(true)
     setSubmitError("")
     try {
-      const formData = buildPropertyFormData({ formEl: e.currentTarget, features, featuresEn })
-      files.forEach(file => formData.append('images', file))
+      const formData = buildPropertyFormData({ formEl: e.currentTarget, features, featuresEn, newImages: files })
 
       const res = await fetch(`${BASE_URL}/api/properties`, {
         method: 'POST',

@@ -12,6 +12,10 @@ interface BuildOptions {
   formData?: Record<string, any>
   features: string[]
   featuresEn: string[]
+  // التعديل بس: روابط الصور القديمة اللي لازم تضل — الباقي بينحذف من العقار ومن Cloudinary
+  keepImages?: string[]
+  // الصور الجديدة المرفوعة (إضافة أو تعديل)
+  newImages?: File[]
 }
 
 export const buildPropertyFormData = ({
@@ -19,6 +23,8 @@ export const buildPropertyFormData = ({
   formData,
   features,
   featuresEn,
+  keepImages,
+  newImages,
 }: BuildOptions): FormData => {
   const data = new FormData()
 
@@ -47,6 +53,10 @@ export const buildPropertyFormData = ({
   }
   data.append('features', features.join(','))
   data.append('featuresEn', featuresEn.join(','))
+
+  // الصور: keepImages بينبعت JSON array (حتى لو فاضي = احذف كل القديمة)
+  if (keepImages) data.append('keepImages', JSON.stringify(keepImages))
+  newImages?.forEach(file => data.append('images', file))
 
   return data
 }
