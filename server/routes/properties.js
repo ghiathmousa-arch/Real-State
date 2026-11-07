@@ -33,6 +33,9 @@ const discardUploadsOnError = (req, res) => {
   });
 };
 
+// أخطاء تحقق الموديل (نوع غير buy/rent، حالة غير معروفة، رقم غير صالح...) غلط بالبيانات مش بالسيرفر
+const VALIDATION_ERROR_MSG = "بيانات العقار غير صالحة — تأكد من النوع (بيع/إيجار) والحالة والأرقام";
+
 const MAX_IMAGES = 12; // الحد الأقصى لصور العقار الواحد (نفس حد multer بـ upload.js)
 
 // ── التحقق من السعر ────────────────────────────────────────
@@ -226,6 +229,8 @@ router.post("/", protect, adminOnly, upload.any(), compressImages, async (req, r
     res.status(201).json(property);
   } catch (error) {
     console.error("Properties POST Error:", error);
+    if (error.name === "ValidationError" || error.name === "CastError")
+      return res.status(400).json({ error: VALIDATION_ERROR_MSG });
     res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" });
   }
 });
@@ -320,7 +325,8 @@ router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req,
           at: new Date()
         }
       },
-      { new: true }
+      // runValidators: عشان enum/required/min بالموديل ينطبقوا على التعديل كمان (مش بس الإضافة)
+      { new: true, runValidators: true }
     );
 
     invalidatePropertiesCache();
@@ -331,6 +337,8 @@ router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req,
     deleteCloudinaryImages(removedImages);
   } catch (error) {
     console.error("Properties PUT Error:", error);
+    if (error.name === "ValidationError" || error.name === "CastError")
+      return res.status(400).json({ error: VALIDATION_ERROR_MSG });
     res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" });
   }
 });
