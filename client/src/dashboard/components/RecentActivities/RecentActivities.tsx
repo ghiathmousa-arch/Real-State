@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { api } from "../../../utils/api"
 
 interface Activity {
   _id: string
@@ -25,17 +26,14 @@ const timeAgo = (dateStr: string) => {
   return `منذ ${days} يوم`
 }
 
-const API_URL = import.meta.env.VITE_API_URL;
-const BASE_URL = API_URL?.replace("/api", "");
 const RecentActivities = () => {
   
   const [activities, setActivities] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`${BASE_URL}/api/properties/recent`)
-      .then(res => res.json())
-      .then(data => setActivities(data))
+    api.get<Activity[]>("/properties/recent")
+      .then(res => setActivities(Array.isArray(res.data) ? res.data : []))
       .catch(err => console.error(err))
       .finally(() => setLoading(false))
   }, [])

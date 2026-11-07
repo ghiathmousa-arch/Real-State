@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useContext, useMemo } from "react";
-import axios from "axios";
 import { useTranslation } from "react-i18next";
 import { useNavigate, Link } from "react-router-dom";
 import { IoLocationOutline } from "react-icons/io5";
@@ -8,6 +7,7 @@ import { CiRuler } from "react-icons/ci";
 import { PiBathtub } from "react-icons/pi";
 import { searchContext } from "../../Layout/Layout";
 import { withImagesFirst, cdn, formatPrice } from "../../../utils/format";
+import { api, API_BASE } from "../../../utils/api";
 
 
 const PER_PAGE = 8;
@@ -68,8 +68,6 @@ const PropertiesList: React.FC = () => {
     const ar = i18n.language === "ar";
     const navigate = useNavigate();
 
-    const API_URL = import.meta.env.VITE_API_URL;
-
     // ← جلب البيانات المفلترة والحالة من الكونتكست
     const { filteredData, loading: filterLoading, search } = useContext(searchContext);
 
@@ -93,7 +91,7 @@ const PropertiesList: React.FC = () => {
         const fetchProperties = async () => {
             try {
                 setLoadingAll(true);
-                const response = await axios.get(`${API_URL}/api/properties`);
+                const response = await api.get("/properties");
                 setAllProperties(Array.isArray(response.data) ? response.data : []);
             } catch (err) {
                 console.error("Error fetching:", err);
@@ -102,7 +100,7 @@ const PropertiesList: React.FC = () => {
             }
         };
         fetchProperties();
-    }, [API_URL]);
+    }, []);
 
     // إعادة الصفحة للأولى عند تغيير الفلتر أو اللغة
     useEffect(() => { setPage(1); }, [search, i18n.language]);
@@ -164,7 +162,7 @@ const PropertiesList: React.FC = () => {
                             let imgSrc: string | null = null;
                             if (property.images && property.images.length > 0) {
                                 const firstImg = property.images[0];
-                                imgSrc = cdn(firstImg.startsWith("http") ? firstImg : `${API_URL}${firstImg}`);
+                                imgSrc = cdn(firstImg.startsWith("http") ? firstImg : `${API_BASE}${firstImg}`);
                             }
 
                             const isBuy = property.type === "buy";

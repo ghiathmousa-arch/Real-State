@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from "react";
-import axios from "axios";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { IoLocationOutline } from "react-icons/io5";
@@ -8,13 +7,10 @@ import { CiRuler } from "react-icons/ci";
 import { PiBathtub } from "react-icons/pi";
 import PropertySlider from "../Propertyslider/Propertyslider";
 import { withImagesFirst, cdn, formatPrice } from "../../../utils/format";
+import { api, API_BASE } from "../../../utils/api";
 
 const PER_PAGE = 12;
 
-// ✅ التصحيح: API_URL يحتوي على /api مسبقاً من متغير البيئة
-const API_URL = import.meta.env.VITE_API_URL;
-// BASE_URL للصور المحلية فقط (مش Cloudinary)
-const BASE_URL = API_URL?.replace("/api", "");
 
 // ── Pagination ────────────────────────────────────────────────────────────────
 const Pagination = ({
@@ -87,8 +83,7 @@ const AllPropertiesPage: React.FC = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // ✅ التصحيح: API_URL يحتوي /api مسبقاً فلا نكررها
-        const res = await axios.get(`${API_URL}/api/properties`);
+        const res = await api.get("/properties");
         const data = Array.isArray(res.data) ? res.data : [];
         setAllProperties(data);
         setFeatured(data.filter((p: any) => p.isFeatured));
@@ -204,10 +199,10 @@ const AllPropertiesPage: React.FC = () => {
                 const city = ar ? property.city : (property.cityEn || property.city);
 
                 // ✅ التصحيح: نتحقق إذا كان الرابط Cloudinary (http) نأخذه مباشرة
-                // وإذا كان رابط محلي (/uploads/...) ندمجه مع BASE_URL
+                // وإذا كان رابط محلي (/uploads/...) ندمجه مع API_BASE (جذر السيرفر)
                 const firstImg = property.images?.[0];
                 const imgSrc = firstImg
-                  ? cdn(firstImg.startsWith("http") ? firstImg : `${BASE_URL}${firstImg}`)
+                  ? cdn(firstImg.startsWith("http") ? firstImg : `${API_BASE}${firstImg}`)
                   : null;
 
                 const isBuy = property.type === "buy";

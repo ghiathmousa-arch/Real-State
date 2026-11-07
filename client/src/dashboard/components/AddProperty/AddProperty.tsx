@@ -7,6 +7,7 @@ import FormInput from '../../../components/FormInput/FormInput'
 import FormSelect from '../../../components/FormSelect/FormSelect'
 import FeatureInput from '../FeatureInput/FeatureInput'
 import { buildPropertyFormData } from '../../../utils/buildPropertyFormData'
+import { api, getApiError } from '../../../utils/api'
 import {
   usePropertyOptions,
   PROPERTY_TYPES, PROPERTY_STATUS, FEATURED_OPTIONS
@@ -14,9 +15,6 @@ import {
 
 const MAX_IMAGES = 12
 const MAX_IMAGE_MB = 7
-
-const API_URL = import.meta.env.VITE_API_URL
-const BASE_URL = API_URL?.replace("/api", "")
 
 const TEXT_FIELDS = [
   { name: "title", label: "عنوان العقار", placeholder: "شقة فاخرة في المزة", required: true },
@@ -106,16 +104,10 @@ const AddProperty = () => {
     try {
       const formData = buildPropertyFormData({ formEl: e.currentTarget, features, featuresEn, newImages: files })
 
-      const res = await fetch(`${BASE_URL}/api/properties`, {
-        method: 'POST',
-        credentials: 'include',
-        body: formData
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || "تعذّر إضافة العقار")
+      await api.post('/properties', formData)
       setShowSuccess(true)
-    } catch (err: any) {
-      setSubmitError(err.message || "تعذّر الاتصال بالسيرفر، حاول مرة تانية")
+    } catch (err) {
+      setSubmitError(getApiError(err, "تعذّر إضافة العقار، تأكد من الاتصال وحاول مرة تانية"))
     } finally {
       setLoading(false)
     }

@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect, type Dispatch, type SetStateAction } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { api } from '../../utils/api';
 
 interface SearchFilters {
     location: string;
@@ -27,7 +28,6 @@ const Layout = () => {
         setLoading(true);
         try {
             const params = new URLSearchParams();
-            const API_URL = import.meta.env.VITE_API_URL;
 
             // الموقع → city
             if (filters.location && filters.location !== "")
@@ -46,9 +46,7 @@ const Layout = () => {
                 }
             }
 
-            const response = await fetch(`${API_URL}/api/properties?${params.toString()}`);
-            if (!response.ok) throw new Error("Failed to fetch");
-            const data = await response.json();
+            const { data } = await api.get(`/properties?${params.toString()}`);
             setFilteredData(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error(error);

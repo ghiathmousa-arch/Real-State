@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { MdClose, MdSave, MdCloudUpload } from "react-icons/md"
-import axios from 'axios'
 import SuccessModal from '../SuccessModal/SuccessModal'
 import FormInput from '../../../components/FormInput/FormInput'
 import FormSelect from "../../../components/FormSelect/FormSelect"
 import FeatureInput from '../FeatureInput/FeatureInput'
 import { buildPropertyFormData } from '../../../utils/buildPropertyFormData'
 import { cdn } from '../../../utils/format'
+import { api, API_BASE, getApiError } from '../../../utils/api'
 import {
   usePropertyOptions,
   PROPERTY_TYPES, PROPERTY_STATUS, FEATURED_OPTIONS
@@ -14,9 +14,6 @@ import {
 
 const MAX_IMAGES = 12
 const MAX_IMAGE_MB = 7
-
-const API_URL = import.meta.env.VITE_API_URL || ""
-const BASE_URL = API_URL.replace(/\/api\/?$/, "")
 
 interface Props {
   isOpen: boolean
@@ -144,7 +141,7 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
   }
 
   const toImgSrc = (img: string) =>
-    cdn(img.startsWith('http') ? img : `${BASE_URL}/${img.replace(/^\//, '')}`)
+    cdn(img.startsWith('http') ? img : `${API_BASE}/${img.replace(/^\//, '')}`)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -159,13 +156,10 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
         newImages: newFiles,
       })
 
-      await axios.put(`${BASE_URL}/api/properties/${property._id}`, data, {
-        withCredentials: true,
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
+      await api.put(`/properties/${property._id}`, data)
       setShowSuccess(true)
-    } catch (error: any) {
-      setSubmitError(error.response?.data?.error || "تعذّر حفظ التعديلات، حاول مرة تانية")
+    } catch (error) {
+      setSubmitError(getApiError(error, "تعذّر حفظ التعديلات، حاول مرة تانية"))
     } finally {
       setLoading(false)
     }

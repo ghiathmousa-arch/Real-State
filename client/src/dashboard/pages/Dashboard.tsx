@@ -5,6 +5,7 @@ import Header from "../components/Header/Header"
 import StatCard from "../components/StatCard/StatCard"
 import RecentActivities from "../components/RecentActivities/RecentActivities"
 import { formatPrice } from "../../utils/format"
+import { api } from "../../utils/api"
 
 interface Property {
   type: 'buy' | 'rent'
@@ -50,8 +51,6 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     </div>
   )
 }
-const API_URL = import.meta.env.VITE_API_URL;
-const BASE_URL = API_URL?.replace("/api", "");
 
 
 const Dashboard = () => {
@@ -61,9 +60,8 @@ const Dashboard = () => {
 
   useEffect(() => {
     // قائمة الأدمن (كل الحالات) — القائمة العامة صارت بترجّع النشط بس
-    fetch(`${BASE_URL}/api/properties/admin/all`, { credentials: "include" })
-      .then(res => res.json())
-      .then(data => setProperties(Array.isArray(data) ? data : data.data || []))
+    api.get("/properties/admin/all")
+      .then(({ data }) => setProperties(Array.isArray(data) ? data : data.data || []))
       .catch(err => console.error(err))
       .finally(() => setLoading(false))
   }, [])

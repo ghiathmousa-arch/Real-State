@@ -1,8 +1,9 @@
 //  المسؤول عن كل دوال التنسيق المشتركة. formatPrice وgetImgSrc وBASE_URL — مكتوبة مرة وحدة وكل المشروع يستورده
 
 // ── BASE_URL ──────────────────────────────────────────────
-const API_URL = import.meta.env.VITE_API_URL || ""
-export const BASE_URL = API_URL.replace(/\/api\/?$/, "")
+// جذر السيرفر بييجي من utils/api.ts (المصدر الوحيد) — BASE_URL اسم قديم منخليه للتوافق
+import { API_BASE } from "./api"
+export const BASE_URL = API_BASE
 
 // ── Cloudinary ───────────────────────────────────────────
 // f_auto بيخلي Cloudinary يقرر الصيغة حسب المتصفح (AVIF لكروم، WebP لسفاري)

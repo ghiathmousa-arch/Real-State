@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
 import { useTranslation } from "react-i18next";
 import {
   LuArrowLeft, LuArrowRight,
@@ -15,6 +14,7 @@ import { TbCheck } from "react-icons/tb";
 import PropertySlider from "../components/Propertyslider/Propertyslider";
 import FloatingWhatsApp from "../components/FloatingWhatsApp/FloatingWhatsApp";
 import { cdn, formatPrice } from "../../utils/format";
+import { api, API_BASE } from "../../utils/api";
 
 const PropertyDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -27,8 +27,6 @@ const PropertyDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeImg, setActiveImg] = useState(0);
   const [liked, setLiked] = useState(false);
-  const API_URL = import.meta.env.VITE_API_URL;
-  const BASE_URL = API_URL?.replace("/api", "");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,12 +34,12 @@ const PropertyDetailPage: React.FC = () => {
         setLoading(true);
         window.scrollTo(0, 0);
 
-        const res = await axios.get(`${API_URL}/api/properties/${id}`);
+        const res = await api.get(`/properties/${id}`);
         const prop = res.data;
         setProperty(prop);
         setActiveImg(0);
 
-        const allRes = await axios.get(`${API_URL}/api/properties`);
+        const allRes = await api.get("/properties");
         const all: any[] = Array.isArray(allRes.data) ? allRes.data : [];
 
         const filtered = all
@@ -112,7 +110,7 @@ const PropertyDetailPage: React.FC = () => {
         : null;
 
   const images: string[] = property.images?.length
-    ? property.images.map((img: string) => cdn(img.startsWith("http") ? img : `${BASE_URL}${img}`))
+    ? property.images.map((img: string) => cdn(img.startsWith("http") ? img : `${API_BASE}${img}`))
     : [];
 
   const BackIcon = ar ? LuArrowRight : LuArrowLeft;

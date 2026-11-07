@@ -5,9 +5,8 @@ import { IoLocationOutline } from "react-icons/io5";
 import { LuBedSingle, LuBath, LuArrowUpLeft, LuArrowUpRight } from "react-icons/lu";
 import { CiRuler } from "react-icons/ci";
 import { cdn, formatPrice } from "../../utils/format";
-
-// 💠 التعديل 1: استخدام رابط الـ API من متغيرات البيئة بدلاً من localhost الثابت
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+// 💠 جذر السيرفر من المصدر الموحّد utils/api.ts بدل قراءة VITE_API_URL هون
+import { API_BASE } from "../../utils/api";
 
 const PropertyCard: React.FC<{ property: any }> = ({ property }) => {
     const { i18n } = useTranslation();
@@ -35,7 +34,7 @@ const PropertyCard: React.FC<{ property: any }> = ({ property }) => {
 
     // 💠 التعديل 2: معالجة رابط الصورة بشكل ديناميكي
     const imageSrc = property.images?.[0]
-        ? cdn(property.images[0].startsWith("http") ? property.images[0] : `${API_BASE_URL}${property.images[0]}`)
+        ? cdn(property.images[0].startsWith("http") ? property.images[0] : `${API_BASE}${property.images[0]}`)
         : null;
 
     return (

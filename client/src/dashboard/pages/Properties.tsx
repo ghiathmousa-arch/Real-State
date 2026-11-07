@@ -4,9 +4,8 @@ import { useEffect, useState, useMemo, useCallback } from "react"
 import StatCard from "../components/StatCard/StatCard"
 import PropertiesTable from "../components/PropertiesTable/PropertiesTable"
 import { formatPrice } from "../../utils/format"
+import { api } from "../../utils/api"
 
-const API_URL = import.meta.env.VITE_API_URL;
-const BASE_URL = API_URL?.replace("/api", "");
 
 
 const Properties = () => {
@@ -24,8 +23,7 @@ const Properties = () => {
     setLoading(true);
     try {
       // قائمة الأدمن (كل الحالات) — القائمة العامة صارت بترجّع النشط بس
-      const res = await fetch(`${BASE_URL}/api/properties/admin/all`, { credentials: "include" });
-      const data = await res.json();
+      const { data } = await api.get("/properties/admin/all");
 
       // التأكد من أن البيانات مصفوفة
       const properties = Array.isArray(data) ? data : data.data || [];

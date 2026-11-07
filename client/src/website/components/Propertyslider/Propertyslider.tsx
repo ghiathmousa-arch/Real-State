@@ -8,6 +8,7 @@ import { LuBedSingle } from "react-icons/lu";
 import { CiRuler } from "react-icons/ci";
 import { PiBathtub } from "react-icons/pi";
 import { cdn, formatPrice } from "../../../utils/format";
+import { API_BASE } from "../../../utils/api";
 
 interface Property {
   _id: string;
@@ -33,8 +34,6 @@ const PropertySlider: React.FC<Props> = ({
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const ar = i18n.language === "ar";
-
-  const API_URL = import.meta.env.VITE_API_URL;
 
   const [rawIndex, setIndex] = useState(0);
   const [perPage, setPerPage] = useState(initialPerPage);
@@ -124,7 +123,7 @@ const PropertySlider: React.FC<Props> = ({
             const city = ar ? property.city : (property.cityEn || property.city);
 
             const imgSrc = property.images?.[0]
-              ? cdn(property.images[0].startsWith("http") ? property.images[0] : `${API_URL}${property.images[0]}`)
+              ? cdn(property.images[0].startsWith("http") ? property.images[0] : `${API_BASE}${property.images[0]}`)
               : null;
 
             const isBuy = property.type === "buy";

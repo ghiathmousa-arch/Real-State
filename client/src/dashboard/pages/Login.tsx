@@ -1,15 +1,13 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import AuthForm from "../components/AuthForm/AuthForm"
+import { api, getApiError } from "../../utils/api"
 
 export interface LoginData {
   email: string,
   password: string,
   remember: boolean
 }
-
-const API_URL = import.meta.env.VITE_API_URL;
-const BASE_URL = API_URL?.replace("/api", "");
 
 
 const Login = () => {
@@ -21,17 +19,19 @@ const Login = () => {
   const navigate = useNavigate()
 
   const handleSubmit = async (formData: LoginData) => {
+    let json
     try {
-      const res = await fetch(`${BASE_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include", // عشان كوكي الجلسة (httpOnly) ينحفظ بالمتصفح
-        body: JSON.stringify(formData)
-      })
-      const json = await res.json()
+      // withCredentials (بالـ api instance) عشان كوكي الجلسة (httpOnly) ينحفظ بالمتصفح
+      const res = await api.post("/auth/login", formData)
+      json = res.data
+    } catch (err: any) {
+      // رد من السيرفر (401/400/429…) = نعرض رسالته بس لو قصيرة ومتوقعة — getApiError بتفحص الطول
+      if (err?.response) return alert(getApiError(err, "بيانات خاطئة"))
+      console.log(err)
+      return alert("حدث خطأ، تحقق من الاتصال")
+    }
 
-      // نعرض رسالة السيرفر بس لو قصيرة ومتوقعة (رسائل الباك اند دايماً عربية قصيرة) — احتياط لو يوماً رجّع نص أطول
-      if (!res.ok) return alert(json.error && json.error.length < 200 ? json.error : "بيانات خاطئة")
+    try {
       if (json.user.role !== "admin") return alert("ليس لديك صلاحية")
 
       // نخزّن بيانات العرض فقط (اسم/دور) — الجلسة الفعلية بكوكي httpOnly غير قابل للقراءة من JS
