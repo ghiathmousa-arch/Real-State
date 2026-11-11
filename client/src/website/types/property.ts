@@ -7,7 +7,15 @@ export interface Property {
   category:string;
   categoryEn: string;
   type: string;
-  price: number | null; // بالدولار الأمريكي (USD) — null = "السعر عند الطلب"
+  price: number | null; // سعر البيع بالدولار الأمريكي (USD) — null = "السعر عند الطلب". عقار الإيجار = null
+  // أسعار الإيجار بالدولار — اللي بيتعبّى بس بيظهر (عقار البيع كلها null)
+  rentPrices?: {
+    daily: number | null;
+    weekly: number | null;
+    monthly: number | null;
+    yearly: number | null;
+  };
+  furnished?: "furnished" | "unfurnished" | null; // null = غير محدد
   city: string;
   cityEn: string;
   area: number | null;
