@@ -40,17 +40,16 @@ const PropertyDetailPage: React.FC = () => {
         setProperty(prop);
         setActiveImg(0);
 
-        const allRes = await api.get("/properties");
-        const all: any[] = Array.isArray(allRes.data) ? allRes.data : [];
+        // عقارات مشابهة: لازم تكون من نفس النوع (إيجار مع إيجار، بيع مع بيع).
+        // الأولوية لنفس المدينة، وإذا ما كفّوا منكمّل من نفس النوع بأي مدينة.
+        const allRes = await api.get("/properties", { params: { type: prop.type } });
+        const sameType: any[] = (Array.isArray(allRes.data) ? allRes.data : [])
+          .filter(p => p._id !== prop._id && p.type === prop.type);
 
-        const filtered = all
-          .filter(p =>
-            p._id !== prop._id &&
-            (p.category === prop.category || p.city === prop.city)
-          )
-          .slice(0, 6);
+        const sameCity = sameType.filter(p => p.city === prop.city);
+        const otherCities = sameType.filter(p => p.city !== prop.city);
 
-        setSimilar(filtered);
+        setSimilar([...sameCity, ...otherCities].slice(0, 6));
       } catch (e) {
         console.error(e);
       } finally {
