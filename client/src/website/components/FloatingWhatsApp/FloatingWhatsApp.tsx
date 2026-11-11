@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { WHATSAPP_NUMBER } from "../../../constants/contact";
 
 const WhatsAppIcon = ({ size = 28 }: { size?: number }) => (
@@ -11,10 +12,13 @@ interface FloatingWhatsAppProps {
 }
 
 const FloatingWhatsApp: React.FC<FloatingWhatsAppProps> = ({
-  message = "مرحباً، أنا مهتم بأحد العقارات",
+  message,
   position = "left"
 }) => {
-  const link = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  const { t } = useTranslation();
+  // النص والرسالة الافتراضية من الترجمات (whatsapp.*) — بيتبعوا لغة الموقع
+  const text = message ?? t("whatsapp.defaultMessage");
+  const link = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
 
   return (
     <a
@@ -27,7 +31,7 @@ const FloatingWhatsApp: React.FC<FloatingWhatsAppProps> = ({
       <div className="relative flex flex-col items-center">
         {/* عبارة "تواصل معنا" تظهر دايماً فوق الزر */}
         <div className="mb-2 bg-gray-800 text-white text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-lg animate-bounce">
-          تواصل معنا
+          {t("whatsapp.label")}
           <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-800" />
         </div>
 

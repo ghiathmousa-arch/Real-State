@@ -322,5 +322,9 @@
       "generic": "Couldn't send the request, please check the details",
       "network": "Connection failed, check your internet and try again"
     }
+  },
+  "whatsapp": {
+    "label": "Contact us",
+    "defaultMessage": "Hello, I'm interested in one of your properties"
   }
 }
