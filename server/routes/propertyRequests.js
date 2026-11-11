@@ -8,7 +8,7 @@ const mongoose = require("mongoose");
 const PropertyRequest = require("../models/PropertyRequest");
 const Property = require("../models/Property");
 const { upload, uploadRequestImages, compressImages, deleteCloudinaryImages } = require("../middleware/upload");
-const { protect, staffOnly, requestLimiter } = require("../middleware");
+const { protect, staffOnly, sanitizeBody, requestLimiter } = require("../middleware");
 const { CITIES, CATEGORIES } = require("../constants/property");
 const { parseListingPrices, parseFurnished, findEn, toNum, toLatinDigits, CITY_ERROR_MSG, CATEGORY_ERROR_MSG, buildNewPropertyData } = require("../utils/propertyFields");
 const { invalidatePropertiesCache } = require("./properties");
@@ -83,6 +83,7 @@ router.post(
   "/",
   requestLimiter,
   uploadRequestImages,
+  sanitizeBody,
   (req, res, next) => {
     // نجاح وهمي للبوت — ما منحفظ شي وما منرفع شي
     if (isBot(req.body)) return res.status(201).json({ message: "تم استلام طلبك" });
@@ -196,7 +197,7 @@ router.post("/:id/reject", protect, staffOnly, async (req, res) => {
 // بيستقبل بيانات فورم الإضافة النهائية (بعد تعديل الأدمن) + keepRequestImages (JSON array لصور الطلب
 // اللي لازم تنتقل للعقار) + أي صور جديدة، وبيعمل Property حقيقي بنفس منطق POST /api/properties.
 // createdBy = اللي حوّله. صور الطلب اللي ما انحطت بالعقار بتنحذف من Cloudinary.
-router.post("/:id/convert", protect, staffOnly, upload.any(), compressImages, async (req, res) => {
+router.post("/:id/convert", protect, staffOnly, upload.any(), sanitizeBody, compressImages, async (req, res) => {
   discardUploadsOnError(req, res);
   try {
     const request = await findNewRequest(req, res);

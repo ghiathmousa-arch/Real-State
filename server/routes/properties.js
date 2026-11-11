@@ -3,7 +3,7 @@ const router = express.Router();
 const mongoose = require("mongoose");
 const Property = require("../models/Property");
 const { upload, compressImages, deleteCloudinaryImages } = require("../middleware/upload");
-const { protect, adminOnly, staffOnly } = require("../middleware");
+const { protect, adminOnly, staffOnly, sanitizeBody } = require("../middleware");
 const { CITIES, CATEGORIES } = require("../constants/property");
 
 // ── كاش بسيط بالذاكرة ────────────────────────────────────────
@@ -210,7 +210,7 @@ router.get("/:id", async (req, res) => {
 
 // ── POST / ─────────────────────────────────────────────────
 // أدمن وسب أدمن — الإضافة بتنزل فوراً للاتنين. السب أدمن ما بيقدر يحط isFeatured
-router.post("/", protect, staffOnly, upload.any(), compressImages, async (req, res) => {
+router.post("/", protect, staffOnly, upload.any(), sanitizeBody, compressImages, async (req, res) => {
   discardUploadsOnError(req, res);
   try {
     // التحقق وبناء البيانات بدالة مشتركة (نفسها بتحويل "طلب عرض" لعقار)
@@ -383,7 +383,7 @@ const sendValidationError = (res, error) => {
 // ── PUT /:id ───────────────────────────────────────────────
 // الأدمن: بيتطبّق فوراً. السب أدمن (editor): ما بيتعدّل العقار — بينحفظ طلب تعديل
 // بـ pendingChanges (202) لحد ما الأدمن يوافق أو يرفض. طلب جديد بيستبدل القديم.
-router.put("/:id", protect, staffOnly, upload.any(), compressImages, async (req, res) => {
+router.put("/:id", protect, staffOnly, upload.any(), sanitizeBody, compressImages, async (req, res) => {
   // بالـ 202 (طلب السب أدمن) الصور الجديدة لازم تضل — هالدالة بتحذفها بس إذا الرد >= 400
   discardUploadsOnError(req, res);
   try {

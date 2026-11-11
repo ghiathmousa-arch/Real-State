@@ -1,5 +1,6 @@
 const { protect, adminOnly, staffOnly } = require("./auth");
 const rateLimit = require("express-rate-limit");
+const mongoSanitize = require("express-mongo-sanitize");
 
 // حد الطلبات العام — 100 طلب كل 15 دقيقة
 const apiLimiter = rateLimit({
@@ -33,4 +34,13 @@ const requestLimiter = rateLimit({
   message: { error: "أرسلت طلبات كثيرة، حاول بعد ساعة أو تواصل معنا عبر واتساب" }
 });
 
-module.exports = { protect, adminOnly, staffOnly, requestLimiter, apiLimiter, loginLimiter, contactLimiter };
+// ── sanitizeBody ──────────────────────────────────────────
+// mongoSanitize العام بـ index.js بيشتغل قبل ما multer يقرا فورمات رفع الصور (multipart)،
+// فـ body هالطلبات ما بينفحص. هالـ middleware بينحط بعد multer مباشرة بكل راوت فيه رفع:
+// بيشيل أي مفتاح بيبلّش بـ $ أو فيه نقطة (متل {"$gt": ""}) قبل ما يوصل لأي query
+const sanitizeBody = (req, res, next) => {
+  if (req.body && typeof req.body === "object") mongoSanitize.sanitize(req.body);
+  next();
+};
+
+module.exports = { protect, adminOnly, staffOnly, sanitizeBody, requestLimiter, apiLimiter, loginLimiter, contactLimiter };
