@@ -4,6 +4,7 @@ import { MdDashboard, MdOutlineBusiness, MdLogout, MdClose, MdEmail } from "reac
 import { IoMdAdd } from "react-icons/io"
 
 import { api } from "../../../utils/api"
+import { clearCurrentUser } from "../../hooks/useCurrentUser"
 
 const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   const navigate = useNavigate()
@@ -16,7 +17,7 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
     } catch {
       // حتى لو فشل الطلب (مثلاً الشبكة)، نكمّل تسجيل الخروج محلياً
     }
-    localStorage.removeItem("user")
+    clearCurrentUser()
     navigate("/dashboard/login")
   }
 

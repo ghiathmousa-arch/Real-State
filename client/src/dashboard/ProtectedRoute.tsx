@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { Navigate, Outlet } from "react-router-dom"
 
 import { api } from "../utils/api"
+import { isStaffRole, saveCurrentUser, clearCurrentUser } from "./hooks/useCurrentUser"
 
 const ProtectedRoute = () => {
   const [status, setStatus] = useState<"loading" | "authorized" | "unauthorized">("loading")
@@ -11,10 +12,12 @@ const ProtectedRoute = () => {
     // مش بالاكتفاء بقراءة localStorage (كانت بوابة من جهة الفرونت فقط وقابلة للتجاوز)
     api.get("/auth/me")
       .then(({ data: user }) => {
-        if (user.role === "admin") {
-          localStorage.setItem("user", JSON.stringify(user))
+        // الأدمن والسب أدمن (editor) بيدخلوا — الصلاحيات التفصيلية بالسيرفر وبـ AdminRoute
+        if (isStaffRole(user.role)) {
+          saveCurrentUser(user)
           setStatus("authorized")
         } else {
+          clearCurrentUser()
           setStatus("unauthorized")
         }
       })

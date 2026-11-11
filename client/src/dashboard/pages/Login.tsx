@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import AuthForm from "../components/AuthForm/AuthForm"
 import { api, getApiError } from "../../utils/api"
+import { isStaffRole, saveCurrentUser } from "../hooks/useCurrentUser"
 
 export interface LoginData {
   email: string,
@@ -32,15 +33,11 @@ const Login = () => {
     }
 
     try {
-      if (json.user.role !== "admin") return alert("ليس لديك صلاحية")
+      // الأدمن والسب أدمن (editor) بس
+      if (!isStaffRole(json.user.role)) return alert("ليس لديك صلاحية")
 
       // نخزّن بيانات العرض فقط (اسم/دور) — الجلسة الفعلية بكوكي httpOnly غير قابل للقراءة من JS
-      localStorage.setItem("user", JSON.stringify({
-        id: json.user.id,
-        name: json.user.name,
-        email: json.user.email,
-        role: json.user.role
-      }))
+      saveCurrentUser(json.user)
 
       navigate("/dashboard")
 
