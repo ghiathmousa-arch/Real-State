@@ -6,6 +6,7 @@ import SuccessModal from '../SuccessModal/SuccessModal'
 import FormInput from '../../../components/FormInput/FormInput'
 import FormSelect from '../../../components/FormSelect/FormSelect'
 import FeatureInput from '../FeatureInput/FeatureInput'
+import EnglishSection from '../EnglishSection/EnglishSection'
 import { buildPropertyFormData } from '../../../utils/buildPropertyFormData'
 import { api, getApiError } from '../../../utils/api'
 import {
@@ -18,8 +19,13 @@ const MAX_IMAGE_MB = 7
 
 const TEXT_FIELDS = [
   { name: "title", label: "عنوان العقار", placeholder: "شقة فاخرة في المزة", required: true },
-  { name: "titleEn", label: "Property Title (EN)", placeholder: "Luxury Apartment in Mezza", dir: "ltr" as const },
   { name: "description", label: "الوصف", placeholder: "وصف تفصيلي للعقار...", isTextarea: true },
+]
+
+// الحقول الإنجليزية كلها اختيارية ومحطوطة بقسم مطوي — إذا فاضية الموقع بيعرض العربي
+const EN_FIELDS = [
+  { name: "titleEn", label: "Property Title (EN)", placeholder: "Luxury Apartment in Mezza", dir: "ltr" as const },
+  { name: "addressEn", label: "Address (EN)", placeholder: "District, Street...", dir: "ltr" as const },
   { name: "descriptionEn", label: "Description (EN)", placeholder: "Detailed description...", dir: "ltr" as const, isTextarea: true },
 ]
 
@@ -31,7 +37,6 @@ const NUMBER_FIELDS = [
 
 const ADDRESS_FIELDS = [
   { name: "address", label: "العنوان التفصيلي", placeholder: "الحي، الشارع..." },
-  { name: "addressEn", label: "Address (EN)", placeholder: "District, Street...", dir: "ltr" as const },
 ]
 
 const AddProperty = () => {
@@ -125,7 +130,7 @@ const AddProperty = () => {
 
   return (
     <div className="p-6 bg-[#f8faff] min-h-screen" dir="rtl">
-      <Header title="إضافة عقار جديد" description="أدخل بيانات العقار بالعربي والإنجليزي" />
+      <Header title="إضافة عقار جديد" description="أدخل بيانات العقار بالعربي — الإنجليزي اختياري" />
 
       <form ref={formRef} onSubmit={handleSubmit}
         className="mt-8 bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
@@ -151,12 +156,15 @@ const AddProperty = () => {
             onRemove={i => setFeatures(prev => prev.filter((_, j) => j !== i))}
           />
 
-          <FeatureInput
-            label="Features (EN)" placeholder="Pool, Garden... then Enter"
-            features={featuresEn} input={featureInputEn} tagColor="green" dir="ltr"
-            onInputChange={setFeatureInputEn} onAdd={addFeatureEn}
-            onRemove={i => setFeaturesEn(prev => prev.filter((_, j) => j !== i))}
-          />
+          <EnglishSection>
+            {EN_FIELDS.map(f => <FormInput key={f.name} {...f} />)}
+            <FeatureInput
+              label="Features (EN)" placeholder="Pool, Garden... then Enter"
+              features={featuresEn} input={featureInputEn} tagColor="green" dir="ltr"
+              onInputChange={setFeatureInputEn} onAdd={addFeatureEn}
+              onRemove={i => setFeaturesEn(prev => prev.filter((_, j) => j !== i))}
+            />
+          </EnglishSection>
 
           {/* الصور */}
           <div className="md:col-span-2 flex flex-col gap-1.5">

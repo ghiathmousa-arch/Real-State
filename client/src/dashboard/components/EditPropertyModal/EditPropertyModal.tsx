@@ -4,6 +4,7 @@ import SuccessModal from '../SuccessModal/SuccessModal'
 import FormInput from '../../../components/FormInput/FormInput'
 import FormSelect from "../../../components/FormSelect/FormSelect"
 import FeatureInput from '../FeatureInput/FeatureInput'
+import EnglishSection from '../EnglishSection/EnglishSection'
 import { buildPropertyFormData } from '../../../utils/buildPropertyFormData'
 import { cdn } from '../../../utils/format'
 import { api, API_BASE, getApiError } from '../../../utils/api'
@@ -24,10 +25,19 @@ interface Props {
 
 const TEXT_FIELDS = [
   { name: "title", label: "عنوان العقار", placeholder: "شقة فاخرة في المزة" },
-  { name: "titleEn", label: "Property Title (EN)", placeholder: "Luxury Apartment in Mezza", dir: "ltr" as const },
   { name: "description", label: "الوصف", placeholder: "وصف تفصيلي...", isTextarea: true },
+]
+
+// الحقول الإنجليزية كلها اختيارية ومحطوطة بقسم مطوي — إذا فاضية الموقع بيعرض العربي
+const EN_FIELDS = [
+  { name: "titleEn", label: "Property Title (EN)", placeholder: "Luxury Apartment in Mezza", dir: "ltr" as const },
+  { name: "addressEn", label: "Address (EN)", placeholder: "District, Street...", dir: "ltr" as const },
   { name: "descriptionEn", label: "Description (EN)", placeholder: "Detailed description...", dir: "ltr" as const, isTextarea: true },
 ]
+
+// العقار عندو أي نص إنجليزي؟ — إذا إي، قسم الإنجليزي بيفتح لحالو بالتعديل
+const hasEnglishContent = (p: any) =>
+  Boolean(p?.titleEn?.trim() || p?.descriptionEn?.trim() || p?.addressEn?.trim() || p?.featuresEn?.length)
 
 const NUMBER_FIELDS = [
   { name: "area", label: "المساحة (م²)", type: "number", min: 0 },
@@ -37,7 +47,6 @@ const NUMBER_FIELDS = [
 
 const ADDRESS_FIELDS = [
   { name: "address", label: "العنوان التفصيلي", placeholder: "الحي، الشارع..." },
-  { name: "addressEn", label: "Address (EN)", placeholder: "District, Street...", dir: "ltr" as const },
 ]
 
 const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
@@ -54,6 +63,7 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
   const [featuresEn, setFeaturesEn] = useState<string[]>([])
   const [featureInput, setFeatureInput] = useState("")
   const [featureInputEn, setFeatureInputEn] = useState("")
+  const [showEnglish, setShowEnglish] = useState(false)
   const [loading, setLoading] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const lastIdRef = useRef<string | null>(null)
@@ -72,6 +82,7 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
       setPriceInput(property.price != null ? String(property.price) : "")
       setFeatures(property.features || [])
       setFeaturesEn(property.featuresEn || [])
+      setShowEnglish(hasEnglishContent(property))
       setExistingImages((property.images || []).filter((img: string) => img && !img.includes('undefined')))
       setNewFiles([])
       setNewPreviews([])
@@ -176,7 +187,7 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
           <div className="flex justify-between items-center mb-6 sm:mb-8">
             <div>
               <h2 className="text-xl sm:text-2xl font-black text-[#0f2d4a]">تعديل بيانات العقار</h2>
-              <p className="text-xs text-gray-400 font-bold mt-1">تحديث المعلومات بالعربي والإنجليزي</p>
+              <p className="text-xs text-gray-400 font-bold mt-1">تحديث المعلومات بالعربي — الإنجليزي اختياري</p>
             </div>
             <button type="button" onClick={onClose}
               className="p-2 sm:p-3 bg-gray-50 text-gray-400 hover:text-red-500 rounded-2xl transition-all">
@@ -229,11 +240,19 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
               onInputChange={setFeatureInput} onAdd={addFeature}
               onRemove={i => setFeatures(prev => prev.filter((_, j) => j !== i))} />
 
-            <FeatureInput
-              label="Features (EN)" placeholder="Pool, Garden..." dir="ltr"
-              features={featuresEn} input={featureInputEn} tagColor="green"
-              onInputChange={setFeatureInputEn} onAdd={addFeatureEn}
-              onRemove={i => setFeaturesEn(prev => prev.filter((_, j) => j !== i))} />
+            {/* الحقول الإنجليزية من الـ state — بتنبعت مع الفورم حتى لو القسم مطوي */}
+            <EnglishSection open={showEnglish} onToggle={setShowEnglish}>
+              {EN_FIELDS.map(f => (
+                <FormInput key={f.name} {...f}
+                  value={formData[f.name] ?? ''}
+                  onChange={e => handleChange(f.name, e.target.value)} />
+              ))}
+              <FeatureInput
+                label="Features (EN)" placeholder="Pool, Garden..." dir="ltr"
+                features={featuresEn} input={featureInputEn} tagColor="green"
+                onInputChange={setFeatureInputEn} onAdd={addFeatureEn}
+                onRemove={i => setFeaturesEn(prev => prev.filter((_, j) => j !== i))} />
+            </EnglishSection>
 
             <div className="sm:col-span-2 space-y-1.5">
               <label className="block text-xs font-black text-gray-400">
