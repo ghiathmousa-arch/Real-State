@@ -7,11 +7,12 @@ import FormInput from '../../../components/FormInput/FormInput'
 import FormSelect from '../../../components/FormSelect/FormSelect'
 import FeatureInput from '../FeatureInput/FeatureInput'
 import EnglishSection from '../EnglishSection/EnglishSection'
+import RentPriceFields from '../RentPriceFields/RentPriceFields'
 import { buildPropertyFormData } from '../../../utils/buildPropertyFormData'
 import { api, getApiError } from '../../../utils/api'
 import {
   usePropertyOptions,
-  PROPERTY_TYPES, PROPERTY_STATUS, FEATURED_OPTIONS
+  PROPERTY_TYPES, PROPERTY_STATUS, FEATURED_OPTIONS, FURNISHED_OPTIONS
 } from '../../../constants/property'
 
 const MAX_IMAGES = 12
@@ -50,6 +51,7 @@ const AddProperty = () => {
     { name: "city", label: "المدينة", required: true, placeholder: "اختر المدينة", options: cities.map(c => ({ value: c, label: c })) },
     { name: "status", label: "الحالة", options: PROPERTY_STATUS },
     { name: "isFeatured", label: "عقار مميز؟", options: FEATURED_OPTIONS },
+    { name: "furnished", label: "مفروش؟", options: FURNISHED_OPTIONS },
   ], [cities, categories])
 
   const [loading, setLoading] = useState(false)
@@ -62,6 +64,8 @@ const AddProperty = () => {
   const [featuresEn, setFeaturesEn] = useState<string[]>([])
   const [featureInput, setFeatureInput] = useState("")
   const [featureInputEn, setFeatureInputEn] = useState("")
+  // النوع المختار — بيحدد إذا منعرض خانة السعر (بيع) أو أسعار الإيجار الأربعة (إيجار)
+  const [type, setType] = useState("")
   const formRef = useRef<HTMLFormElement>(null)
 
   const handleImages = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,6 +129,7 @@ const AddProperty = () => {
     setFiles([])
     setFeatures([])
     setFeaturesEn([])
+    setType("")
     formRef.current?.reset()
   }
 
@@ -133,16 +138,25 @@ const AddProperty = () => {
       <Header title="إضافة عقار جديد" description="أدخل بيانات العقار بالعربي — الإنجليزي اختياري" />
 
       <form ref={formRef} onSubmit={handleSubmit}
+        onChange={e => {
+          const el = e.target as HTMLSelectElement
+          if (el.name === "type") setType(el.value)
+        }}
         className="mt-8 bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
           {TEXT_FIELDS.map(f => <FormInput key={f.name} {...f} />)}
           {SELECT_FIELDS.map(f => <FormSelect key={f.name} {...f} />)}
 
-          <FormInput
-            name="price" label="السعر (بالدولار $)" placeholder="مثال: 85000 (اختياري)" inputMode="numeric" dir="ltr"
-            onChange={e => { (e.target as HTMLInputElement).value = e.target.value.replace(/[^0-9]/g, '') }}
-          />
+          {/* إيجار = 4 أسعار للمدد، بيع (أو ما انختار نوع) = سعر واحد */}
+          {type === "rent" ? (
+            <RentPriceFields />
+          ) : (
+            <FormInput
+              name="price" label="السعر (بالدولار $)" placeholder="مثال: 85000 (اختياري)" inputMode="numeric" dir="ltr"
+              onChange={e => { (e.target as HTMLInputElement).value = e.target.value.replace(/[^0-9]/g, '') }}
+            />
+          )}
 
           {NUMBER_FIELDS.map(f => <FormInput key={f.name} {...f} />)}
           {ADDRESS_FIELDS.map(f => <FormInput key={f.name} {...f} />)}

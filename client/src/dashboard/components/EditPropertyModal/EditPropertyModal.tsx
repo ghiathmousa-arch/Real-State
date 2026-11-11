@@ -5,12 +5,13 @@ import FormInput from '../../../components/FormInput/FormInput'
 import FormSelect from "../../../components/FormSelect/FormSelect"
 import FeatureInput from '../FeatureInput/FeatureInput'
 import EnglishSection from '../EnglishSection/EnglishSection'
+import RentPriceFields, { EMPTY_RENT_INPUTS, RENT_FIELDS, rentInputsFrom, type RentInputs } from '../RentPriceFields/RentPriceFields'
 import { buildPropertyFormData } from '../../../utils/buildPropertyFormData'
 import { cdn } from '../../../utils/format'
 import { api, API_BASE, getApiError } from '../../../utils/api'
 import {
   usePropertyOptions,
-  PROPERTY_TYPES, PROPERTY_STATUS, FEATURED_OPTIONS
+  PROPERTY_TYPES, PROPERTY_STATUS, FEATURED_OPTIONS, FURNISHED_OPTIONS
 } from '../../../constants/property'
 
 const MAX_IMAGES = 12
@@ -53,6 +54,8 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
   const { cities, categories } = usePropertyOptions()
   const [formData, setFormData] = useState<any>({})
   const [priceInput, setPriceInput] = useState("")
+  // أسعار الإيجار الأربعة — state منفصل متل السعر
+  const [rentInputs, setRentInputs] = useState<RentInputs>(EMPTY_RENT_INPUTS)
   // الصور: القديمة اللي لسا محفوظة (روابط) + الجديدة المختارة (ملفات ومعاينات)
   const [existingImages, setExistingImages] = useState<string[]>([])
   const [newFiles, setNewFiles] = useState<File[]>([])
@@ -80,6 +83,7 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
       lastIdRef.current = property._id
       setFormData({ ...property })
       setPriceInput(property.price != null ? String(property.price) : "")
+      setRentInputs(rentInputsFrom(property.rentPrices))
       setFeatures(property.features || [])
       setFeaturesEn(property.featuresEn || [])
       setShowEnglish(hasEnglishContent(property))
@@ -98,6 +102,7 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
     { name: "city", label: "المدينة", placeholder: "اختر المدينة", options: cities.map(c => ({ value: c, label: c })) },
     { name: "status", label: "الحالة", options: PROPERTY_STATUS },
     { name: "isFeatured", label: "مميز؟", options: FEATURED_OPTIONS },
+    { name: "furnished", label: "مفروش؟", options: FURNISHED_OPTIONS },
   ], [cities, categories])
 
   if (!isOpen) return null
@@ -159,7 +164,11 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
     setSubmitError("")
     try {
       const data = buildPropertyFormData({
-        formData: { ...formData, price: priceInput },
+        formData: {
+          ...formData,
+          price: priceInput,
+          ...Object.fromEntries(RENT_FIELDS.map(f => [f.name, rentInputs[f.period]])),
+        },
         features,
         featuresEn,
         keepImages: existingImages,
@@ -209,12 +218,19 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
                 onChange={e => handleChange(f.name, e.target.value)} />
             ))}
 
-            {/* السعر — state منفصل عشان ما يتأثر بالـ useEffect */}
-            <FormInput
-              name="price" label="السعر (بالدولار $)" inputMode="numeric" dir="ltr"
-              placeholder="مثال: 85000 (اختياري)"
-              value={priceInput}
-              onChange={e => setPriceInput(e.target.value.replace(/[^0-9]/g, ''))} />
+            {/* السعر — state منفصل عشان ما يتأثر بالـ useEffect.
+                إيجار = 4 أسعار للمدد، بيع = سعر واحد */}
+            {formData.type === "rent" ? (
+              <RentPriceFields
+                values={rentInputs}
+                onChange={(period, value) => setRentInputs(prev => ({ ...prev, [period]: value }))} />
+            ) : (
+              <FormInput
+                name="price" label="السعر (بالدولار $)" inputMode="numeric" dir="ltr"
+                placeholder="مثال: 85000 (اختياري)"
+                value={priceInput}
+                onChange={e => setPriceInput(e.target.value.replace(/[^0-9]/g, ''))} />
+            )}
 
             {NUMBER_FIELDS.map(f => (
               <FormInput key={f.name} {...f}

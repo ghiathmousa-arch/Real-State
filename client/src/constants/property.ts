@@ -77,3 +77,10 @@ export const FEATURED_OPTIONS = [
   { value: "false", label: "لا" },
   { value: "true", label: "نعم" },
 ]
+
+// مفروش؟ — "" = غير محدد (السيرفر بيخزّنه null)
+export const FURNISHED_OPTIONS = [
+  { value: "", label: "غير محدد" },
+  { value: "furnished", label: "مفروش" },
+  { value: "unfurnished", label: "غير مفروش" },
+]
