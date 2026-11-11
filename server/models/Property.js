@@ -9,7 +9,19 @@ const PropertySchema = new mongoose.Schema({
   category: { type: String, required: true }, // الفئة بالعربي (شقة، منزل...)
   categoryEn: String,     // الفئة بالإنجليزي
   type: { type: String, enum: ["buy", "rent"], required: true }, // نوع العملية: buy أو rent
-  price: { type: Number, min: 0 }, // السعر بالدولار الأمريكي (USD) فقط — اختياري، null = "السعر عند الطلب"
+  price: { type: Number, min: 0 }, // سعر البيع بالدولار الأمريكي (USD) فقط — اختياري، null = "السعر عند الطلب". عقار الإيجار = null
+
+  // أسعار الإيجار بالدولار — كل مدة اختيارية، اللي بيتعبّى بس بيظهر. ولا وحدة = "السعر عند الطلب"
+  // (عقار البيع كلها null)
+  rentPrices: {
+    daily: { type: Number, min: 0, default: null },   // يومي
+    weekly: { type: Number, min: 0, default: null },  // أسبوعي
+    monthly: { type: Number, min: 0, default: null }, // شهري
+    yearly: { type: Number, min: 0, default: null },  // سنوي
+  },
+
+  // مفروش؟ — null = غير محدد
+  furnished: { type: String, enum: ["furnished", "unfurnished", null], default: null },
   city: { type: String, required: true },     // المدينة بالعربي
   cityEn: String,         // المدينة بالإنجليزي
   area: Number,           // المساحة بالمتر المربع
@@ -39,7 +51,7 @@ const PropertySchema = new mongoose.Schema({
 // القائمة العامة بتفلتر على status وبتعرض الأحدث أول، والفلاتر الشائعة على المدينة والنوع والمميز
 PropertySchema.index({ status: 1, createdAt: -1 });
 PropertySchema.index({ city: 1 });
-PropertySchema.index({ type: 1 });
+PropertySchema.index({ type: 1, status: 1 }); // فلترة بيع/إيجار بالقائمة العامة (النشط بس)
 PropertySchema.index({ isFeatured: 1 });
 
 module.exports = mongoose.model("Property", PropertySchema); // تصدير الموديل
