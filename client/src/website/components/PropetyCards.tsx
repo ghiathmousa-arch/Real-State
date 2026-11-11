@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { IoLocationOutline } from "react-icons/io5";
 import { LuBedSingle, LuBath, LuArrowUpLeft, LuArrowUpRight } from "react-icons/lu";
 import { CiRuler } from "react-icons/ci";
-import { cdn, formatPrice } from "../../utils/format";
+import { cdn, getMainPrice } from "../../utils/format";
 // 💠 جذر السيرفر من المصدر الموحّد utils/api.ts بدل قراءة VITE_API_URL هون
 import { API_BASE } from "../../utils/api";
 import { localized } from "../../utils/helper";
@@ -27,12 +27,12 @@ const PropertyCard: React.FC<{ property: any }> = ({ property }) => {
         baths: isAr ? "حمام" : (property.bathrooms === 1 ? "Bath" : "Baths"),
         area: isAr ? "م٢" : "m²",
         price: isAr ? "السعر" : "Price",
-        month: isAr ? "شهرياً" : "month",
         sale: isAr ? "للبيع" : "For Sale",
         rent: isAr ? "للإيجار" : "For Rent"
     };
 
     const isSale = property.type === "sale" || property.type === "buy";
+    const mainPrice = getMainPrice(property, isAr);
 
     // 💠 التعديل 2: معالجة رابط الصورة بشكل ديناميكي
     const imageSrc = property.images?.[0]
@@ -99,8 +99,9 @@ const PropertyCard: React.FC<{ property: any }> = ({ property }) => {
                     <div>
                         <span className="text-[10px] text-gray-400 font-black block uppercase">{labels.price}</span>
                         <div className="text-xl font-black text-sky-700 dark:text-sky-400">
-                            {property.price
-                                ? <>{formatPrice(property.price)}{property.type === "rent" && <span className="text-xs"> / {labels.month}</span>}</>
+                            {/* البيع = السعر، الإيجار = أول مدة متوفرة، ولا شي = "السعر عند الطلب" */}
+                            {mainPrice
+                                ? <><span dir="ltr">{mainPrice.price}</span>{mainPrice.suffix && <span className="text-xs"> / {mainPrice.suffix}</span>}</>
                                 : <span className="text-sm">{isAr ? "السعر عند الطلب" : "Price on request"}</span>}
                         </div>
                     </div>

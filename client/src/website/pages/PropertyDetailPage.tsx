@@ -13,7 +13,7 @@ import { PiBathtub } from "react-icons/pi";
 import { TbCheck } from "react-icons/tb";
 import PropertySlider from "../components/Propertyslider/Propertyslider";
 import FloatingWhatsApp from "../components/FloatingWhatsApp/FloatingWhatsApp";
-import { cdn, formatPrice } from "../../utils/format";
+import { cdn, formatPrice, formatRentPrices } from "../../utils/format";
 import { api, API_BASE } from "../../utils/api";
 import { localized, localizedList } from "../../utils/helper";
 
@@ -96,7 +96,9 @@ const PropertyDetailPage: React.FC = () => {
   const category = localized(property, "category", ar);
   const features = localizedList(property, "features", ar);
   const isBuy = property.type === "buy";
-  const hasPrice = property.price != null && property.price > 0;
+  // الإيجار: كل المدد المعبّاة سطر سطر. البيع: السعر الواحد
+  const rentItems = isBuy ? [] : formatRentPrices(property.rentPrices, ar);
+  const hasPrice = isBuy ? property.price != null && property.price > 0 : rentItems.length > 0;
 
   // حالة العقار: المباع والمعلّق ما بيظهروا بالقوائم العامة، بس صفحتهم بتفتح من الروابط القديمة
   const isActive = !property.status || property.status === "active";
@@ -246,13 +248,21 @@ const PropertyDetailPage: React.FC = () => {
             {/* السعر */}
             {hasPrice && (
               <div className={`shrink-0 w-full sm:w-auto ${ar ? "text-left sm:text-left" : "text-right sm:text-right"}`}>
-                <p dir="ltr" className="text-3xl font-extrabold text-sky-600 dark:text-sky-400 leading-none">
-                  {formatPrice(property.price)}
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  {t("properties.currency")}
-                  {!isBuy && <> / {t("properties.month")}</>}
-                </p>
+                {isBuy ? (
+                  <p dir="ltr" className="text-3xl font-extrabold text-sky-600 dark:text-sky-400 leading-none">
+                    {formatPrice(property.price)}
+                  </p>
+                ) : (
+                  <ul className="space-y-1.5">
+                    {rentItems.map(item => (
+                      <li key={item.period} className="text-2xl font-extrabold text-sky-600 dark:text-sky-400 leading-none">
+                        <span dir="ltr">{item.price}</span>
+                        <span className="text-sm font-bold text-gray-400 ms-1">/ {item.label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <p className="text-xs text-gray-400 mt-1">{t("properties.currency")}</p>
               </div>
             )}
           </div>

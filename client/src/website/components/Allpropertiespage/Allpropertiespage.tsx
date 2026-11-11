@@ -6,7 +6,7 @@ import { LuBedSingle, LuArrowLeft, LuArrowRight, LuSearch } from "react-icons/lu
 import { CiRuler } from "react-icons/ci";
 import { PiBathtub } from "react-icons/pi";
 import PropertySlider from "../Propertyslider/Propertyslider";
-import { withImagesFirst, cdn, formatPrice } from "../../../utils/format";
+import { withImagesFirst, cdn, getMainPrice } from "../../../utils/format";
 import { api, API_BASE } from "../../../utils/api";
 import { localized } from "../../../utils/helper";
 
@@ -208,6 +208,8 @@ const AllPropertiesPage: React.FC = () => {
 
                 const isBuy = property.type === "buy";
 
+                const mainPrice = getMainPrice(property, ar);
+
                 return (
                   <div key={property._id}
                     onClick={() => navigate(`/properties/${property._id}`)}
@@ -239,9 +241,16 @@ const AllPropertiesPage: React.FC = () => {
                         {(property.bathrooms ?? 0) > 0 && <span className="flex items-center gap-1"><PiBathtub className="text-sm" />{property.bathrooms}</span>}
                       </div>
                       <p className="text-sky-700 dark:text-sky-400 font-bold text-lg leading-none">
-                        <span dir="ltr">{formatPrice(property.price)}</span>
-                        {!isBuy && property.price != null && (
-                          <span className="text-xs font-normal text-gray-400 ms-1">/ {t("properties.month")}</span>
+                        {/* البيع = السعر، الإيجار = أول مدة متوفرة، ولا شي = "السعر عند الطلب" */}
+                        {mainPrice ? (
+                          <>
+                            <span dir="ltr">{mainPrice.price}</span>
+                            {mainPrice.suffix && (
+                              <span className="text-xs font-normal text-gray-400 ms-1">/ {mainPrice.suffix}</span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-sm">{t("properties.priceOnRequest")}</span>
                         )}
                       </p>
                     </div>
