@@ -6,7 +6,8 @@
     "services": "Our Services",
     "contact": "Contact Us",
     "forSale": "For Sale",
-    "forRent": "For Rent"
+    "forRent": "For Rent",
+    "listProperty": "List Your Property"
   },
   "properties": {
     "allEstates": "All Estates",
@@ -254,5 +255,68 @@
     "allTitle": "All Properties — Buy & Rent in Syria",
     "forRent": "For Rent",
     "forSale": "For Sale"
+  },
+  "listProperty": {
+    "title": "List Your Property",
+    "intro": "Fill in the details below and our team will contact you within 24 hours. Only fields marked * are required.",
+    "seoTitle": "List your property for sale or rent",
+    "seoDescription": "Have a property for sale or rent in Syria? Fill in a short form and our team will get in touch and list it.",
+    "sections": {
+      "owner": "Your details",
+      "property": "The property",
+      "price": "Price",
+      "images": "Photos"
+    },
+    "fields": {
+      "ownerName": "Name",
+      "ownerPhone": "Phone / WhatsApp",
+      "type": "Sell or rent?",
+      "category": "Property type",
+      "city": "City",
+      "area": "Area (m²)",
+      "rooms": "Rooms",
+      "bathrooms": "Bathrooms",
+      "address": "Address / area",
+      "description": "Description",
+      "price": "Asking price (USD $)",
+      "furnished": "Furnished?"
+    },
+    "types": {
+      "buy": "Sell",
+      "rent": "Rent"
+    },
+    "choose": "Choose...",
+    "placeholders": {
+      "address": "e.g. Mezzeh, Jalaa St.",
+      "description": "Anything you'd like us to know: floor, finishing, view..."
+    },
+    "rentHint": "Fill in only the periods you rent for — not sure? Leave them empty and we'll discuss.",
+    "rentPrices": {
+      "daily": "Daily price $",
+      "weekly": "Weekly price $",
+      "monthly": "Monthly price $",
+      "yearly": "Yearly price $"
+    },
+    "priceHint": "Optional — not sure? Leave it empty and we'll discuss.",
+    "furnished": {
+      "unknown": "Not specified"
+    },
+    "imagesHint": "Tap here to add photos (up to {{max}}) — {{count}} added",
+    "removeImage": "Remove photo",
+    "submit": "Send request",
+    "sending": "Sending...",
+    "successTitle": "We got your request! 🎉",
+    "successText": "Thank you. Our team will call you within 24 hours.",
+    "whatsappButton": "Contact us directly on WhatsApp",
+    "whatsappMessage": "Hello, I sent a request to list my property on your website and would like to talk.",
+    "errors": {
+      "required": "This field is required",
+      "phone": "Digits only, e.g. 0991234567",
+      "type": "Choose sell or rent",
+      "tooManyImages": "Maximum {{max}} photos",
+      "imageTooBig": "\"{{name}}\" is larger than {{mb}} MB",
+      "generic": "Couldn't send the request, please check the details",
+      "network": "Connection failed, check your internet and try again"
+    }
   }
 }

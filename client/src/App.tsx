@@ -7,6 +7,7 @@ import Footer from "./website/components/Footer";
 import HomePage from "./website/pages/HomePage";
 import PropertyDetailPage from "./website/pages/PropertyDetailPage";
 import AllPropertiesPage from "./website/components/Allpropertiespage/Allpropertiespage";
+import ListYourPropertyPage from "./website/pages/ListYourPropertyPage";
 
 import SEO from "./website/components/SEO/SEO";
 import AiChat from "./website/components/AiChat/AiChat";
@@ -100,6 +101,7 @@ function App() {
           />
           <Route path="properties" element={<AllPropertiesPage />} />
           <Route path="properties/:id" element={<PropertyDetailPage />} />
+          <Route path="list-your-property" element={<ListYourPropertyPage />} />
         </Route>
       </Routes>
 
