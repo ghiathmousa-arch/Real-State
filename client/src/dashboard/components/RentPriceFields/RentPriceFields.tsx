@@ -27,10 +27,12 @@ export const rentInputsFrom = (rentPrices: any): RentInputs => ({
 
 interface Props {
   values?: RentInputs
+  // قيم أولية بالوضع uncontrolled (الإضافة من "طلب عرض")
+  defaults?: Partial<RentInputs>
   onChange?: (period: RentPeriod, value: string) => void
 }
 
-const RentPriceFields = ({ values, onChange }: Props) => (
+const RentPriceFields = ({ values, defaults, onChange }: Props) => (
   <div className="md:col-span-2 sm:col-span-2 rounded-[1.5rem] border-2 border-blue-100 bg-blue-50/40 p-4 sm:p-5 flex flex-col gap-4">
     <div>
       <p className="text-base font-black text-[#0f2d4a]">أسعار الإيجار (بالدولار $)</p>
@@ -46,7 +48,7 @@ const RentPriceFields = ({ values, onChange }: Props) => (
           {...(values ? {
             value: values[f.period],
             onChange: e => onChange?.(f.period, e.target.value.replace(/[^0-9]/g, '')),
-          } : {})}
+          } : { defaultValue: defaults?.[f.period] })}
         />
       ))}
     </div>

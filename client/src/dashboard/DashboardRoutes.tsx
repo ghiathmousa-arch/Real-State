@@ -10,6 +10,8 @@ import AddProperty from "./components/AddProperty/AddProperty"
 import Messages from "./pages/Messages"
 import PendingChanges from "./pages/PendingChanges"
 import Users from "./pages/Users"
+import Requests from "./pages/Requests"
+import ConvertRequest from "./pages/ConvertRequest"
 
 const DashboardRoutes = () => {
   return (
@@ -25,6 +27,9 @@ const DashboardRoutes = () => {
           <Route path="/" element={<Dashboard />} />
           <Route path="/properties" element={<Properties />} />
           <Route path="properties/add" element={<AddProperty />} />
+          {/* طلبات "اعرض عقارك" — أدمن وسب أدمن */}
+          <Route path="requests" element={<Requests />} />
+          <Route path="requests/:id/convert" element={<ConvertRequest />} />
 
           {/* للأدمن بس */}
           <Route element={<AdminRoute />}>

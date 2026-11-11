@@ -11,6 +11,8 @@ interface Props {
   min?: number
   isTextarea?: boolean
   value?: string | number
+  // قيمة أولية بالوضع uncontrolled (الإضافة) — مثلاً تحويل "طلب عرض" لعقار
+  defaultValue?: string | number
   onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
 }
 
@@ -19,7 +21,7 @@ const inputClass =
 
 const FormInput = ({
   label, name, type = "text", placeholder, required,
-  dir, inputMode, min, isTextarea, value, onChange
+  dir, inputMode, min, isTextarea, value, defaultValue, onChange
 }: Props) => {
 
   // إذا value موجود = controlled (Edit mode)
@@ -38,7 +40,7 @@ const FormInput = ({
           placeholder={placeholder}
           rows={3}
           dir={dir}
-          {...(controlled ? { value, onChange } : {})}
+          {...(controlled ? { value, onChange } : { defaultValue })}
           className={`${inputClass} text-sm resize-none`}
         />
       ) : (
@@ -50,7 +52,7 @@ const FormInput = ({
           dir={dir}
           inputMode={inputMode}
           min={min}
-          {...(controlled ? { value, onChange } : {})}
+          {...(controlled ? { value, onChange } : { defaultValue })}
           className={inputClass}
         />
       )}
