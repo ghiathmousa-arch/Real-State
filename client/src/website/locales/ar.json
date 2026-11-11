@@ -18,7 +18,9 @@
     "priceOnRequest": "السعر عند الطلب",
     "latest": "أحدث العقارات",
     "explore": "استكشف",
-    "noPropertiesFound": "لا توجد عقارات حالياً"
+    "noPropertiesFound": "لا توجد عقارات حالياً",
+    "furnished": "مفروش",
+    "unfurnished": "غير مفروش"
   },
   "contact": {
     "title": "تواصل معنا",

@@ -5,9 +5,11 @@ import { IoLocationOutline } from "react-icons/io5";
 import { LuBedSingle, LuArrowUpRight } from "react-icons/lu";
 import { CiRuler } from "react-icons/ci";
 import { PiBathtub } from "react-icons/pi";
-import { cdn, getMainPrice } from "../../../utils/format";
+import { cdn } from "../../../utils/format";
 import { api, API_BASE } from "../../../utils/api";
 import { localized } from "../../../utils/helper";
+import PriceTag from "../PriceTag/PriceTag";
+import ListingBadges from "../PriceTag/ListingBadges";
 import { sortProperties } from "../../../utils/propertyFilters";
 
 
@@ -94,10 +96,6 @@ const PropertiesList: React.FC = () => {
                                 imgSrc = cdn(firstImg.startsWith("http") ? firstImg : `${API_BASE}${firstImg}`);
                             }
 
-                            const isBuy = property.type === "buy";
-
-                            const mainPrice = getMainPrice(property, ar);
-
                             return (
                                 <div
                                     key={property._id}
@@ -110,14 +108,7 @@ const PropertiesList: React.FC = () => {
                                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                         )}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                                        <div className={`absolute top-3 flex gap-1.5 ${ar ? "left-3" : "right-3"}`}>
-                                            <span className={`text-xs font-bold px-2.5 py-1 rounded-full text-white shadow-sm ${isBuy ? "bg-sky-600" : "bg-amber-500"}`}>
-                                                {isBuy ? t("properties.sale") : t("properties.rent")}
-                                            </span>
-                                            {property.isFeatured && (
-                                                <span className="text-xs font-bold px-2 py-1 rounded-full bg-emerald-500 text-white shadow-sm">★</span>
-                                            )}
-                                        </div>
+                                        <ListingBadges property={property} className={`absolute top-3 ${ar ? "left-3" : "right-3"} max-w-[85%]`} />
                                     </div>
 
                                     <div className={`p-4 ${ar ? "text-right" : "text-left"}`}>
@@ -131,19 +122,7 @@ const PropertiesList: React.FC = () => {
                                             {(property.rooms ?? 0) > 0 && <span className="flex items-center gap-1"><LuBedSingle className="text-sm" />{property.rooms}</span>}
                                             {(property.bathrooms ?? 0) > 0 && <span className="flex items-center gap-1"><PiBathtub className="text-sm" />{property.bathrooms}</span>}
                                         </div>
-                                        <p className="text-sky-700 dark:text-sky-400 font-bold text-lg leading-none">
-                                            {/* البيع = السعر، الإيجار = أول مدة متوفرة، ولا شي = "السعر عند الطلب" */}
-                                            {mainPrice ? (
-                                              <>
-                                                <span dir="ltr">{mainPrice.price}</span>
-                                                {mainPrice.suffix && (
-                                                  <span className="text-xs font-normal text-gray-400 ms-1">/ {mainPrice.suffix}</span>
-                                                )}
-                                              </>
-                                            ) : (
-                                              <span className="text-sm">{t("properties.priceOnRequest")}</span>
-                                            )}
-                                        </p>
+                                        <PriceTag property={property} size="md" />
                                     </div>
                                 </div>
                             );

@@ -18,7 +18,9 @@
     "priceOnRequest": "Price on request",
     "latest": "Latest Properties",
     "explore": "Explore",
-    "noPropertiesFound": "No properties available right now"
+    "noPropertiesFound": "No properties available right now",
+    "furnished": "Furnished",
+    "unfurnished": "Unfurnished"
   },
   "contact": {
     "title": "Contact Us",
