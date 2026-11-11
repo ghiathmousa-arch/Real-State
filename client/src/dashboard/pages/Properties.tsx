@@ -5,11 +5,23 @@ import StatCard from "../components/StatCard/StatCard"
 import PropertiesTable from "../components/PropertiesTable/PropertiesTable"
 import { formatPrice } from "../../utils/format"
 import { api } from "../../utils/api"
+import { useCurrentUser } from "../hooks/useCurrentUser"
 
 
 
 const Properties = () => {
+  const { isAdmin } = useCurrentUser();
   const [propertiesList, setPropertiesList] = useState([]);
+  // فلتر "حسب الشخص" (للأدمن) — بينفلتر بالسيرفر ?createdBy=
+  const [createdBy, setCreatedBy] = useState("");
+  const [people, setPeople] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    api.get("/auth/users")
+      .then(res => setPeople(Array.isArray(res.data) ? res.data : []))
+      .catch(err => console.error("Users fetch error:", err));
+  }, [isAdmin]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     total: 0,
@@ -23,7 +35,9 @@ const Properties = () => {
     setLoading(true);
     try {
       // قائمة الأدمن (كل الحالات) — القائمة العامة صارت بترجّع النشط بس
-      const { data } = await api.get("/properties/admin/all");
+      const { data } = await api.get("/properties/admin/all", {
+        params: createdBy ? { createdBy } : undefined,
+      });
 
       // التأكد من أن البيانات مصفوفة
       const properties = Array.isArray(data) ? data : data.data || [];
@@ -49,7 +63,7 @@ const Properties = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [createdBy]);
 
   useEffect(() => {
     fetchData();
@@ -118,6 +132,9 @@ const Properties = () => {
           data={propertiesList}
           loading={loading}
           refreshData={fetchData}
+          people={isAdmin ? people : undefined}
+          createdBy={createdBy}
+          onCreatedByChange={setCreatedBy}
         />
       </div>
     </div>

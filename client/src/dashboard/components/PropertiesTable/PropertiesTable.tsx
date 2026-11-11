@@ -15,6 +15,8 @@ interface Property {
   price: number | null
   rentPrices?: RentPrices
   status: string
+  createdBy?: { id?: string; name?: string }
+  pendingChanges?: unknown
   images: string[]
 }
 
@@ -22,7 +24,16 @@ interface Props {
   data: Property[]
   loading: boolean
   refreshData: () => void
+  // فلتر الأشخاص (للأدمن بس) — undefined = ما بينعرض
+  people?: { id: string; name: string }[]
+  createdBy?: string
+  onCreatedByChange?: (id: string) => void
 }
+
+// شارة "تعديل معلّق" — طلب تعديل من سب أدمن بانتظار الموافقة
+const PendingBadge = () => (
+  <span className="shrink-0 text-[9px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">تعديل معلّق</span>
+)
 
 const ITEMS_PER_PAGE = 5
 
@@ -35,7 +46,7 @@ const priceLabel = (p: Property): string => {
   return p.price != null ? formatPrice(p.price) : "عند الطلب"
 }
 
-const PropertiesTable = ({ data, loading, refreshData }: Props) => {
+const PropertiesTable = ({ data, loading, refreshData, people, createdBy = "", onCreatedByChange }: Props) => {
   const { cities } = usePropertyOptions()
   const [searchTerm, setSearchTerm] = useState("")
   const [filterCity, setFilterCity] = useState("الكل")
@@ -73,6 +84,17 @@ const PropertiesTable = ({ data, loading, refreshData }: Props) => {
             className="w-full pr-11 pl-4 py-3 bg-white border border-gray-100 rounded-2xl text-[12px] focus:ring-2 focus:ring-blue-100 outline-none shadow-sm font-bold transition-all"
           />
         </div>
+        {people && onCreatedByChange && (
+          <select
+            value={createdBy}
+            onChange={e => { onCreatedByChange(e.target.value); setCurrentPage(1) }}
+            className="self-start px-4 py-2.5 bg-white border border-gray-100 rounded-2xl text-[12px] font-bold text-[#0f2d4a] shadow-sm outline-none focus:ring-2 focus:ring-blue-100"
+            aria-label="فلتر حسب الشخص"
+          >
+            <option value="">كل الأشخاص</option>
+            {people.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        )}
         <div className="flex flex-wrap gap-1.5">
           {FILTER_CITIES.map(city => (
             <button
@@ -105,8 +127,13 @@ const PropertiesTable = ({ data, loading, refreshData }: Props) => {
                     : <MdHomeWork size={20} className="text-gray-300" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-black text-[#0f2d4a] text-[11px] truncate leading-tight">{p.title}</h3>
-                  <p className="text-[9px] text-gray-400 font-bold truncate mt-0.5">{p.city} • {p.category}</p>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <h3 className="font-black text-[#0f2d4a] text-[11px] truncate leading-tight">{p.title}</h3>
+                    {!!p.pendingChanges && <PendingBadge />}
+                  </div>
+                  <p className="text-[9px] text-gray-400 font-bold truncate mt-0.5">
+                    {p.city} • {p.category}{p.createdBy?.name ? ` • أضافه ${p.createdBy.name}` : ""}
+                  </p>
                   <div className="flex items-center gap-2 mt-1.5">
                     <span className="text-[11px] font-black text-blue-600">{priceLabel(p)}</span>
                     <span className={`w-1.5 h-1.5 rounded-full ${p.status === 'active' ? 'bg-green-500' : 'bg-gray-300'}`} />
@@ -126,6 +153,7 @@ const PropertiesTable = ({ data, loading, refreshData }: Props) => {
                 <tr className="text-gray-400 text-[9px] font-black uppercase tracking-wider border-b border-gray-50 bg-gray-50/30">
                   <th className="px-4 py-4">العقار</th>
                   <th className="px-2 py-4 text-center w-28">الموقع</th>
+                  <th className="px-2 py-4 text-center w-28">أضافه</th>
                   <th className="px-2 py-4 text-center w-32">السعر</th>
                   <th className="px-2 py-4 text-center w-16">الحالة</th>
                   <th className="px-4 py-4 text-left w-32">التحكم</th>
@@ -142,13 +170,19 @@ const PropertiesTable = ({ data, loading, refreshData }: Props) => {
                             : <MdHomeWork size={16} className="text-gray-300" />}
                         </div>
                         <div className="min-w-0">
-                          <h3 className="font-black text-[#0f2d4a] text-[12px] truncate">{p.title}</h3>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <h3 className="font-black text-[#0f2d4a] text-[12px] truncate">{p.title}</h3>
+                            {!!p.pendingChanges && <PendingBadge />}
+                          </div>
                           <p className="text-[8px] text-gray-400 font-bold truncate">{p.city} • {p.category}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-2 py-4 text-center">
                       <span className="text-[10px] font-bold text-gray-500">{p.city}</span>
+                    </td>
+                    <td className="px-2 py-4 text-center">
+                      <span className="text-[10px] font-bold text-gray-500">{p.createdBy?.name || "—"}</span>
                     </td>
                     <td className="px-2 py-4 text-center">
                       <span className="text-[11px] font-black text-blue-600">{priceLabel(p)}</span>
