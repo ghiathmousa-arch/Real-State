@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom"
 import Auth from "./layouts/Auth"
 import ProtectedRoute from "./ProtectedRoute"
+import AdminRoute from "./AdminRoute"
 import Login from "./pages/Login"
 import Dashboard from "./pages/Dashboard"
 import DashboardLayout from "./layouts/DashboardLayout"
@@ -21,8 +22,12 @@ const DashboardRoutes = () => {
         <Route element={<DashboardLayout />}>     {/* شكل */}
           <Route path="/" element={<Dashboard />} />
           <Route path="/properties" element={<Properties />} />
-          <Route path="/messages" element={<Messages />} />
           <Route path="properties/add" element={<AddProperty />} />
+
+          {/* للأدمن بس */}
+          <Route element={<AdminRoute />}>
+            <Route path="/messages" element={<Messages />} />
+          </Route>
         </Route>
       </Route>
     </Routes>
