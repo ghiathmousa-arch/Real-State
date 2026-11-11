@@ -24,6 +24,8 @@ const CATEGORIES = [
   { ar: "منزل", en: "House" },
   { ar: "أرض", en: "Land" },
   { ar: "مزرعة", en: "Farm" },
+  { ar: "محل", en: "Shop" },
+  { ar: "مكتب", en: "Office" },
 ];
 
 module.exports = { CITIES, CATEGORIES };
