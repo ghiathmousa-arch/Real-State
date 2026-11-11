@@ -54,6 +54,34 @@ const parsePrice = (v) => {
   return { value: n };
 };
 
+// ── أسعار الإيجار ومفروش ──────────────────────────────────────
+// الفورم بيبعت الحقول مسطّحة (FormData): rentDaily / rentWeekly / rentMonthly / rentYearly
+const RENT_PERIODS = ["daily", "weekly", "monthly", "yearly"];
+const RENT_FIELDS = { daily: "rentDaily", weekly: "rentWeekly", monthly: "rentMonthly", yearly: "rentYearly" };
+const RENT_LABELS = { daily: "اليومي", weekly: "الأسبوعي", monthly: "الشهري", yearly: "السنوي" };
+const EMPTY_RENT_PRICES = { daily: null, weekly: null, monthly: null, yearly: null };
+
+// مشتركة بين POST و PUT: كل سعر بيمرّ على parsePrice.
+// current = الأسعار القديمة (PUT): الحقل ما انبعت = يضل القديم، انبعت "" = null
+const parseRentPrices = (body, current = EMPTY_RENT_PRICES) => {
+  const value = {};
+  for (const period of RENT_PERIODS) {
+    const raw = body[RENT_FIELDS[period]];
+    if (raw === undefined) {
+      value[period] = current?.[period] ?? null;
+      continue;
+    }
+    const parsed = parsePrice(raw);
+    if (parsed.error) return { error: `السعر ${RENT_LABELS[period]}: ${parsed.error}` };
+    value[period] = parsed.value;
+  }
+  return { value };
+};
+
+// "furnished" / "unfurnished" / أي شي تاني أو فاضي = null (غير محدد)
+const FURNISHED_VALUES = ["furnished", "unfurnished"];
+const parseFurnished = (v) => (FURNISHED_VALUES.includes(v) ? v : null);
+
 // ── الاسم الإنجليزي للمدينة والفئة ────────────────────────────
 // cityEn و categoryEn ما عاد يجوا من الفورم — السيرفر بيحسبهن من القوائم الثابتة
 // حسب القيمة العربية، عشان ما يصير في عقارات إنجليزيتها فاضية أو مكتوبة غلط
@@ -65,8 +93,15 @@ const CATEGORY_ERROR_MSG = "الفئة غير معروفة — اختار فئة
 // القائمة العامة: بترجّع العقارات النشطة بس (status: "active") — المعلّق والمباع ما بيظهروا بالموقع
 router.get("/", async (req, res) => {
   try {
-    const { category, city, minPrice, maxPrice, type, search } = req.query;
-    const hasFilters = Boolean(category || city || minPrice || maxPrice || type || search);
+    const { category, city, minPrice, maxPrice, type, search, rentPeriod, furnished } = req.query;
+    const hasFilters = Boolean(
+      category || city || minPrice || maxPrice || type || search || rentPeriod || furnished
+    );
+
+    if (rentPeriod !== undefined && !RENT_PERIODS.includes(rentPeriod))
+      return res.status(400).json({ error: "مدة الإيجار غير صالحة — المسموح: daily, weekly, monthly, yearly" });
+    if (furnished !== undefined && !FURNISHED_VALUES.includes(furnished))
+      return res.status(400).json({ error: "قيمة مفروش غير صالحة — المسموح: furnished, unfurnished" });
 
     // القائمة الكاملة (بدون فلاتر) هي الأكتر استدعاءً — كاشها لوحدها كافي
     if (!hasFilters && isFresh(cache.list)) {
@@ -78,11 +113,16 @@ router.get("/", async (req, res) => {
     if (category) query.category = category;
     if (city) query.city = city;
     if (type) query.type = type;
+    if (furnished) query.furnished = furnished;
+
+    // مع rentPeriod: بس العقارات اللي إلها سعر لهالمدة، وفلتر السعر بينطبق على هالمدة بدل price
+    const priceField = rentPeriod ? `rentPrices.${rentPeriod}` : "price";
+    if (rentPeriod) query[priceField] = { $ne: null };
 
     if (minPrice || maxPrice) {
-      query.price = {};
-      if (minPrice) query.price.$gte = parseFloat(minPrice);
-      if (maxPrice) query.price.$lte = parseFloat(maxPrice);
+      query[priceField] = query[priceField] || {};
+      if (minPrice) query[priceField].$gte = parseFloat(minPrice);
+      if (maxPrice) query[priceField].$lte = parseFloat(maxPrice);
     }
 
     if (search) {
@@ -196,8 +236,13 @@ router.post("/", protect, adminOnly, upload.any(), compressImages, async (req, r
     if (!b.title || !b.city || !b.category || !b.type)
       return res.status(400).json({ error: "العنوان والمدينة والفئة والنوع مطلوبة" });
 
-    const price = parsePrice(b.price);
+    // البيع بيستعمل price، الإيجار بيستعمل rentPrices — الطرف التاني دايماً null
+    const isRent = b.type === "rent";
+    const price = isRent ? { value: null } : parsePrice(b.price);
     if (price.error) return res.status(400).json({ error: price.error });
+
+    const rentPrices = isRent ? parseRentPrices(b) : { value: { ...EMPTY_RENT_PRICES } };
+    if (rentPrices.error) return res.status(400).json({ error: rentPrices.error });
 
     const cityEn = findEn(CITIES, b.city);
     if (!cityEn) return res.status(400).json({ error: CITY_ERROR_MSG });
@@ -220,6 +265,8 @@ router.post("/", protect, adminOnly, upload.any(), compressImages, async (req, r
       categoryEn,
       type: b.type,
       price: price.value,
+      rentPrices: rentPrices.value,
+      furnished: parseFurnished(b.furnished),
       city: b.city.trim(),
       cityEn,
       area: toNum(b.area),
@@ -262,13 +309,26 @@ router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req,
 
     const b = req.body;
 
-    // السعر ما انبعت = منخلّي القديم؛ انبعت = لازم يكون صالح
-    let price = property.price;
-    if (b.price !== undefined) {
-      const parsed = parsePrice(b.price);
+    // البيع: السعر ما انبعت = منخلّي القديم؛ انبعت = لازم يكون صالح. rentPrices بتتصفّر.
+    // الإيجار: price = null، وأسعار المدد نفس القاعدة (ما انبعت = القديم، "" = null).
+    // هيك تغيير النوع بيصفّر الطرف التاني تلقائياً.
+    const type = b.type ?? property.type;
+    let price = null;
+    let rentPrices = { ...EMPTY_RENT_PRICES };
+    if (type === "rent") {
+      const parsed = parseRentPrices(b, property.type === "rent" ? property.rentPrices : EMPTY_RENT_PRICES);
       if (parsed.error) return res.status(400).json({ error: parsed.error });
-      price = parsed.value;
+      rentPrices = parsed.value;
+    } else {
+      price = property.type === "rent" ? null : property.price;
+      if (b.price !== undefined) {
+        const parsed = parsePrice(b.price);
+        if (parsed.error) return res.status(400).json({ error: parsed.error });
+        price = parsed.value;
+      }
     }
+
+    const furnished = b.furnished !== undefined ? parseFurnished(b.furnished) : property.furnished ?? null;
 
     // المدينة/الفئة: إذا تغيّرت لازم تكون من القائمة، والإنجليزي بيتحدّث معها.
     // إذا ما تغيّرت منقبل القيمة القديمة حتى لو مش بالقائمة (عقارات قديمة) عشان ما ينقفل تعديلها
@@ -326,8 +386,10 @@ router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req,
         descriptionEn: b.descriptionEn ?? property.descriptionEn ?? "",
         category,
         categoryEn: categoryEn ?? property.categoryEn ?? "",
-        type: b.type ?? property.type,
+        type,
         price,
+        rentPrices,
+        furnished,
         city,
         cityEn: cityEn ?? property.cityEn ?? "",
         // انبعت = منحدّثه (و"" بيصير null عشان الأدمن يقدر يمسحه)، ما انبعت = منخلّي القديم
