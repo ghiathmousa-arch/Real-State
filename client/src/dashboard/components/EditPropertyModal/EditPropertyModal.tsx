@@ -42,9 +42,10 @@ const hasEnglishContent = (p: any) =>
   Boolean(p?.titleEn?.trim() || p?.descriptionEn?.trim() || p?.addressEn?.trim() || p?.featuresEn?.length)
 
 const NUMBER_FIELDS = [
-  { name: "area", label: "المساحة (م²)", type: "number", min: 0 },
-  { name: "rooms", label: "عدد الغرف", type: "number", min: 0 },
-  { name: "bathrooms", label: "عدد الحمامات", type: "number", min: 0 },
+  // numeric بدل type="number" — عشان الأرقام العربية (٠-٩) تنقبل وتتحوّل
+  { name: "area", label: "المساحة (م²)", numeric: "decimal" as const },
+  { name: "rooms", label: "عدد الغرف", numeric: "int" as const },
+  { name: "bathrooms", label: "عدد الحمامات", numeric: "int" as const },
 ]
 
 const ADDRESS_FIELDS = [
@@ -240,10 +241,10 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
                 onChange={(period, value) => setRentInputs(prev => ({ ...prev, [period]: value }))} />
             ) : (
               <FormInput
-                name="price" label="السعر (بالدولار $)" inputMode="numeric" dir="ltr"
+                name="price" label="السعر (بالدولار $)" numeric="int"
                 placeholder="مثال: 85000 (اختياري)"
                 value={priceInput}
-                onChange={e => setPriceInput(e.target.value.replace(/[^0-9]/g, ''))} />
+                onChange={e => setPriceInput(e.target.value)} />
             )}
 
             {NUMBER_FIELDS.map(f => (

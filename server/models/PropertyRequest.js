@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { CITIES, CATEGORIES } = require("../constants/property");
+const { toLatinDigits } = require("../utils/propertyFields");
 
 // طلب "اعرض عقارك" من زائر (مالك عقار) — collection منفصلة عن العقارات.
 // ما بينزل عالموقع أبداً: الأدمن/السب أدمن بيحوّله لعقار حقيقي (converted) أو بيرفضه (rejected).
@@ -14,6 +15,8 @@ const PropertyRequestSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true,
+    // أرقام عربية ← لاتينية، ومنشيل المسافات والشرطات — قبل التحقق
+    set: (v) => toLatinDigits(v).replace(/[\s-]/g, ""),
     match: [/^\+?[0-9]{7,20}$/, "رقم الهاتف لازم يكون أرقام بس (7–20 رقم، مع + اختياري)"],
   },
   ownerNote: { type: String, trim: true, maxlength: 1000, default: "" },

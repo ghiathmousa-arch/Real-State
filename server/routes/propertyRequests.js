@@ -10,7 +10,7 @@ const Property = require("../models/Property");
 const { upload, uploadRequestImages, compressImages, deleteCloudinaryImages } = require("../middleware/upload");
 const { protect, staffOnly, requestLimiter } = require("../middleware");
 const { CITIES, CATEGORIES } = require("../constants/property");
-const { parseListingPrices, parseFurnished, findEn, toNum, CITY_ERROR_MSG, CATEGORY_ERROR_MSG, buildNewPropertyData } = require("../utils/propertyFields");
+const { parseListingPrices, parseFurnished, findEn, toNum, toLatinDigits, CITY_ERROR_MSG, CATEGORY_ERROR_MSG, buildNewPropertyData } = require("../utils/propertyFields");
 const { invalidatePropertiesCache } = require("./properties");
 
 const SERVER_ERROR = "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً";
@@ -30,7 +30,8 @@ const validateRequestBody = (b) => {
   const errors = {};
   const ownerName = String(b.ownerName ?? "").trim();
   // منشيل المسافات والشرطات من الرقم — كبار العمر بيكتبوه "0991 234 567"
-  const ownerPhone = String(b.ownerPhone ?? "").replace(/[\s-]/g, "");
+  // والأرقام العربية (٠٩٩...) بتتحوّل قبل
+  const ownerPhone = toLatinDigits(b.ownerPhone).replace(/[\s-]/g, "");
 
   if (!ownerName) errors.ownerName = "الاسم مطلوب";
   else if (ownerName.length > 100) errors.ownerName = "الاسم طويل كتير";

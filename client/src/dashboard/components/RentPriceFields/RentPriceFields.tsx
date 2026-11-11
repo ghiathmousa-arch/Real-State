@@ -44,10 +44,11 @@ const RentPriceFields = ({ values, defaults, onChange }: Props) => (
       {RENT_FIELDS.map(f => (
         <FormInput
           key={f.name} name={f.name} label={f.label} placeholder={f.placeholder}
-          inputMode="numeric" dir="ltr"
+          numeric="int"
           {...(values ? {
             value: values[f.period],
-            onChange: e => onChange?.(f.period, e.target.value.replace(/[^0-9]/g, '')),
+            // FormInput (numeric) بيحوّل الأرقام العربية وبيفلتر قبل ما توصل هون
+            onChange: e => onChange?.(f.period, e.target.value),
           } : { defaultValue: defaults?.[f.period] })}
         />
       ))}

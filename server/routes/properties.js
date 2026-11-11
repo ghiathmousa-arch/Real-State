@@ -45,7 +45,7 @@ const MAX_IMAGES = 12; // الحد الأقصى لصور العقار الواح
 // التحقق من السعر و rentPrices ومفروش والمدينة/الفئة — مشترك مع راوتات "اعرض عقارك"
 const {
   parsePrice, EMPTY_RENT_PRICES, parseRentPrices, FURNISHED_VALUES, parseFurnished, RENT_PERIODS,
-  findEn, CITY_ERROR_MSG, CATEGORY_ERROR_MSG, buildNewPropertyData,
+  findEn, CITY_ERROR_MSG, CATEGORY_ERROR_MSG, buildNewPropertyData, toNum, toLatinDigits,
 } = require("../utils/propertyFields");
 
 // ── GET / ──────────────────────────────────────────────────
@@ -80,8 +80,8 @@ router.get("/", async (req, res) => {
 
     if (minPrice || maxPrice) {
       query[priceField] = query[priceField] || {};
-      if (minPrice) query[priceField].$gte = parseFloat(minPrice);
-      if (maxPrice) query[priceField].$lte = parseFloat(maxPrice);
+      if (minPrice) query[priceField].$gte = parseFloat(toLatinDigits(minPrice));
+      if (maxPrice) query[priceField].$lte = parseFloat(toLatinDigits(maxPrice));
     }
 
     if (search) {
@@ -277,7 +277,6 @@ const applyPropertyUpdate = async (property, body, newImages, user, options = {}
   const categoryEn = findEn(CATEGORIES, category);
   if (!categoryEn && category !== property.category) return fail(CATEGORY_ERROR_MSG);
 
-  const toNum = (v) => (v !== undefined && v !== "" ? Number(v) : null);
   const toArr = (v) => {
     if (!v) return [];
     if (Array.isArray(v)) return v;

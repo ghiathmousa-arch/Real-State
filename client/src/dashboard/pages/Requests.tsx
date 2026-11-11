@@ -8,6 +8,7 @@ import { MdHomeWork, MdPhone, MdClose, MdSwapHoriz } from "react-icons/md"
 import Header from "../components/Header/Header"
 import { api, getApiError } from "../../utils/api"
 import { getImgSrc, formatPrice, formatRentPrices } from "../../utils/format"
+import { toLatinDigits } from "../../utils/digits"
 
 type Status = "new" | "converted" | "rejected"
 
@@ -21,7 +22,7 @@ const FURNISHED_LABELS: Record<string, string> = { furnished: "مفروش", unfu
 
 // رقم سوري محلي (09...) → صيغة دولية لواتساب (9639...)
 const toWhatsApp = (phone: string) => {
-  const digits = phone.replace(/[^0-9]/g, "")
+  const digits = toLatinDigits(phone).replace(/[^0-9]/g, "")
   if (phone.trim().startsWith("+")) return digits
   if (digits.startsWith("00")) return digits.slice(2)
   if (digits.startsWith("0")) return `963${digits.slice(1)}`

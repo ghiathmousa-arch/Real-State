@@ -3,12 +3,21 @@
 
 const { CITIES, CATEGORIES } = require("../constants/property");
 
+// ── الأرقام العربية ──────────────────────────────────────────
+// "٤٠" أو "۴۰" → "40"، و"٫" → "." — قبل أي تحويل لرقم، عشان طلبات الـ API المباشرة كمان
+// (الواجهة بتحوّل قبل، بس السيرفر ما بيعتمد عليها)
+const toLatinDigits = (v) =>
+  String(v ?? "")
+    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
+    .replace(/٫/g, ".");
+
 // ── التحقق من السعر ────────────────────────────────────────
 // كل الأسعار بالمنصة بالدولار الأمريكي (USD). القيمة الفاضية = null ("السعر عند الطلب")
 const MAX_PRICE_USD = 100_000_000;
 const parsePrice = (v) => {
   if (v === undefined || v === null || String(v).trim() === "") return { value: null };
-  const n = Number(v);
+  const n = Number(toLatinDigits(v).trim());
   if (!Number.isFinite(n))
     return { error: "السعر لازم يكون رقم (بالدولار الأمريكي)" };
   if (n < 0)
@@ -63,7 +72,7 @@ const findEn = (list, ar) => list.find((item) => item.ar === String(ar ?? "").tr
 const CITY_ERROR_MSG = "المدينة غير معروفة — اختار مدينة من القائمة";
 const CATEGORY_ERROR_MSG = "الفئة غير معروفة — اختار فئة من القائمة";
 
-const toNum = (v) => (v !== undefined && v !== null && v !== "" ? Number(v) : null);
+const toNum = (v) => (v !== undefined && v !== null && v !== "" ? Number(toLatinDigits(v).trim()) : null);
 const toArr = (v) => {
   if (!v) return [];
   if (Array.isArray(v)) return v;
@@ -122,6 +131,7 @@ const buildNewPropertyData = (b, images, user) => {
 };
 
 module.exports = {
+  toLatinDigits,
   MAX_PRICE_USD,
   parsePrice,
   RENT_PERIODS,

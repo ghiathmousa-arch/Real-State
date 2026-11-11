@@ -33,9 +33,10 @@ const EN_FIELDS = [
 ]
 
 const NUMBER_FIELDS = [
-  { name: "area", label: "المساحة (م²)", type: "number", placeholder: "150", required: true, min: 0 },
-  { name: "rooms", label: "عدد الغرف", type: "number", placeholder: "3", min: 0 },
-  { name: "bathrooms", label: "عدد الحمامات", type: "number", placeholder: "2", min: 0 },
+  // numeric بدل type="number" — عشان الأرقام العربية (٠-٩) تنقبل وتتحوّل
+  { name: "area", label: "المساحة (م²)", numeric: "decimal" as const, placeholder: "150", required: true },
+  { name: "rooms", label: "عدد الغرف", numeric: "int" as const, placeholder: "3" },
+  { name: "bathrooms", label: "عدد الحمامات", numeric: "int" as const, placeholder: "2" },
 ]
 
 const ADDRESS_FIELDS = [
@@ -212,9 +213,8 @@ const AddProperty = ({ fromRequest }: { fromRequest?: ListingRequest } = {}) => 
             <RentPriceFields defaults={rentDefaults} />
           ) : (
             <FormInput
-              name="price" label="السعر (بالدولار $)" placeholder="مثال: 85000 (اختياري)" inputMode="numeric" dir="ltr"
+              name="price" label="السعر (بالدولار $)" placeholder="مثال: 85000 (اختياري)" numeric="int"
               defaultValue={defaults.price}
-              onChange={e => { (e.target as HTMLInputElement).value = e.target.value.replace(/[^0-9]/g, '') }}
             />
           )}
 

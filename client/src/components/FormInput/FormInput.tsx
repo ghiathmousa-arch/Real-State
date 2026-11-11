@@ -1,4 +1,5 @@
 // مسؤول عن كل حقل إدخال نصي أو رقمي أو textarea بالفورم. يشتغل بوضعين — uncontrolled بالإضافة وcontrolled بالتعديل.
+import { digitsOnly, decimalOnly } from "../../utils/digits"
 
 interface Props {
   label: string
@@ -14,6 +15,9 @@ interface Props {
   // قيمة أولية بالوضع uncontrolled (الإضافة) — مثلاً تحويل "طلب عرض" لعقار
   defaultValue?: string | number
   onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
+  // خانة رقمية: "int" = أرقام بس، "decimal" = أرقام ونقطة. بتقبل الأرقام العربية (٠-٩) وبتحوّلها،
+  // وبتشتغل بالوضعين (controlled و uncontrolled). منستعملها بدل type="number" اللي بيرفض الأرقام العربية
+  numeric?: "int" | "decimal"
 }
 
 const inputClass =
@@ -21,12 +25,18 @@ const inputClass =
 
 const FormInput = ({
   label, name, type = "text", placeholder, required,
-  dir, inputMode, min, isTextarea, value, defaultValue, onChange
+  dir, inputMode, min, isTextarea, value, defaultValue, onChange, numeric
 }: Props) => {
 
   // إذا value موجود = controlled (Edit mode)
   // إذا value غير موجود = uncontrolled (Add mode)
   const controlled = value !== undefined
+
+  // الخانات الرقمية: منحوّل الأرقام العربية ومنفلتر قبل ما توصل القيمة لأي حدا
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (numeric) e.target.value = numeric === "decimal" ? decimalOnly(e.target.value) : digitsOnly(e.target.value)
+    onChange?.(e)
+  }
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -40,19 +50,19 @@ const FormInput = ({
           placeholder={placeholder}
           rows={3}
           dir={dir}
-          {...(controlled ? { value, onChange } : { defaultValue })}
+          {...(controlled ? { value, onChange: handleChange } : { defaultValue, onChange: handleChange })}
           className={`${inputClass} text-sm resize-none`}
         />
       ) : (
         <input
           name={name}
-          type={type}
+          type={numeric ? "text" : type}
           placeholder={placeholder}
           required={required}
-          dir={dir}
-          inputMode={inputMode}
+          inputMode={numeric ? (numeric === "decimal" ? "decimal" : "numeric") : inputMode}
+          dir={numeric ? "ltr" : dir}
           min={min}
-          {...(controlled ? { value, onChange } : { defaultValue })}
+          {...(controlled ? { value, onChange: handleChange } : { defaultValue, onChange: handleChange })}
           className={inputClass}
         />
       )}

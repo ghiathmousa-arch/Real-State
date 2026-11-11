@@ -12,6 +12,7 @@ import { WHATSAPP_NUMBER } from "../../constants/contact";
 import { RENT_PERIODS } from "../../utils/format";
 import { api } from "../../utils/api";
 import axios from "axios";
+import { toLatinDigits, digitsOnly } from "../../utils/digits";
 
 const MAX_IMAGES = 6;
 const MAX_IMAGE_MB = 7;
@@ -66,7 +67,8 @@ const ListYourPropertyPage = () => {
     setForm(prev => ({ ...prev, [field]: value }));
     setErrors(prev => ({ ...prev, [field]: undefined }));
   };
-  const numeric = (v: string) => v.replace(/[^0-9]/g, "");
+  // الأرقام العربية (٠-٩) بتتحوّل قبل الفلترة — وإلا بتنمسح بصمت
+  const numeric = digitsOnly;
 
   const addImages = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files || []);
@@ -95,7 +97,7 @@ const ListYourPropertyPage = () => {
   const validate = (): Errors => {
     const e: Errors = {};
     if (!form.ownerName.trim()) e.ownerName = t("listProperty.errors.required");
-    const phone = form.ownerPhone.replace(/[\s-]/g, "");
+    const phone = toLatinDigits(form.ownerPhone).replace(/[\s-]/g, "");
     if (!phone) e.ownerPhone = t("listProperty.errors.required");
     else if (!/^\+?[0-9]{7,20}$/.test(phone)) e.ownerPhone = t("listProperty.errors.phone");
     if (!form.type) e.type = t("listProperty.errors.type");
@@ -185,7 +187,7 @@ const ListYourPropertyPage = () => {
             <div data-field="ownerPhone">
               <Label text={t("listProperty.fields.ownerPhone")} required />
               <input className={inputClass} dir="ltr" inputMode="tel" autoComplete="tel" placeholder="09xx xxx xxx"
-                value={form.ownerPhone} onChange={e => set("ownerPhone", e.target.value.replace(/[^0-9+\s-]/g, ""))} />
+                value={form.ownerPhone} onChange={e => set("ownerPhone", toLatinDigits(e.target.value).replace(/[^0-9+\s-]/g, ""))} />
               <FieldError msg={errors.ownerPhone} />
             </div>
           </Section>
