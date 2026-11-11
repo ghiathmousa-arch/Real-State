@@ -523,3 +523,5 @@ router.delete("/:id", protect, adminOnly, async (req, res) => {
 });
 
 module.exports = router;
+// راوتات "اعرض عقارك" بتضيف عقارات كمان (التحويل) — لازم تصفّر نفس الكاش
+module.exports.invalidatePropertiesCache = invalidatePropertiesCache;

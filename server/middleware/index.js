@@ -23,4 +23,11 @@ const contactLimiter = rateLimit({
   message: { error: "أرسلت رسائل كثيرة، حاول بعد ساعة" }
 });
 
-module.exports = { protect, adminOnly, staffOnly, apiLimiter, loginLimiter, contactLimiter };
+// حد خاص بفورم "اعرض عقارك" — 3 طلبات بالساعة من نفس الـ IP (فيه رفع صور، فأشد من فورم التواصل)
+const requestLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 3,
+  message: { error: "أرسلت طلبات كثيرة، حاول بعد ساعة أو تواصل معنا عبر واتساب" }
+});
+
+module.exports = { protect, adminOnly, staffOnly, requestLimiter, apiLimiter, loginLimiter, contactLimiter };

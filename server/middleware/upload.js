@@ -14,20 +14,44 @@ const configureCloudinary = () => {
 
 const storage = multer.memoryStorage();
 
+// صور بس (نفس الفلتر للعقارات ولفورم "اعرض عقارك")
+const imageFileFilter = (req, file, cb) => {
+  const allowed = /jpeg|jpg|png|gif|webp/;
+  const isMimetype = allowed.test(file.mimetype);
+  const isExtname = allowed.test(path.extname(file.originalname).toLowerCase());
+  if (isMimetype && isExtname) cb(null, true);
+  else cb(new Error("يرجى رفع صور فقط بلاحقة مدعومة"));
+};
+
 const upload = multer({
   storage,
   limits: {
     fileSize: 7 * 1024 * 1024, // أقصى حجم للصورة الواحدة: 7 ميجا
     files: 12                  // ✅ أقصى عدد صور بالطلب الواحد: 12
   },
-  fileFilter: (req, file, cb) => {
-    const allowed = /jpeg|jpg|png|gif|webp/;
-    const isMimetype = allowed.test(file.mimetype);
-    const isExtname = allowed.test(path.extname(file.originalname).toLowerCase());
-    if (isMimetype && isExtname) cb(null, true);
-    else cb(new Error("يرجى رفع صور فقط بلاحقة مدعومة"));
-  },
+  fileFilter: imageFileFilter,
 });
+
+// رفع صور فورم "اعرض عقارك" العام — نفس الفلتر والحجم (7MB) بس حد أقصى 6 صور بحقل "images"
+const REQUEST_MAX_IMAGES = 6;
+const requestUpload = multer({
+  storage,
+  limits: { fileSize: 7 * 1024 * 1024, files: REQUEST_MAX_IMAGES },
+  fileFilter: imageFileFilter,
+});
+
+// ملفوف عشان أخطاء الرفع (عدد/حجم/نوع) ترجع 400 برسالة خاصة بالفورم بدل رسالة الـ 12 صورة العامة
+const uploadRequestImages = (req, res, next) => {
+  requestUpload.array("images", REQUEST_MAX_IMAGES)(req, res, (err) => {
+    if (!err) return next();
+    const messages = {
+      LIMIT_FILE_COUNT: `الحد الأقصى ${REQUEST_MAX_IMAGES} صور`,
+      LIMIT_UNEXPECTED_FILE: `الحد الأقصى ${REQUEST_MAX_IMAGES} صور`,
+      LIMIT_FILE_SIZE: "حجم الصورة الواحدة لازم يكون أقل من 7 ميجابايت",
+    };
+    res.status(400).json({ error: messages[err.code] || err.message || "تعذّر رفع الصور" });
+  });
+};
 
 const compressImages = async (req, res, next) => {
   configureCloudinary();
@@ -124,4 +148,4 @@ const deleteCloudinaryImages = async (urls) => {
   }
 };
 
-module.exports = { upload, compressImages, deleteCloudinaryImages, getCloudinaryPublicId };
+module.exports = { upload, uploadRequestImages, compressImages, deleteCloudinaryImages, getCloudinaryPublicId };
