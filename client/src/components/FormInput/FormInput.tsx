@@ -20,8 +20,9 @@ interface Props {
   numeric?: "int" | "decimal"
 }
 
+// الخطوط والـ labels كبيرة وغامقة — اللي بيضيفوا غالباً كبار بالعمر
 const inputClass =
-  "w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:border-blue-500 font-bold text-[#0f2d4a]"
+  "w-full p-4 text-base bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:border-blue-500 font-bold text-[#0f2d4a]"
 
 const FormInput = ({
   label, name, type = "text", placeholder, required,
@@ -40,7 +41,7 @@ const FormInput = ({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-xs font-black text-gray-400">
+      <label className="text-sm font-bold text-gray-700">
         {label} {required && <span className="text-red-400">*</span>}
       </label>
 
@@ -51,7 +52,7 @@ const FormInput = ({
           rows={3}
           dir={dir}
           {...(controlled ? { value, onChange: handleChange } : { defaultValue, onChange: handleChange })}
-          className={`${inputClass} text-sm resize-none`}
+          className={`${inputClass} resize-none`}
         />
       ) : (
         <input

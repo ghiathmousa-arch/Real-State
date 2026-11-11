@@ -286,7 +286,7 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
             </EnglishSection>
 
             <div className="sm:col-span-2 space-y-1.5">
-              <label className="block text-xs font-black text-gray-400">
+              <label className="block text-sm font-bold text-gray-700">
                 الصور — {totalImages} من {MAX_IMAGES}
               </label>
 

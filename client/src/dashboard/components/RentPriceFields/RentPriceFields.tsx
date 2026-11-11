@@ -36,7 +36,7 @@ const RentPriceFields = ({ values, defaults, onChange }: Props) => (
   <div className="md:col-span-2 sm:col-span-2 rounded-[1.5rem] border-2 border-blue-100 bg-blue-50/40 p-4 sm:p-5 flex flex-col gap-4">
     <div>
       <p className="text-base font-black text-[#0f2d4a]">أسعار الإيجار (بالدولار $)</p>
-      <p className="text-sm font-bold text-gray-500 mt-1">
+      <p className="text-sm font-bold text-gray-600 mt-1">
         عبّي بس المدد المتاحة — إذا تركتها كلها فاضية بيظهر "السعر عند الطلب"
       </p>
     </div>

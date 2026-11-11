@@ -18,7 +18,7 @@ const EnglishSection = ({ children, open, onToggle }: Props) => (
     className="group/en md:col-span-2 sm:col-span-2 rounded-[1.5rem] border border-gray-100 bg-gray-50/50"
   >
     <summary className="flex items-center justify-between gap-3 p-4 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
-      <span className="flex items-center gap-2 text-sm font-black text-[#0f2d4a]">
+      <span className="flex items-center gap-2 text-base font-black text-[#0f2d4a]">
         <MdLanguage size={18} className="text-blue-500" />
         النسخة الإنجليزية (اختياري)
       </span>

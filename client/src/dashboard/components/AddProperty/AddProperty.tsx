@@ -242,7 +242,7 @@ const AddProperty = ({ fromRequest }: { fromRequest?: ListingRequest } = {}) => 
 
           {/* الصور */}
           <div className="md:col-span-2 flex flex-col gap-1.5">
-            <label className="text-xs font-black text-gray-400">الصور *</label>
+            <label className="text-sm font-bold text-gray-700">الصور *</label>
             {/* صور الطلب — بتنتقل للعقار إلا اللي بتشيلها (هي بتنحذف من Cloudinary) */}
             {requestImages.length > 0 && (
               <div className="mb-3">
