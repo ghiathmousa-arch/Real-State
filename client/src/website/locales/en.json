@@ -4,7 +4,9 @@
     "featured": "Featured Properties",
     "list": "Properties List",
     "services": "Our Services",
-    "contact": "Contact Us"
+    "contact": "Contact Us",
+    "forSale": "For Sale",
+    "forRent": "For Rent"
   },
   "properties": {
     "allEstates": "All Estates",

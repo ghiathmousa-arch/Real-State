@@ -4,7 +4,9 @@
     "featured": "العقارات المميزة",
     "list": "قائمة العقارات",
     "services": "خدماتنا",
-    "contact": "اتصل بنا"
+    "contact": "اتصل بنا",
+    "forSale": "للبيع",
+    "forRent": "للإيجار"
   },
   "properties": {
     "allEstates": "كافة العقارات",
