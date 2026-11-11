@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { NavLink, useNavigate, useLocation } from "react-router-dom"
-import { MdDashboard, MdOutlineBusiness, MdLogout, MdClose, MdEmail, MdPendingActions, MdPeople } from "react-icons/md"
+import { MdDashboard, MdOutlineBusiness, MdLogout, MdClose, MdEmail, MdPendingActions, MdPeople, MdInbox } from "react-icons/md"
 import { IoMdAdd } from "react-icons/io"
 
 import { api } from "../../../utils/api"
@@ -13,6 +13,14 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
   const [showLogoutPopup, setShowLogoutPopup] = useState(false)
   // عدد طلبات التعديل المعلّقة (للأدمن) — بيتحدّث مع كل تنقّل بالداشبورد
   const [pendingCount, setPendingCount] = useState(0)
+  // عدد طلبات "اعرض عقارك" الجديدة (أدمن وسب أدمن)
+  const [requestsCount, setRequestsCount] = useState(0)
+
+  useEffect(() => {
+    api.get("/property-requests/count")
+      .then(res => setRequestsCount(res.data?.count ?? 0))
+      .catch(() => setRequestsCount(0))
+  }, [location.pathname])
 
   useEffect(() => {
     if (!isAdmin) return
@@ -21,10 +29,11 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
       .catch(() => setPendingCount(0))
   }, [isAdmin, location.pathname])
 
-  // السب أدمن بيشوف: الرئيسية، العقارات، إضافة عقار. الأدمن كمان: الرسائل، بانتظار الموافقة، المستخدمين
+  // السب أدمن بيشوف: الرئيسية، العقارات، طلبات العرض، إضافة عقار. الأدمن كمان: الرسائل، بانتظار الموافقة، المستخدمين
   const links = [
     { label: "Dashboard", path: "/dashboard", icon: <MdDashboard /> },
     { label: "Property Listings", path: "/dashboard/properties", icon: <MdOutlineBusiness /> },
+    { label: "طلبات العرض", path: "/dashboard/requests", icon: <MdInbox />, badge: requestsCount },
     ...(isAdmin ? [
       { label: "الرسائل", path: "/dashboard/messages", icon: <MdEmail /> },
       { label: "بانتظار الموافقة", path: "/dashboard/pending-changes", icon: <MdPendingActions />, badge: pendingCount },
