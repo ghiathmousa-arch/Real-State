@@ -151,6 +151,8 @@ const PropertyDetailPage: React.FC = () => {
       <FloatingWhatsApp
         message={whatsappMessage}
         position={ar ? "left" : "right"}
+        // ≤ 800px الزر العائم كان يقعد فوق مربع السعر/المدد — وفي زر واتساب كبير بالمربع أصلاً
+        className="max-[800px]:hidden"
       />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6">
 

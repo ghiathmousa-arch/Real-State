@@ -9,11 +9,14 @@ const WhatsAppIcon = ({ size = 28 }: { size?: number }) => (
 interface FloatingWhatsAppProps {
   message?: string;
   position?: "left" | "right";
+  // كلاسات إضافية للزر — مثلاً إخفاؤه على الموبايل بصفحة فيها زر واتساب تاني
+  className?: string;
 }
 
 const FloatingWhatsApp: React.FC<FloatingWhatsAppProps> = ({
   message,
-  position = "left"
+  position = "left",
+  className = ""
 }) => {
   const { t } = useTranslation();
   // النص والرسالة الافتراضية من الترجمات (whatsapp.*) — بيتبعوا لغة الموقع
@@ -25,7 +28,7 @@ const FloatingWhatsApp: React.FC<FloatingWhatsAppProps> = ({
       href={link}
       target="_blank"
       rel="noopener noreferrer"
-      className={`fixed bottom-6 z-50 group ${position === "left" ? "left-6" : "right-6"}`}
+      className={`fixed bottom-6 z-50 group ${position === "left" ? "left-6" : "right-6"} ${className}`}
       aria-label="WhatsApp"
     >
       <div className="relative flex flex-col items-center">
