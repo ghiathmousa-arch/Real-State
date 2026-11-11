@@ -8,6 +8,7 @@ import FormSelect from '../../../components/FormSelect/FormSelect'
 import FeatureInput from '../FeatureInput/FeatureInput'
 import EnglishSection from '../EnglishSection/EnglishSection'
 import RentPriceFields from '../RentPriceFields/RentPriceFields'
+import { useCurrentUser } from '../../hooks/useCurrentUser'
 import { buildPropertyFormData } from '../../../utils/buildPropertyFormData'
 import { api, getApiError } from '../../../utils/api'
 import {
@@ -44,15 +45,18 @@ const AddProperty = () => {
   const navigate = useNavigate()
   const { cities, categories } = usePropertyOptions()
 
+  // "عقار مميز؟" للأدمن بس — السب أدمن ما بيشوفه (والسيرفر بيخليه false)
+  const { isAdmin } = useCurrentUser()
+
   // cityEn و categoryEn ما عاد ينبعتوا — السيرفر بيحسبهن من القيمة العربية
   const SELECT_FIELDS = useMemo(() => [
     { name: "category", label: "الفئة", required: true, placeholder: "اختر الفئة", options: categories.map(c => ({ value: c, label: c })) },
     { name: "type", label: "النوع", required: true, placeholder: "اختر النوع", options: PROPERTY_TYPES },
     { name: "city", label: "المدينة", required: true, placeholder: "اختر المدينة", options: cities.map(c => ({ value: c, label: c })) },
     { name: "status", label: "الحالة", options: PROPERTY_STATUS },
-    { name: "isFeatured", label: "عقار مميز؟", options: FEATURED_OPTIONS },
+    ...(isAdmin ? [{ name: "isFeatured", label: "عقار مميز؟", options: FEATURED_OPTIONS }] : []),
     { name: "furnished", label: "مفروش؟", options: FURNISHED_OPTIONS },
-  ], [cities, categories])
+  ], [cities, categories, isAdmin])
 
   const [loading, setLoading] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
