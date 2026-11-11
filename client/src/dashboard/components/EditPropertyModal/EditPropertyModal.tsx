@@ -5,6 +5,7 @@ import FormInput from '../../../components/FormInput/FormInput'
 import FormSelect from "../../../components/FormSelect/FormSelect"
 import FeatureInput from '../FeatureInput/FeatureInput'
 import EnglishSection from '../EnglishSection/EnglishSection'
+import { useCurrentUser } from '../../hooks/useCurrentUser'
 import RentPriceFields, { EMPTY_RENT_INPUTS, RENT_FIELDS, rentInputsFrom, type RentInputs } from '../RentPriceFields/RentPriceFields'
 import { buildPropertyFormData } from '../../../utils/buildPropertyFormData'
 import { cdn } from '../../../utils/format'
@@ -69,6 +70,9 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
   const [showEnglish, setShowEnglish] = useState(false)
   const [loading, setLoading] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  // السب أدمن: التعديل بيروح طلب بانتظار موافقة الأدمن (202) — ما في "مميز؟"
+  const { isAdmin } = useCurrentUser()
+  const [submittedForApproval, setSubmittedForApproval] = useState(false)
   const lastIdRef = useRef<string | null>(null)
 
   useEffect(() => {
@@ -101,9 +105,9 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
     { name: "type", label: "النوع", options: PROPERTY_TYPES },
     { name: "city", label: "المدينة", placeholder: "اختر المدينة", options: cities.map(c => ({ value: c, label: c })) },
     { name: "status", label: "الحالة", options: PROPERTY_STATUS },
-    { name: "isFeatured", label: "مميز؟", options: FEATURED_OPTIONS },
+    ...(isAdmin ? [{ name: "isFeatured", label: "مميز؟", options: FEATURED_OPTIONS }] : []),
     { name: "furnished", label: "مفروش؟", options: FURNISHED_OPTIONS },
-  ], [cities, categories])
+  ], [cities, categories, isAdmin])
 
   if (!isOpen) return null
 
@@ -175,7 +179,8 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
         newImages: newFiles,
       })
 
-      await api.put(`/properties/${property._id}`, data)
+      const res = await api.put(`/properties/${property._id}`, data)
+      setSubmittedForApproval(res.status === 202)
       setShowSuccess(true)
     } catch (error) {
       setSubmitError(getApiError(error, "تعذّر حفظ التعديلات، حاول مرة تانية"))
@@ -196,13 +201,22 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
           <div className="flex justify-between items-center mb-6 sm:mb-8">
             <div>
               <h2 className="text-xl sm:text-2xl font-black text-[#0f2d4a]">تعديل بيانات العقار</h2>
-              <p className="text-xs text-gray-400 font-bold mt-1">تحديث المعلومات بالعربي — الإنجليزي اختياري</p>
+              <p className="text-xs text-gray-400 font-bold mt-1">
+                {isAdmin ? "تحديث المعلومات بالعربي — الإنجليزي اختياري" : "التعديل بيتطبّق بعد موافقة الأدمن"}
+              </p>
             </div>
             <button type="button" onClick={onClose}
               className="p-2 sm:p-3 bg-gray-50 text-gray-400 hover:text-red-500 rounded-2xl transition-all">
               <MdClose size={22} />
             </button>
           </div>
+
+          {/* في طلب تعديل معلّق — السب أدمن لازم يعرف إن طلبه الجديد رح يستبدله */}
+          {!isAdmin && property?.pendingChanges && (
+            <p className="mb-6 text-sm font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3">
+              في تعديل سابق لهالعقار لسا بانتظار موافقة الأدمن — إذا حفظت هلق، تعديلك الجديد رح يستبدله.
+            </p>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
@@ -340,7 +354,9 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
       </div>
 
       <SuccessModal
-        isOpen={showSuccess} title="تم التعديل!" message="تم تحديث بيانات العقار بنجاح"
+        isOpen={showSuccess}
+        title={submittedForApproval ? "تم إرسال التعديل" : "تم التعديل!"}
+        message={submittedForApproval ? "تم إرسال التعديل — بانتظار موافقة الأدمن" : "تم تحديث بيانات العقار بنجاح"}
         primaryBtn={{
           label: "حسناً", onClick: () => {
             lastIdRef.current = null
