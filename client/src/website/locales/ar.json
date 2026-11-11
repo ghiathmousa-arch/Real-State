@@ -243,5 +243,11 @@
     "sortPriceDesc": "السعر: من الأعلى",
     "reset": "إعادة تعيين",
     "emptyFiltered": "ما في عقارات بهالمواصفات"
+  },
+  "detail": {
+    "rentPeriods": "مدد الإيجار",
+    "furnished": "مفروش؟",
+    "whatsappRent": "احجز / استفسر عبر واتساب",
+    "whatsappBuy": "استفسر عبر واتساب"
   }
 }

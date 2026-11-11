@@ -239,5 +239,11 @@
     "sortPriceDesc": "Price: high to low",
     "reset": "Reset",
     "emptyFiltered": "No properties match these filters"
+  },
+  "detail": {
+    "rentPeriods": "Rental periods",
+    "furnished": "Furnished?",
+    "whatsappRent": "Book / ask on WhatsApp",
+    "whatsappBuy": "Ask on WhatsApp"
   }
 }
