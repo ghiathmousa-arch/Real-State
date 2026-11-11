@@ -13,9 +13,9 @@
 //
 // ⚠️ --apply بيعدّل قاعدة البيانات الحية مباشرة — خود نسخة احتياطية قبل.
 
-const path = require("path");
 const mongoose = require("mongoose");
-require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
+// server/.env، أو ENV_FILE (مثلاً .env.test لقاعدة الاختبار)
+require("../config/loadEnv").loadEnv();
 const { CITIES, CATEGORIES } = require("../constants/property");
 
 const apply = process.argv.slice(2).includes("--apply");

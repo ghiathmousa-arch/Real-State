@@ -5,7 +5,8 @@ const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const mongoSanitize = require("express-mongo-sanitize");
 
-require("dotenv").config({ path: __dirname + "/.env" });
+// server/.env، أو الملف اللي بـ ENV_FILE (بيئة الاختبار) — شوف config/loadEnv.js
+require("./config/loadEnv").loadEnv();
 
 const connectDB = require("./config/db");
 const { apiLimiter } = require("./middleware");
