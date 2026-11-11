@@ -48,17 +48,17 @@ const Login = () => {
   }
 
   const inputs = [
-    { lable: "Email", type: "email", name: "email", pleaceholder: "Enter your email" },
-    { lable: "Password", type: "password", name: "password", pleaceholder: "Enter your password" }
+    { lable: "البريد الإلكتروني", type: "email", name: "email", pleaceholder: "name@example.com" },
+    { lable: "كلمة السر", type: "password", name: "password", pleaceholder: "••••••" }
   ]
 
   return (
     <AuthForm<LoginData>
-      title="Real state"
-      description="Welcome back to Real state"
+      title="عقارات سوريا"
+      description="أهلاً فيك — سجّل دخولك للوحة التحكم"
       inputs={inputs}
-      checkbox={{ lable: "Remember me", name: "remember" }}
-      btn="Login"
+      checkbox={{ lable: "تذكرني", name: "remember" }}
+      btn="تسجيل الدخول"
       setData={setData}
       onSubmit={handleSubmit}
     />

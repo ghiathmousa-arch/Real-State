@@ -33,11 +33,11 @@ const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
       {/* User Info */}
       <div className="flex items-center gap-3">
         <div className="text-right">
-          <p className="text-xs lg:text-sm font-black text-[#0f2d4a]">{user.name || "Admin"}</p>
-          <p className="text-[10px] lg:text-xs text-gray-400">{ROLE_LABELS[user.role as keyof typeof ROLE_LABELS] ?? "Admin"}</p>
+          <p className="text-xs lg:text-sm font-black text-[#0f2d4a]">{user.name || "أدمن"}</p>
+          <p className="text-[10px] lg:text-xs text-gray-400">{ROLE_LABELS[user.role as keyof typeof ROLE_LABELS] ?? "أدمن"}</p>
         </div>
         <div className="w-8 h-8 lg:w-9 lg:h-9 rounded-full bg-[#004e80] text-white flex items-center justify-center text-sm font-bold">
-          {user.name?.[0] || "A"}
+          {user.name?.[0] || "أ"}
         </div>
       </div>
     </header>

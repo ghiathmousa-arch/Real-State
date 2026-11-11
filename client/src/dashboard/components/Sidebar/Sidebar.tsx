@@ -31,8 +31,8 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
 
   // السب أدمن بيشوف: الرئيسية، العقارات، طلبات العرض، إضافة عقار. الأدمن كمان: الرسائل، بانتظار الموافقة، المستخدمين
   const links = [
-    { label: "Dashboard", path: "/dashboard", icon: <MdDashboard /> },
-    { label: "Property Listings", path: "/dashboard/properties", icon: <MdOutlineBusiness /> },
+    { label: "لوحة التحكم", path: "/dashboard", icon: <MdDashboard /> },
+    { label: "العقارات", path: "/dashboard/properties", icon: <MdOutlineBusiness /> },
     { label: "طلبات العرض", path: "/dashboard/requests", icon: <MdInbox />, badge: requestsCount },
     ...(isAdmin ? [
       { label: "الرسائل", path: "/dashboard/messages", icon: <MdEmail /> },
@@ -73,8 +73,8 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
           </button>
 
           <div className="mb-10 text-right">
-            <h1 className="text-lg font-bold text-[#004e80]">Syrian Estate Admin</h1>
-            <p className="text-xs text-gray-400 font-medium">Premium Management</p>
+            <h1 className="text-lg font-bold text-[#004e80]">إدارة عقارات سوريا</h1>
+            <p className="text-xs text-gray-400 font-medium">لوحة الإدارة</p>
           </div>
 
           <nav className="flex flex-col gap-2">
@@ -118,7 +118,7 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
             }
           >
             <span className="text-xl"><IoMdAdd /></span>
-            <span>Add New Property</span>
+            <span>إضافة عقار</span>
           </NavLink>
 
           <button
@@ -126,7 +126,7 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 active:bg-red-100 active:scale-95 transition-all duration-200"
           >
             <span className="text-xl"><MdLogout /></span>
-            <span>Logout</span>
+            <span>تسجيل الخروج</span>
           </button>
         </div>
       </aside>
