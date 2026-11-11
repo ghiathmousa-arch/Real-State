@@ -41,7 +41,7 @@ const ADDRESS_FIELDS = [
 ]
 
 const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
-  const { cities, citiesEn, categories, categoriesEn } = usePropertyOptions()
+  const { cities, categories } = usePropertyOptions()
   const [formData, setFormData] = useState<any>({})
   const [priceInput, setPriceInput] = useState("")
   // الصور: القديمة اللي لسا محفوظة (روابط) + الجديدة المختارة (ملفات ومعاينات)
@@ -80,15 +80,14 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
     }
   }, [property, isOpen])
 
+  // cityEn و categoryEn ما عاد ينبعتوا — السيرفر بيحسبهن من القيمة العربية
   const SELECT_FIELDS = useMemo(() => [
     { name: "category", label: "الفئة", placeholder: "اختر الفئة", options: categories.map(c => ({ value: c, label: c })) },
-    { name: "categoryEn", label: "Category (EN)", placeholder: "Select Category", dir: "ltr" as const, options: categoriesEn.map(c => ({ value: c, label: c })) },
     { name: "type", label: "النوع", options: PROPERTY_TYPES },
     { name: "city", label: "المدينة", placeholder: "اختر المدينة", options: cities.map(c => ({ value: c, label: c })) },
-    { name: "cityEn", label: "City (EN)", placeholder: "Select City", dir: "ltr" as const, options: citiesEn.map(c => ({ value: c, label: c })) },
     { name: "status", label: "الحالة", options: PROPERTY_STATUS },
     { name: "isFeatured", label: "مميز؟", options: FEATURED_OPTIONS },
-  ], [cities, citiesEn, categories, categoriesEn])
+  ], [cities, categories])
 
   if (!isOpen) return null
 

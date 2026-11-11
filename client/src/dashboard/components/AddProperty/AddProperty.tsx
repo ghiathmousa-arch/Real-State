@@ -36,17 +36,16 @@ const ADDRESS_FIELDS = [
 
 const AddProperty = () => {
   const navigate = useNavigate()
-  const { cities, citiesEn, categories, categoriesEn } = usePropertyOptions()
+  const { cities, categories } = usePropertyOptions()
 
+  // cityEn و categoryEn ما عاد ينبعتوا — السيرفر بيحسبهن من القيمة العربية
   const SELECT_FIELDS = useMemo(() => [
     { name: "category", label: "الفئة", required: true, placeholder: "اختر الفئة", options: categories.map(c => ({ value: c, label: c })) },
-    { name: "categoryEn", label: "Category (EN)", required: true, placeholder: "Select Category", dir: "ltr" as const, options: categoriesEn.map(c => ({ value: c, label: c })) },
     { name: "type", label: "النوع", required: true, placeholder: "اختر النوع", options: PROPERTY_TYPES },
     { name: "city", label: "المدينة", required: true, placeholder: "اختر المدينة", options: cities.map(c => ({ value: c, label: c })) },
-    { name: "cityEn", label: "City (EN)", required: true, placeholder: "Select City", dir: "ltr" as const, options: citiesEn.map(c => ({ value: c, label: c })) },
     { name: "status", label: "الحالة", options: PROPERTY_STATUS },
     { name: "isFeatured", label: "عقار مميز؟", options: FEATURED_OPTIONS },
-  ], [cities, citiesEn, categories, categoriesEn])
+  ], [cities, categories])
 
   const [loading, setLoading] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)

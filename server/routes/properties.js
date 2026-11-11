@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const Property = require("../models/Property");
 const { upload, compressImages, deleteCloudinaryImages } = require("../middleware/upload");
 const { protect, adminOnly } = require("../middleware");
+const { CITIES, CATEGORIES } = require("../constants/property");
 
 // ── كاش بسيط بالذاكرة ────────────────────────────────────────
 // نكاش القائمة العامة (بدون فلاتر)، قائمة الأدمن، المميزة، وتفاصيل كل عقار لفترة قصيرة
@@ -52,6 +53,13 @@ const parsePrice = (v) => {
     return { error: "السعر أكبر من 100,000,000 دولار — تأكد إنك كاتبه بالدولار مو بالليرة" };
   return { value: n };
 };
+
+// ── الاسم الإنجليزي للمدينة والفئة ────────────────────────────
+// cityEn و categoryEn ما عاد يجوا من الفورم — السيرفر بيحسبهن من القوائم الثابتة
+// حسب القيمة العربية، عشان ما يصير في عقارات إنجليزيتها فاضية أو مكتوبة غلط
+const findEn = (list, ar) => list.find((item) => item.ar === String(ar ?? "").trim())?.en ?? null;
+const CITY_ERROR_MSG = "المدينة غير معروفة — اختار مدينة من القائمة";
+const CATEGORY_ERROR_MSG = "الفئة غير معروفة — اختار فئة من القائمة";
 
 // ── GET / ──────────────────────────────────────────────────
 // القائمة العامة: بترجّع العقارات النشطة بس (status: "active") — المعلّق والمباع ما بيظهروا بالموقع
@@ -189,6 +197,11 @@ router.post("/", protect, adminOnly, upload.any(), compressImages, async (req, r
     const price = parsePrice(b.price);
     if (price.error) return res.status(400).json({ error: price.error });
 
+    const cityEn = findEn(CITIES, b.city);
+    if (!cityEn) return res.status(400).json({ error: CITY_ERROR_MSG });
+    const categoryEn = findEn(CATEGORIES, b.category);
+    if (!categoryEn) return res.status(400).json({ error: CATEGORY_ERROR_MSG });
+
     const toNum = (v) => (v !== undefined && v !== "" ? Number(v) : null);
     const toArr = (v) => {
       if (!v) return [];
@@ -201,12 +214,12 @@ router.post("/", protect, adminOnly, upload.any(), compressImages, async (req, r
       titleEn: b.titleEn || "",
       description: b.description,
       descriptionEn: b.descriptionEn || "",
-      category: b.category,
-      categoryEn: b.categoryEn || "",
+      category: b.category.trim(),
+      categoryEn,
       type: b.type,
       price: price.value,
-      city: b.city,
-      cityEn: b.cityEn || "",
+      city: b.city.trim(),
+      cityEn,
       area: toNum(b.area),
       rooms: toNum(b.rooms),
       bathrooms: toNum(b.bathrooms),
@@ -255,6 +268,18 @@ router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req,
       price = parsed.value;
     }
 
+    // المدينة/الفئة: إذا تغيّرت لازم تكون من القائمة، والإنجليزي بيتحدّث معها.
+    // إذا ما تغيّرت منقبل القيمة القديمة حتى لو مش بالقائمة (عقارات قديمة) عشان ما ينقفل تعديلها
+    const city = b.city !== undefined ? String(b.city).trim() : property.city;
+    const cityEn = findEn(CITIES, city);
+    if (!cityEn && city !== property.city)
+      return res.status(400).json({ error: CITY_ERROR_MSG });
+
+    const category = b.category !== undefined ? String(b.category).trim() : property.category;
+    const categoryEn = findEn(CATEGORIES, category);
+    if (!categoryEn && category !== property.category)
+      return res.status(400).json({ error: CATEGORY_ERROR_MSG });
+
     const toNum = (v) => (v !== undefined && v !== "" ? Number(v) : null);
     const toArr = (v) => {
       if (!v) return [];
@@ -297,12 +322,12 @@ router.put("/:id", protect, adminOnly, upload.any(), compressImages, async (req,
         titleEn: b.titleEn ?? property.titleEn ?? "",
         description: b.description ?? property.description,
         descriptionEn: b.descriptionEn ?? property.descriptionEn ?? "",
-        category: b.category ?? property.category,
-        categoryEn: b.categoryEn ?? property.categoryEn ?? "",
+        category,
+        categoryEn: categoryEn ?? property.categoryEn ?? "",
         type: b.type ?? property.type,
         price,
-        city: b.city ?? property.city,
-        cityEn: b.cityEn ?? property.cityEn ?? "",
+        city,
+        cityEn: cityEn ?? property.cityEn ?? "",
         // انبعت = منحدّثه (و"" بيصير null عشان الأدمن يقدر يمسحه)، ما انبعت = منخلّي القديم
         area: b.area !== undefined ? toNum(b.area) : property.area,
         rooms: b.rooms !== undefined ? toNum(b.rooms) : property.rooms,

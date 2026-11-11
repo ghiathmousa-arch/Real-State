@@ -1,8 +1,9 @@
 // مسؤول عن بناء الـ FormData اللي بتروح للسيرفر. مشترك بين الإضافة والتعديل — الإضافة بتبعتله formEl، والتعديل بتبعتله
 // price مش هون — بيتعامل معه لحالو تحت
+// cityEn و categoryEn مش هون — السيرفر بيحسبهن من المدينة والفئة بالعربي
 const FORM_FIELDS = [
   'title', 'titleEn', 'description', 'descriptionEn',
-  'category', 'categoryEn', 'type', 'city', 'cityEn',
+  'category', 'type', 'city',
   'area', 'rooms', 'bathrooms', 'address', 'addressEn',
   'status', 'isFeatured', 'videoUrl'
 ]
