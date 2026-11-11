@@ -1,4 +1,4 @@
-const { protect, adminOnly } = require("./auth");
+const { protect, adminOnly, staffOnly } = require("./auth");
 const rateLimit = require("express-rate-limit");
 
 // حد الطلبات العام — 100 طلب كل 15 دقيقة
@@ -23,4 +23,4 @@ const contactLimiter = rateLimit({
   message: { error: "أرسلت رسائل كثيرة، حاول بعد ساعة" }
 });
 
-module.exports = { protect, adminOnly, apiLimiter, loginLimiter, contactLimiter };
+module.exports = { protect, adminOnly, staffOnly, apiLimiter, loginLimiter, contactLimiter };
