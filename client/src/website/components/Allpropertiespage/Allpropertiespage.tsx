@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { IoLocationOutline } from "react-icons/io5";
-import { LuBedSingle, LuArrowLeft, LuArrowRight, LuSearch } from "react-icons/lu";
+import { LuBedSingle, LuArrowLeft, LuArrowRight } from "react-icons/lu";
 import { CiRuler } from "react-icons/ci";
 import { PiBathtub } from "react-icons/pi";
 import PropertySlider from "../Propertyslider/Propertyslider";
@@ -13,6 +13,7 @@ import PriceTag from "../PriceTag/PriceTag";
 import ListingBadges from "../PriceTag/ListingBadges";
 import { applyFilters, sortProperties, hasActiveFilters } from "../../../utils/propertyFilters";
 import { useUrlFilters } from "../../hooks/useUrlFilters";
+import FilterBar from "./FilterBar";
 
 const PER_PAGE = 12;
 
@@ -115,10 +116,26 @@ const AllPropertiesPage: React.FC = () => {
     setPage(1);
   }, [filters, allProperties]);
 
-  const cities = useMemo(
-    () => [...new Set(allProperties.map(p => p.city).filter(Boolean))],
-    [allProperties]
-  );
+  // أعداد التبويبات (الكل / للبيع / للإيجار) حسب باقي الفلاتر
+  const counts = useMemo(() => {
+    const base = applyFilters(allProperties, filters, true);
+    return {
+      all: base.length,
+      buy: base.filter(p => p.type === "buy").length,
+      rent: base.filter(p => p.type === "rent").length,
+    };
+  }, [allProperties, filters]);
+
+  // خيارات المدينة والفئة من العقارات الموجودة — القيمة بالعربي (متل الـ URL)، والعرض حسب اللغة
+  const optionsFrom = (field: "city" | "category") => {
+    const map = new Map<string, string>();
+    allProperties.forEach(p => {
+      if (p[field] && !map.has(p[field])) map.set(p[field], localized(p, field, ar));
+    });
+    return [...map].map(([value, label]) => ({ value, label }));
+  };
+  const cities = useMemo(() => optionsFrom("city"), [allProperties, ar]);
+  const categories = useMemo(() => optionsFrom("category"), [allProperties, ar]);
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
   const currentItems = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
@@ -128,51 +145,25 @@ const AllPropertiesPage: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-screen p-8 bg-gray-50 dark:bg-gray-900 ${ar ? "text-right" : "text-left"}`}>
+    <div className={`min-h-screen pt-16 pb-8 sm:px-8 bg-gray-50 dark:bg-gray-900 ${ar ? "text-right" : "text-left"}`}>
 
       {/* ── Hero ── */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-6 py-10">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-3xl md:text-5xl font-extrabold text-gray-800 dark:text-white mb-2">
-            {t("properties.allEstates")}
+            {filters.type === "rent" ? t("listing.rentTitle") : filters.type === "buy" ? t("listing.buyTitle") : t("properties.allEstates")}
             <span className="ms-3 text-base font-semibold px-3 py-1 rounded-full bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400">
               {filtered.length}
             </span>
           </h1>
           <p className="text-gray-400 dark:text-gray-500 text-sm">
-            {ar ? "تصفح جميع العقارات المتاحة وابحث عن ما يناسبك" : "Browse all available properties and find what suits you"}
+            {filters.type === "rent" ? t("listing.rentSubtitle") : t("listing.subtitle")}
           </p>
         </div>
       </div>
 
-      {/* ── فلاتر sticky ── */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-6 py-4 sticky top-0 z-10">
-        <div className={`max-w-7xl mx-auto flex flex-wrap gap-3 items-center ${ar ? "flex-row-reverse" : ""}`}>
-          <div className="relative flex-1 min-w-[180px] max-w-xs">
-            <LuSearch className={`absolute top-1/2 -translate-y-1/2 text-gray-400 text-sm ${ar ? "right-3" : "left-3"}`} />
-            <input type="text" value={filters.q} onChange={e => update({ q: e.target.value })}
-              placeholder={ar ? "ابحث عن عقار..." : "Search properties..."}
-              className={`w-full py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-200 placeholder:text-gray-400 focus:outline-none focus:border-sky-400 ${ar ? "pr-8 pl-3" : "pl-8 pr-3"}`} />
-          </div>
-          <select value={filters.type} onChange={e => update({ type: e.target.value as any, rentPeriod: "", furnished: "" })}
-            className="py-2 px-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:border-sky-400 min-w-[120px]">
-            <option value="">{ar ? "الكل" : "All Types"}</option>
-            <option value="buy">{ar ? "للبيع" : "For Sale"}</option>
-            <option value="rent">{ar ? "للإيجار" : "For Rent"}</option>
-          </select>
-          <select value={filters.city} onChange={e => update({ city: e.target.value })}
-            className="py-2 px-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:border-sky-400 min-w-[120px]">
-            <option value="">{ar ? "كل المدن" : "All Cities"}</option>
-            {cities.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-          {hasActiveFilters(filters) && (
-            <button onClick={reset}
-              className="px-4 py-2 rounded-xl text-sm text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-              {ar ? "إعادة تعيين" : "Reset"}
-            </button>
-          )}
-        </div>
-      </div>
+      {/* ── فلاتر (sticky تحت النافبار) ── */}
+      <FilterBar filters={filters} update={update} reset={reset} counts={counts} cities={cities} categories={categories} />
 
       {/* ── Grid ── */}
       <div className="max-w-7xl mx-auto px-6 py-10">
@@ -230,7 +221,15 @@ const AllPropertiesPage: React.FC = () => {
         ) : (
           <div className="text-center py-24 text-gray-400 dark:text-gray-500">
             <p className="text-5xl mb-4">🏠</p>
-            <p className="text-lg">{t("properties.noPropertiesFound")}</p>
+            <p className="text-lg font-bold text-gray-500 dark:text-gray-400">
+              {hasActiveFilters(filters) ? t("listing.emptyFiltered") : t("properties.noPropertiesFound")}
+            </p>
+            {hasActiveFilters(filters) && (
+              <button onClick={reset}
+                className="mt-6 px-6 py-3 rounded-2xl bg-[#004E80] hover:bg-sky-700 text-white font-bold transition">
+                {t("listing.reset")}
+              </button>
+            )}
           </div>
         )}
       </div>

@@ -214,5 +214,30 @@
     "subtitle": "Daily, weekly, monthly or yearly rentals — pick the period that suits you",
     "all": "All",
     "viewAll": "All rentals"
+  },
+  "listing": {
+    "tabs": {
+      "all": "All",
+      "buy": "For Sale",
+      "rent": "For Rent"
+    },
+    "subtitle": "Browse all available properties and find what suits you",
+    "rentSubtitle": "Daily, weekly, monthly or yearly rentals — pick the period and budget that suit you",
+    "rentTitle": "Properties for Rent",
+    "buyTitle": "Properties for Sale",
+    "furnishedAll": "All",
+    "searchPlaceholder": "Search properties...",
+    "filters": "Filters",
+    "city": "City",
+    "category": "Category",
+    "allCities": "All cities",
+    "allCategories": "All categories",
+    "anyPrice": "Any price",
+    "sort": "Sort",
+    "sortNewest": "Newest",
+    "sortPriceAsc": "Price: low to high",
+    "sortPriceDesc": "Price: high to low",
+    "reset": "Reset",
+    "emptyFiltered": "No properties match these filters"
   }
 }
