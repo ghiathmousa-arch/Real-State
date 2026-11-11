@@ -8,6 +8,8 @@ import DashboardLayout from "./layouts/DashboardLayout"
 import Properties from "./pages/Properties"
 import AddProperty from "./components/AddProperty/AddProperty"
 import Messages from "./pages/Messages"
+import PendingChanges from "./pages/PendingChanges"
+import Users from "./pages/Users"
 
 const DashboardRoutes = () => {
   return (
@@ -27,6 +29,8 @@ const DashboardRoutes = () => {
           {/* للأدمن بس */}
           <Route element={<AdminRoute />}>
             <Route path="/messages" element={<Messages />} />
+            <Route path="/pending-changes" element={<PendingChanges />} />
+            <Route path="/users" element={<Users />} />
           </Route>
         </Route>
       </Route>
