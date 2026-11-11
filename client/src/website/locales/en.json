@@ -13,7 +13,10 @@
     "rent": "For Rent",
     "squareMeter": "m²",
     "currency": "US Dollar",
-    "priceOnRequest": "Price on request"
+    "priceOnRequest": "Price on request",
+    "latest": "Latest Properties",
+    "explore": "Explore",
+    "noPropertiesFound": "No properties available right now"
   },
   "contact": {
     "title": "Contact Us",
@@ -89,14 +92,14 @@
   },
   "search": {
     "placeholder": "Select an option",
-    "button": "Advanced Search",
+    "button": "Search",
     "location_label": "Location",
-    "type_label": "Type",
     "price_label": "Price",
-    "price_options": {
-      "low": "< $100K",
-      "high": "$100K+"
-    }
+    "buy": "Buy",
+    "rent": "Rent",
+    "category_label": "Property type",
+    "period_label": "Rental period",
+    "choose_period_first": "Choose a period first"
   },
   "why_us": {
     "title": "Why Major Investors Choose Us?",
@@ -191,5 +194,15 @@
         "answer": "Yes. We follow up on fitting out and maintaining the property, and if it is an investment we handle letting it, managing it and collecting the rent, sending you regular reports on its status."
       }
     ]
+  },
+  "rentPeriods": {
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "yearly": "Yearly"
+  },
+  "priceRange": {
+    "under": "Under {{value}}",
+    "over": "Over {{value}}"
   }
 }

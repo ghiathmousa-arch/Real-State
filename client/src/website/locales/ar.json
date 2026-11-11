@@ -13,7 +13,10 @@
     "rent": "للإيجار",
     "squareMeter": "م²",
     "currency": "دولار أمريكي",
-    "priceOnRequest": "السعر عند الطلب"
+    "priceOnRequest": "السعر عند الطلب",
+    "latest": "أحدث العقارات",
+    "explore": "استكشف",
+    "noPropertiesFound": "لا توجد عقارات حالياً"
   },
   "contact": {
     "title": "تواصل معنا",
@@ -89,14 +92,14 @@
   },
   "search": {
     "placeholder": "حدد الخيار",
-    "button": "بحث متقدم",
+    "button": "بحث",
     "location_label": "الموقع",
-    "type_label": "النوع",
     "price_label": "السعر",
-    "price_options": {
-      "low": "< $100K",
-      "high": "$100K+"
-    }
+    "buy": "شراء",
+    "rent": "إيجار",
+    "category_label": "نوع العقار",
+    "period_label": "مدة الإيجار",
+    "choose_period_first": "اختر المدة أولاً"
   },
   "why_us": {
     "title": "لماذا يختارنا كبار المستثمرين؟",
@@ -195,5 +198,15 @@
         "answer": "نعم. نتابع معك تجهيز العقار وصيانته، وإذا كان استثمارياً نتولى تأجيره وإدارته ومتابعة تحصيل الإيجار، وترسل لك تقارير دورية عن وضعه."
       }
     ]
+  },
+  "rentPeriods": {
+    "daily": "يومي",
+    "weekly": "أسبوعي",
+    "monthly": "شهري",
+    "yearly": "سنوي"
+  },
+  "priceRange": {
+    "under": "أقل من {{value}}",
+    "over": "أكثر من {{value}}"
   }
 }

@@ -1,74 +1,11 @@
-import { createContext, useState, useEffect, type Dispatch, type SetStateAction } from 'react';
 import { Outlet } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { api } from '../../utils/api';
 
-interface SearchFilters {
-    location: string;
-    type: string;
-    price: string;
-}
-
-interface SearchContextType {
-    search: SearchFilters;
-    setSearch: Dispatch<SetStateAction<SearchFilters>>;
-    filteredData: any[];
-    loading: boolean;
-}
-
-export const searchContext = createContext<SearchContextType>({} as SearchContextType);
-
-const Layout = () => {
-    const { i18n } = useTranslation();
-    const [search, setSearch] = useState<SearchFilters>({ location: '', type: '', price: '' });
-    const [filteredData, setFilteredData] = useState<any[]>([]);
-    const [loading, setLoading] = useState(false);
-
-    const fetchFilteredProperties = async (filters: SearchFilters) => {
-        setLoading(true);
-        try {
-            const params = new URLSearchParams();
-
-            // الموقع → city
-            if (filters.location && filters.location !== "")
-                params.append('city', filters.location);
-
-            // النوع (شقة/منزل...) → category (مش type)
-            if (filters.type && filters.type !== "")
-                params.append('category', filters.type);
-
-            // السعر — كل الأسعار بالدولار: "< $100K" أو "$100K+" (نفس النص بالعربي والإنجليزي)
-            if (filters.price) {
-                if (filters.price.includes("+")) {
-                    params.append('minPrice', '100000');
-                } else if (filters.price.includes("<")) {
-                    params.append('maxPrice', '100000');
-                }
-            }
-
-            const { data } = await api.get(`/properties?${params.toString()}`);
-            setFilteredData(Array.isArray(data) ? data : []);
-        } catch (error) {
-            console.error(error);
-            setFilteredData([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        // نفذ الفلتر فقط إذا في قيمة مختارة
-        const hasFilter = search.location !== '' || search.type !== '' || search.price !== '';
-        if (hasFilter) fetchFilteredProperties(search);
-    }, [search]);
-
-    return (
-        <searchContext.Provider value={{ search, setSearch, filteredData, loading }}>
-            <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors duration-300">
-                <Outlet />
-            </div>
-        </searchContext.Provider>
-    );
-};
+// غلاف صفحات الموقع العام. البحث صار بيودّي على /properties?... (الفلاتر بالـ URL)،
+// فما عاد في searchContext ولا فلترة هون.
+const Layout = () => (
+    <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors duration-300">
+        <Outlet />
+    </div>
+);
 
 export default Layout;
