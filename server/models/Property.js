@@ -1,5 +1,17 @@
 const mongoose = require("mongoose"); // استيراد mongoose
 
+// طلب التعديل المعلّق (شوف pendingChanges تحت) — بدون _id خاص فيه
+const PendingChangesSchema = new mongoose.Schema({
+  data: { type: mongoose.Schema.Types.Mixed, default: {} },
+  newImages: { type: [String], default: [] },
+  keepImages: { type: [String], default: undefined },
+  submittedBy: {
+    id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    name: String,
+  },
+  submittedAt: Date,
+}, { _id: false, minimize: false });
+
 // تعريف شكل بيانات العقار بـ MongoDB
 const PropertySchema = new mongoose.Schema({
   title: { type: String, required: true },    // عنوان العقار بالعربي
@@ -38,6 +50,18 @@ const PropertySchema = new mongoose.Schema({
   isFeatured: { type: Boolean, default: false }, // هل العقار موصى به؟ افتراضياً لا
   status: { type: String, enum: ["active", "pending", "sold"], default: "active" }, // حالة العقار
 
+  // مين أضاف العقار — بينكتب مرة وحدة وقت الإضافة وما بيتغيّر أبداً (بعكس action.by اللي بيتبدّل مع كل تعديل).
+  // name محفوظ نسخة عشان يضل ظاهر حتى لو المستخدم انحذف
+  createdBy: {
+    id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    name: String,
+  },
+
+  // طلب تعديل من سب أدمن (editor) بانتظار موافقة الأدمن — null = ما في طلب.
+  // data: الحقول اللي انبعتت بالطلب (متل body الـ PUT)، newImages: الصور الجديدة المرفوعة على Cloudinary،
+  // keepImages: الصور القديمة اللي لازم تضل (null = ما انبعتت = كلها بتضل)
+  pendingChanges: { type: PendingChangesSchema, default: null },
+
   // معلومات آخر إجراء تم على العقار (إضافة / بيع / تحديث)
   action: {
     type: { type: String, enum: ["added", "sold", "updated"], default: "added" },
@@ -53,5 +77,6 @@ PropertySchema.index({ status: 1, createdAt: -1 });
 PropertySchema.index({ city: 1 });
 PropertySchema.index({ type: 1, status: 1 }); // فلترة بيع/إيجار بالقائمة العامة (النشط بس)
 PropertySchema.index({ isFeatured: 1 });
+PropertySchema.index({ "createdBy.id": 1 }); // فلتر "حسب الشخص" بالداشبورد
 
 module.exports = mongoose.model("Property", PropertySchema); // تصدير الموديل
