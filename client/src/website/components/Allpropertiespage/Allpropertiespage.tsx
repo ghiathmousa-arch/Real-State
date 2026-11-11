@@ -14,6 +14,7 @@ import ListingBadges from "../PriceTag/ListingBadges";
 import { applyFilters, sortProperties, hasActiveFilters } from "../../../utils/propertyFilters";
 import { useUrlFilters } from "../../hooks/useUrlFilters";
 import FilterBar from "./FilterBar";
+import SEO from "../SEO/SEO";
 
 const PER_PAGE = 12;
 
@@ -146,6 +147,11 @@ const AllPropertiesPage: React.FC = () => {
 
   return (
     <div className={`min-h-screen pt-16 pb-8 sm:px-8 bg-gray-50 dark:bg-gray-900 ${ar ? "text-right" : "text-left"}`}>
+      {/* عنوان ووصف خاصين لكل تبويب — صفحة الإيجار بالذات بتستهدف "عقارات للإيجار في سوريا" */}
+      <SEO
+        title={filters.type === "rent" ? t("seo.rentTitle") : filters.type === "buy" ? t("seo.buyTitle") : t("seo.allTitle")}
+        description={filters.type === "rent" ? t("seo.rentDescription") : filters.type === "buy" ? t("seo.buyDescription") : undefined}
+      />
 
       {/* ── Hero ── */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-6 py-10">

@@ -13,6 +13,7 @@ import { PiBathtub } from "react-icons/pi";
 import { TbCheck } from "react-icons/tb";
 import PropertySlider from "../components/Propertyslider/Propertyslider";
 import FloatingWhatsApp from "../components/FloatingWhatsApp/FloatingWhatsApp";
+import SEO from "../components/SEO/SEO";
 import { cdn, formatPrice, formatRentPrices, type RentPeriod } from "../../utils/format";
 import { WHATSAPP_NUMBER } from "../../constants/contact";
 import { api, API_BASE } from "../../utils/api";
@@ -138,6 +139,15 @@ const PropertyDetailPage: React.FC = () => {
       dir={ar ? "rtl" : "ltr"}
       className={`min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 ${ar ? "text-right" : "text-left"}`}
     >
+      {/* العنوان بيذكر بيع/إيجار والسعر (للإيجار: أقصر مدة) */}
+      <SEO
+        title={[
+          title,
+          isBuy ? t("seo.forSale") : t("seo.forRent"),
+          isBuy ? (hasPrice ? formatPrice(property.price) : "") : rentItems[0]?.text ?? "",
+        ].filter(Boolean).join(" — ")}
+        description={description ? description.slice(0, 155) : undefined}
+      />
       <FloatingWhatsApp
         message={whatsappMessage}
         position={ar ? "left" : "right"}

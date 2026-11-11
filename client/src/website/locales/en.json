@@ -245,5 +245,14 @@
     "furnished": "Furnished?",
     "whatsappRent": "Book / ask on WhatsApp",
     "whatsappBuy": "Ask on WhatsApp"
+  },
+  "seo": {
+    "rentTitle": "Properties for Rent in Syria — Daily, Monthly, Yearly",
+    "rentDescription": "Apartments, houses, shops and offices for rent in Syria: daily, weekly, monthly or yearly, priced in USD.",
+    "buyTitle": "Properties for Sale in Syria",
+    "buyDescription": "Apartments, houses, land and farms for sale across Syria, priced in USD.",
+    "allTitle": "All Properties — Buy & Rent in Syria",
+    "forRent": "For Rent",
+    "forSale": "For Sale"
   }
 }
