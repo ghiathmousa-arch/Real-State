@@ -62,6 +62,10 @@
         "title": "Quick Links",
         "items": [
           {
+            "label": "List your property",
+            "to": "/list-your-property"
+          },
+          {
             "label": "Privacy Policy",
             "to": "/privacy"
           },

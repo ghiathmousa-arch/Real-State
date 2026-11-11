@@ -141,6 +141,13 @@ const NavBar: React.FC<NavBarProps> = ({ theme, setTheme }) => {
 
       {/* أزرار الديسكتوب */}
       <div className="hidden lg:flex gap-2 items-center">
+        {/* "اعرض عقارك" — زر بارز لصفحة الفورم العام */}
+        <button
+          onClick={() => { navigate("/list-your-property"); window.scrollTo({ top: 0 }); }}
+          className="me-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold whitespace-nowrap shadow transition"
+        >
+          {t("nav.listProperty")}
+        </button>
         <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           className="text-2xl p-2"
@@ -189,6 +196,13 @@ const NavBar: React.FC<NavBarProps> = ({ theme, setTheme }) => {
               {t(item.translationKey)}
             </button>,
           ])}
+
+          <button
+            onClick={() => { navigate("/list-your-property"); window.scrollTo({ top: 0 }); setIsOpen(false); }}
+            className="py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold"
+          >
+            {t("nav.listProperty")}
+          </button>
 
           <div className="border-t pt-3 flex justify-center gap-6">
             <button

@@ -80,6 +80,10 @@
         "title": "روابط سريعة",
         "items": [
           {
+            "label": "اعرض عقارك",
+            "to": "/list-your-property"
+          },
+          {
             "label": "سياسة الخصوصية",
             "to": "/privacy"
           },
