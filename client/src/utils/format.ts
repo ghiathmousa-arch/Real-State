@@ -94,3 +94,15 @@ export const getMainPrice = (
   }
   return property?.price != null ? { price: formatPrice(property.price) } : null
 }
+
+// السعر اللي منفلتر/منرتّب عليه: البيع = price، الإيجار = سعر المدة المختارة،
+// وبدون مدة = أول مدة متوفرة (يومي ← سنوي). null = ما في سعر
+export const priceFor = (property: any, period?: RentPeriod | ""): number | null => {
+  if (property?.type === "rent") {
+    const rp = property.rentPrices
+    if (period) return rp?.[period] ?? null
+    const first = RENT_PERIODS.find(p => rp?.[p] != null)
+    return first ? rp[first] : null
+  }
+  return property?.price ?? null
+}

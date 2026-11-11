@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { IoLocationOutline } from "react-icons/io5";
 import { LuBedSingle, LuArrowLeft, LuArrowRight, LuSearch } from "react-icons/lu";
 import { CiRuler } from "react-icons/ci";
 import { PiBathtub } from "react-icons/pi";
 import PropertySlider from "../Propertyslider/Propertyslider";
-import { withImagesFirst, cdn, getMainPrice } from "../../../utils/format";
+import { cdn, getMainPrice } from "../../../utils/format";
 import { api, API_BASE } from "../../../utils/api";
 import { localized } from "../../../utils/helper";
+import { applyFilters, sortProperties, hasActiveFilters } from "../../../utils/propertyFilters";
+import { useUrlFilters } from "../../hooks/useUrlFilters";
 
 const PER_PAGE = 12;
 
@@ -68,16 +70,14 @@ const AllPropertiesPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const ar = i18n.language === "ar";
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  // كل الفلاتر من الـ URL (type, rentPeriod, furnished, city, category, minPrice, maxPrice, q, sort)
+  const { filters, update, reset } = useUrlFilters();
 
   const [allProperties, setAllProperties] = useState<any[]>([]);
   const [featured, setFeatured] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
 
-  const [search, setSearch] = useState("");
-  const [typeFilter, setType] = useState("");
-  const [cityFilter, setCity] = useState(searchParams.get("city") || "");
 
   // ── جلب البيانات ──
   useEffect(() => {
@@ -98,32 +98,20 @@ const AllPropertiesPage: React.FC = () => {
   }, []);
 
   // ── فلترة محلية ── محسوبة أثناء الـ render (بدل useState+useEffect) بدل ما نعمل render إضافي بلا داعي
-  const filtered = useMemo(() => {
-    let result = [...allProperties];
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      result = result.filter(p =>
-        p.title?.toLowerCase().includes(q) ||
-        p.titleEn?.toLowerCase().includes(q) ||
-        p.city?.toLowerCase().includes(q) ||
-        p.cityEn?.toLowerCase().includes(q)
-      );
-    }
-    if (typeFilter) result = result.filter(p => p.type === typeFilter);
-    if (cityFilter) result = result.filter(p => p.city === cityFilter || p.cityEn === cityFilter);
-    // الترتيب قبل تقسيم الصفحات، حتى يكون ترتيب شامل مش داخل كل صفحة لحالها
-    return withImagesFirst(result);
-  }, [search, typeFilter, cityFilter, allProperties]);
-
-  // مزامنة فلتر المدينة مع الرابط (?city=) — لما نجي من قسم "تصفّح حسب المنطقة"
-  useEffect(() => {
-    setCity(searchParams.get("city") || "");
-  }, [searchParams]);
+  // الترتيب قبل تقسيم الصفحات، حتى يكون ترتيب شامل مش داخل كل صفحة لحالها
+  const filtered = useMemo(
+    () => sortProperties(
+      applyFilters(allProperties, filters),
+      filters.sort,
+      filters.type === "rent" ? filters.rentPeriod : ""
+    ),
+    [filters, allProperties]
+  );
 
   // إعادة الصفحة للأولى عند تغيّر الفلتر — side-effect حقيقي، لازم يضل بـ useEffect منفصل
   useEffect(() => {
     setPage(1);
-  }, [search, typeFilter, cityFilter, allProperties]);
+  }, [filters, allProperties]);
 
   const cities = useMemo(
     () => [...new Set(allProperties.map(p => p.city).filter(Boolean))],
@@ -160,23 +148,23 @@ const AllPropertiesPage: React.FC = () => {
         <div className={`max-w-7xl mx-auto flex flex-wrap gap-3 items-center ${ar ? "flex-row-reverse" : ""}`}>
           <div className="relative flex-1 min-w-[180px] max-w-xs">
             <LuSearch className={`absolute top-1/2 -translate-y-1/2 text-gray-400 text-sm ${ar ? "right-3" : "left-3"}`} />
-            <input type="text" value={search} onChange={e => setSearch(e.target.value)}
+            <input type="text" value={filters.q} onChange={e => update({ q: e.target.value })}
               placeholder={ar ? "ابحث عن عقار..." : "Search properties..."}
               className={`w-full py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-200 placeholder:text-gray-400 focus:outline-none focus:border-sky-400 ${ar ? "pr-8 pl-3" : "pl-8 pr-3"}`} />
           </div>
-          <select value={typeFilter} onChange={e => setType(e.target.value)}
+          <select value={filters.type} onChange={e => update({ type: e.target.value as any, rentPeriod: "", furnished: "" })}
             className="py-2 px-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:border-sky-400 min-w-[120px]">
             <option value="">{ar ? "الكل" : "All Types"}</option>
             <option value="buy">{ar ? "للبيع" : "For Sale"}</option>
             <option value="rent">{ar ? "للإيجار" : "For Rent"}</option>
           </select>
-          <select value={cityFilter} onChange={e => setCity(e.target.value)}
+          <select value={filters.city} onChange={e => update({ city: e.target.value })}
             className="py-2 px-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:border-sky-400 min-w-[120px]">
             <option value="">{ar ? "كل المدن" : "All Cities"}</option>
             {cities.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
-          {(search || typeFilter || cityFilter) && (
-            <button onClick={() => { setSearch(""); setType(""); setCity(""); }}
+          {hasActiveFilters(filters) && (
+            <button onClick={reset}
               className="px-4 py-2 rounded-xl text-sm text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
               {ar ? "إعادة تعيين" : "Reset"}
             </button>
