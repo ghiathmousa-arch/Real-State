@@ -146,7 +146,9 @@ router.get("/admin/all", protect, adminOnly, async (req, res) => {
 });
 
 // ── GET /recent ────────────────────────────────────────────
-router.get("/recent", async (req, res) => {
+// آخر النشاطات بالداشبورد (RecentActivities) — بترجّع كل الحالات (معلّق ومباع)
+// فلازم تكون للأدمن بس، والموقع العام ما بيستدعيها
+router.get("/recent", protect, adminOnly, async (req, res) => {
   try {
     const properties = await Property
       .find()
