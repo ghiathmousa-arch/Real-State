@@ -3,6 +3,7 @@ const router = express.Router();
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const User = require("../models/User");
+const Property = require("../models/Property");
 const { protect, adminOnly, loginLimiter } = require("../middleware");
 
 const signToken = (id) =>
@@ -23,6 +24,8 @@ const cookieOptions = (req) => ({
   path: "/",
 });
 
+const STAFF_ROLES = ["admin", "editor"];
+
 // صيغة إيميل بسيطة (نفس المستخدمة بموديل Contact)
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -32,6 +35,10 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 router.post("/register", protect, adminOnly, async (req, res) => {
   try {
     const { name, password } = req.body;
+    // الدور: أدمن أو سب أدمن (editor) — الافتراضي سب أدمن
+    const role = req.body.role === undefined || req.body.role === "" ? "editor" : req.body.role;
+    if (!STAFF_ROLES.includes(role))
+      return res.status(400).json({ error: "الدور لازم يكون admin أو editor" });
     const email = typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
 
     if (!name || !email || !password)
@@ -47,7 +54,7 @@ router.post("/register", protect, adminOnly, async (req, res) => {
     if (exists)
       return res.status(400).json({ error: "البريد الإلكتروني مسجل مسبقاً" });
 
-    const user = await User.create({ name, email, password });
+    const user = await User.create({ name, email, password, role });
 
     res.status(201).json({
       user: { id: user._id, name: user.name, email: user.email, role: user.role },
@@ -91,6 +98,61 @@ router.get("/me", protect, (req, res) => {
     email: req.user.email,
     role: req.user.role,
   });
+});
+
+// ─── GET /api/auth/users ──────────────────────────────────
+// (أدمن) كل المستخدمين بدون كلمات السر، مع عدد العقارات اللي أضافها كل واحد (createdBy.id)
+router.get("/users", protect, adminOnly, async (req, res) => {
+  try {
+    const [users, counts] = await Promise.all([
+      User.find().select("-password").sort({ createdAt: 1 }).lean(),
+      Property.aggregate([
+        { $match: { "createdBy.id": { $ne: null } } },
+        { $group: { _id: "$createdBy.id", count: { $sum: 1 } } },
+      ]),
+    ]);
+    const countById = new Map(counts.map((c) => [String(c._id), c.count]));
+    res.json(users.map((u) => ({
+      id: u._id,
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      createdAt: u.createdAt,
+      propertiesCount: countById.get(String(u._id)) || 0,
+    })));
+  } catch (error) {
+    console.error("Auth Users GET Error:", error);
+    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" });
+  }
+});
+
+// ─── DELETE /api/auth/users/:id ───────────────────────────
+// (أدمن) حذف مستخدم. ممنوع الأدمن يحذف حالو، وممنوع حذف آخر أدمن.
+// عقاراته بتضل — createdBy.name محفوظ فيها نسخة.
+router.delete("/users/:id", protect, adminOnly, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id))
+      return res.status(400).json({ error: "ID غير صالح" });
+
+    if (String(req.user._id) === id)
+      return res.status(400).json({ error: "ما فيك تحذف حسابك" });
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ error: "المستخدم غير موجود" });
+
+    if (user.role === "admin") {
+      const admins = await User.countDocuments({ role: "admin" });
+      if (admins <= 1)
+        return res.status(400).json({ error: "ما فيك تحذف آخر أدمن" });
+    }
+
+    await user.deleteOne();
+    res.json({ message: "تم حذف المستخدم" });
+  } catch (error) {
+    console.error("Auth Users DELETE Error:", error);
+    res.status(500).json({ error: "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً" });
+  }
 });
 
 // ─── POST /api/auth/logout ────────────────────────────────
