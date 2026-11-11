@@ -4,6 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import Header from "../components/Header/Header"
 import StatCard from "../components/StatCard/StatCard"
 import RecentActivities from "../components/RecentActivities/RecentActivities"
+import { useCurrentUser } from "../hooks/useCurrentUser"
 import { formatPrice } from "../../utils/format"
 import { api } from "../../utils/api"
 
@@ -55,6 +56,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 
 const Dashboard = () => {
+  const { isAdmin } = useCurrentUser()
 
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
@@ -103,7 +105,8 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* آخر النشاطات */}
-        <RecentActivities />
+        {/* آخر النشاطات بتستعمل /recent (أدمن بس) */}
+        {isAdmin && <RecentActivities />}
 
         {/* الشارت */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-4" dir="rtl">
