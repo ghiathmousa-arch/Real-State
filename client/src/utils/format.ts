@@ -47,3 +47,50 @@ export const formatPrice = (price: number | null | undefined): string => {
   }
   return `$${Math.round(n).toLocaleString("en-US")}`
 }
+
+// ── أسعار الإيجار ────────────────────────────────────────
+// عقار الإيجار إلو لحد 4 أسعار (يومي، أسبوعي، شهري، سنوي) — اللي بيتعبّى بس بيظهر.
+export type RentPeriod = "daily" | "weekly" | "monthly" | "yearly"
+export type RentPrices = Partial<Record<RentPeriod, number | null>>
+
+export const RENT_PERIODS: RentPeriod[] = ["daily", "weekly", "monthly", "yearly"]
+
+const RENT_LABELS: Record<RentPeriod, { ar: string; en: string }> = {
+  daily: { ar: "يوم", en: "Day" },
+  weekly: { ar: "أسبوع", en: "Week" },
+  monthly: { ar: "شهر", en: "Month" },
+  yearly: { ar: "سنة", en: "Year" },
+}
+
+export interface RentPriceItem {
+  period: RentPeriod
+  label: string   // "يوم" / "Day"
+  price: string   // "$40"
+  text: string    // "$40 / يوم"
+}
+
+// المدد المعبّاة بالترتيب (يومي ← سنوي). فاضية = "السعر عند الطلب"
+export const formatRentPrices = (
+  rentPrices: RentPrices | null | undefined,
+  isAr: boolean
+): RentPriceItem[] =>
+  RENT_PERIODS
+    .filter(period => rentPrices?.[period] != null && Number.isFinite(Number(rentPrices[period])))
+    .map(period => {
+      const label = RENT_LABELS[period][isAr ? "ar" : "en"]
+      const price = formatPrice(rentPrices![period])
+      return { period, label, price, text: `${price} / ${label}` }
+    })
+
+// السعر الرئيسي للكرت: البيع = price، الإيجار = أول مدة متوفرة.
+// null = ما في سعر ("السعر عند الطلب")
+export const getMainPrice = (
+  property: any,
+  isAr: boolean
+): { price: string; suffix?: string } | null => {
+  if (property?.type === "rent") {
+    const first = formatRentPrices(property.rentPrices, isAr)[0]
+    return first ? { price: first.price, suffix: first.label } : null
+  }
+  return property?.price != null ? { price: formatPrice(property.price) } : null
+}

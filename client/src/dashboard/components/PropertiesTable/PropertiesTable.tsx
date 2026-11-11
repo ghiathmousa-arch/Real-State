@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { MdSearch, MdChevronLeft, MdChevronRight, MdHomeWork } from "react-icons/md"
 import PropertyActions from '../PropertyActions/PropertyActions'
-import { getImgSrc, formatPrice } from '../../../utils/format'
+import { getImgSrc, formatPrice, formatRentPrices, type RentPrices } from '../../../utils/format'
 import { usePropertyOptions } from '../../../constants/property'
 
 interface Property {
@@ -11,7 +11,9 @@ interface Property {
   area: number
   city: string
   address: string
+  type?: string
   price: number | null
+  rentPrices?: RentPrices
   status: string
   images: string[]
 }
@@ -23,6 +25,15 @@ interface Props {
 }
 
 const ITEMS_PER_PAGE = 5
+
+// عمود السعر: البيع = السعر، الإيجار = كل المدد المعبّاة ("$40/يوم · $900/شهر")، ولا شي = "عند الطلب"
+const priceLabel = (p: Property): string => {
+  if (p.type === "rent") {
+    const items = formatRentPrices(p.rentPrices, true)
+    return items.length ? items.map(i => `${i.price}/${i.label}`).join(" · ") : "عند الطلب"
+  }
+  return p.price != null ? formatPrice(p.price) : "عند الطلب"
+}
 
 const PropertiesTable = ({ data, loading, refreshData }: Props) => {
   const { cities } = usePropertyOptions()
@@ -97,7 +108,7 @@ const PropertiesTable = ({ data, loading, refreshData }: Props) => {
                   <h3 className="font-black text-[#0f2d4a] text-[11px] truncate leading-tight">{p.title}</h3>
                   <p className="text-[9px] text-gray-400 font-bold truncate mt-0.5">{p.city} • {p.category}</p>
                   <div className="flex items-center gap-2 mt-1.5">
-                    <span className="text-[11px] font-black text-blue-600">{formatPrice(p.price)}</span>
+                    <span className="text-[11px] font-black text-blue-600">{priceLabel(p)}</span>
                     <span className={`w-1.5 h-1.5 rounded-full ${p.status === 'active' ? 'bg-green-500' : 'bg-gray-300'}`} />
                   </div>
                 </div>
@@ -140,7 +151,7 @@ const PropertiesTable = ({ data, loading, refreshData }: Props) => {
                       <span className="text-[10px] font-bold text-gray-500">{p.city}</span>
                     </td>
                     <td className="px-2 py-4 text-center">
-                      <span className="text-[11px] font-black text-blue-600">{formatPrice(p.price)}</span>
+                      <span className="text-[11px] font-black text-blue-600">{priceLabel(p)}</span>
                     </td>
                     <td className="px-2 py-4 text-center">
                       <span className={`w-1.5 h-1.5 inline-block rounded-full ${p.status === 'active' ? 'bg-green-500' : 'bg-gray-300'}`} />
