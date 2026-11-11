@@ -30,7 +30,10 @@ const Properties = () => {
       setPropertiesList(properties);
 
       // حساب الإحصائيات بذكاء
-      const totalValue = properties.reduce((acc: number, p: any) => acc + (Number(p.price) || 0), 0);
+      // القيمة السوقية = أسعار البيع بس (الإيجار ما إلو price — أسعاره بـ rentPrices)
+      const totalValue = properties
+        .filter((p: any) => p.type === "buy")
+        .reduce((acc: number, p: any) => acc + (Number(p.price) || 0), 0);
 
       // تنسيق القيمة السوقية بالدولار (مثلاً $1.2M) — نفس formatPrice المستخدمة بكل المشروع
       const formattedMarketValue = formatPrice(totalValue);

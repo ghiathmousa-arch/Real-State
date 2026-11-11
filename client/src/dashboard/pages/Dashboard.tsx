@@ -21,7 +21,8 @@ const buildChartData = (properties: Property[]) => {
   const months: Record<string, { label: string; total: number; count: number }> = {}
 
   properties.forEach(p => {
-    if (!p.price || !p.createdAt) return
+    // البيع بس — أسعار الإيجار (rentPrices) مدد مختلفة وما بتنخلط مع أسعار البيع
+    if (p.type !== "buy" || !p.price || !p.createdAt) return
     const date = new Date(p.createdAt)
     const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
     const label = date.toLocaleDateString('ar-SY', { month: 'short', year: '2-digit' })
