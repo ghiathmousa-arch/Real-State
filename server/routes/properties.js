@@ -42,55 +42,11 @@ const PUBLIC_SELECT = "-pendingChanges -createdBy.id";
 
 const MAX_IMAGES = 12; // الحد الأقصى لصور العقار الواحد (نفس حد multer بـ upload.js)
 
-// ── التحقق من السعر ────────────────────────────────────────
-// كل الأسعار بالمنصة بالدولار الأمريكي (USD). القيمة الفاضية = null ("السعر عند الطلب")
-const MAX_PRICE_USD = 100_000_000;
-const parsePrice = (v) => {
-  if (v === undefined || v === null || String(v).trim() === "") return { value: null };
-  const n = Number(v);
-  if (!Number.isFinite(n))
-    return { error: "السعر لازم يكون رقم (بالدولار الأمريكي)" };
-  if (n < 0)
-    return { error: "السعر ما بيصير يكون سالب" };
-  if (n > MAX_PRICE_USD)
-    return { error: "السعر أكبر من 100,000,000 دولار — تأكد إنك كاتبه بالدولار مو بالليرة" };
-  return { value: n };
-};
-
-// ── أسعار الإيجار ومفروش ──────────────────────────────────────
-// الفورم بيبعت الحقول مسطّحة (FormData): rentDaily / rentWeekly / rentMonthly / rentYearly
-const RENT_PERIODS = ["daily", "weekly", "monthly", "yearly"];
-const RENT_FIELDS = { daily: "rentDaily", weekly: "rentWeekly", monthly: "rentMonthly", yearly: "rentYearly" };
-const RENT_LABELS = { daily: "اليومي", weekly: "الأسبوعي", monthly: "الشهري", yearly: "السنوي" };
-const EMPTY_RENT_PRICES = { daily: null, weekly: null, monthly: null, yearly: null };
-
-// مشتركة بين POST و PUT: كل سعر بيمرّ على parsePrice.
-// current = الأسعار القديمة (PUT): الحقل ما انبعت = يضل القديم، انبعت "" = null
-const parseRentPrices = (body, current = EMPTY_RENT_PRICES) => {
-  const value = {};
-  for (const period of RENT_PERIODS) {
-    const raw = body[RENT_FIELDS[period]];
-    if (raw === undefined) {
-      value[period] = current?.[period] ?? null;
-      continue;
-    }
-    const parsed = parsePrice(raw);
-    if (parsed.error) return { error: `السعر ${RENT_LABELS[period]}: ${parsed.error}` };
-    value[period] = parsed.value;
-  }
-  return { value };
-};
-
-// "furnished" / "unfurnished" / أي شي تاني أو فاضي = null (غير محدد)
-const FURNISHED_VALUES = ["furnished", "unfurnished"];
-const parseFurnished = (v) => (FURNISHED_VALUES.includes(v) ? v : null);
-
-// ── الاسم الإنجليزي للمدينة والفئة ────────────────────────────
-// cityEn و categoryEn ما عاد يجوا من الفورم — السيرفر بيحسبهن من القوائم الثابتة
-// حسب القيمة العربية، عشان ما يصير في عقارات إنجليزيتها فاضية أو مكتوبة غلط
-const findEn = (list, ar) => list.find((item) => item.ar === String(ar ?? "").trim())?.en ?? null;
-const CITY_ERROR_MSG = "المدينة غير معروفة — اختار مدينة من القائمة";
-const CATEGORY_ERROR_MSG = "الفئة غير معروفة — اختار فئة من القائمة";
+// التحقق من السعر و rentPrices ومفروش والمدينة/الفئة — مشترك مع راوتات "اعرض عقارك"
+const {
+  parsePrice, EMPTY_RENT_PRICES, parseRentPrices, FURNISHED_VALUES, parseFurnished, RENT_PERIODS,
+  findEn, CITY_ERROR_MSG, CATEGORY_ERROR_MSG, buildNewPropertyData,
+} = require("../utils/propertyFields");
 
 // ── GET / ──────────────────────────────────────────────────
 // القائمة العامة: بترجّع العقارات النشطة بس (status: "active") — المعلّق والمباع ما بيظهروا بالموقع
@@ -257,64 +213,11 @@ router.get("/:id", async (req, res) => {
 router.post("/", protect, staffOnly, upload.any(), compressImages, async (req, res) => {
   discardUploadsOnError(req, res);
   try {
-    const b = req.body;
+    // التحقق وبناء البيانات بدالة مشتركة (نفسها بتحويل "طلب عرض" لعقار)
+    const built = buildNewPropertyData(req.body, req.compressedImages, req.user);
+    if (built.error) return res.status(400).json({ error: built.error });
 
-    // ✅ السعر صار اختياري - تم حذفه من شرط الإلزامية
-    if (!b.title || !b.city || !b.category || !b.type)
-      return res.status(400).json({ error: "العنوان والمدينة والفئة والنوع مطلوبة" });
-
-    // البيع بيستعمل price، الإيجار بيستعمل rentPrices — الطرف التاني دايماً null
-    const isRent = b.type === "rent";
-    const price = isRent ? { value: null } : parsePrice(b.price);
-    if (price.error) return res.status(400).json({ error: price.error });
-
-    const rentPrices = isRent ? parseRentPrices(b) : { value: { ...EMPTY_RENT_PRICES } };
-    if (rentPrices.error) return res.status(400).json({ error: rentPrices.error });
-
-    const cityEn = findEn(CITIES, b.city);
-    if (!cityEn) return res.status(400).json({ error: CITY_ERROR_MSG });
-    const categoryEn = findEn(CATEGORIES, b.category);
-    if (!categoryEn) return res.status(400).json({ error: CATEGORY_ERROR_MSG });
-
-    const toNum = (v) => (v !== undefined && v !== "" ? Number(v) : null);
-    const toArr = (v) => {
-      if (!v) return [];
-      if (Array.isArray(v)) return v;
-      return v.split(",").map((f) => f.trim()).filter((f) => f);
-    };
-
-    const property = await Property.create({
-      title: b.title,
-      titleEn: b.titleEn || "",
-      description: b.description,
-      descriptionEn: b.descriptionEn || "",
-      category: b.category.trim(),
-      categoryEn,
-      type: b.type,
-      price: price.value,
-      rentPrices: rentPrices.value,
-      furnished: parseFurnished(b.furnished),
-      city: b.city.trim(),
-      cityEn,
-      area: toNum(b.area),
-      rooms: toNum(b.rooms),
-      bathrooms: toNum(b.bathrooms),
-      address: b.address || "",
-      addressEn: b.addressEn || "",
-      images: req.compressedImages,
-      features: toArr(b.features),
-      featuresEn: toArr(b.featuresEn),
-      videoUrl: b.videoUrl || "", // ✅ رابط فيديو يوتيوب تبع العقار
-      isFeatured: req.user.role === "admin" && (b.isFeatured === true || b.isFeatured === "true"),
-      status: b.status || "active",
-      // بينكتب مرة وحدة وما بيتغيّر (بعكس action.by)
-      createdBy: { id: req.user._id, name: req.user.name },
-      action: {
-        type: "added",
-        by: req.user.name,
-        at: new Date()
-      }
-    });
+    const property = await Property.create(built.data);
 
     invalidatePropertiesCache();
     res.status(201).json(property);
