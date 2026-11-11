@@ -8,6 +8,7 @@ import { PiBathtub } from "react-icons/pi";
 import PropertySlider from "../Propertyslider/Propertyslider";
 import { withImagesFirst, cdn, formatPrice } from "../../../utils/format";
 import { api, API_BASE } from "../../../utils/api";
+import { localized } from "../../../utils/helper";
 
 const PER_PAGE = 12;
 
@@ -195,8 +196,8 @@ const AllPropertiesPage: React.FC = () => {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {currentItems.map(property => {
-                const title = ar ? property.title : (property.titleEn || property.title);
-                const city = ar ? property.city : (property.cityEn || property.city);
+                const title = localized(property, "title", ar);
+                const city = localized(property, "city", ar);
 
                 // ✅ التصحيح: نتحقق إذا كان الرابط Cloudinary (http) نأخذه مباشرة
                 // وإذا كان رابط محلي (/uploads/...) ندمجه مع API_BASE (جذر السيرفر)

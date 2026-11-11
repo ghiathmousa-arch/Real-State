@@ -9,6 +9,7 @@ import { CiRuler } from "react-icons/ci";
 import { PiBathtub } from "react-icons/pi";
 import { cdn, formatPrice } from "../../../utils/format";
 import { API_BASE } from "../../../utils/api";
+import { localized } from "../../../utils/helper";
 
 interface Property {
   _id: string;
@@ -119,8 +120,8 @@ const PropertySlider: React.FC<Props> = ({
           style={{ transform: `translateX(${translateX})`, gap: `${GAP}px` }}
         >
           {properties.map((property) => {
-            const name = ar ? property.title : (property.titleEn || property.title);
-            const city = ar ? property.city : (property.cityEn || property.city);
+            const name = localized(property, "title", ar);
+            const city = localized(property, "city", ar);
 
             const imgSrc = property.images?.[0]
               ? cdn(property.images[0].startsWith("http") ? property.images[0] : `${API_BASE}${property.images[0]}`)

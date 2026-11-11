@@ -7,6 +7,7 @@ import { CiRuler } from "react-icons/ci";
 import { cdn, formatPrice } from "../../utils/format";
 // 💠 جذر السيرفر من المصدر الموحّد utils/api.ts بدل قراءة VITE_API_URL هون
 import { API_BASE } from "../../utils/api";
+import { localized } from "../../utils/helper";
 
 const PropertyCard: React.FC<{ property: any }> = ({ property }) => {
     const { i18n } = useTranslation();
@@ -14,10 +15,11 @@ const PropertyCard: React.FC<{ property: any }> = ({ property }) => {
     const isAr = i18n.language === "ar";
 
     // جلب البيانات بناءً على اللغة المفعلة
-    const title = isAr ? property.title : property.titleEn;
-    const description = isAr ? property.description : property.descriptionEn;
-    const city = isAr ? property.city : property.cityEn;
-    const category = isAr ? property.category : property.categoryEn;
+    // إذا الموقع بالإنجليزي والنص الإنجليزي فاضي منعرض العربي
+    const title = localized(property, "title", isAr);
+    const description = localized(property, "description", isAr);
+    const city = localized(property, "city", isAr);
+    const category = localized(property, "category", isAr);
 
     // نصوص ثابتة بسيطة
     const labels = {

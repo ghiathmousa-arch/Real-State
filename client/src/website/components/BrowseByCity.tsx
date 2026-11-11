@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { HiOutlineBuildingOffice2 } from "react-icons/hi2";
 import { LuArrowLeft, LuArrowRight } from "react-icons/lu";
+import { localized } from "../../utils/helper";
 
 const MAX_CITIES = 6;
 
@@ -86,7 +87,7 @@ const BrowseByCity = () => {
                     <>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                             {cities.map((item) => {
-                                const name = ar ? item.city : (item.cityEn || item.city);
+                                const name = localized(item, "city", ar);
 
                                 return (
                                     <button

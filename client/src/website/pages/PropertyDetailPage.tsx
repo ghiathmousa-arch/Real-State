@@ -15,6 +15,7 @@ import PropertySlider from "../components/Propertyslider/Propertyslider";
 import FloatingWhatsApp from "../components/FloatingWhatsApp/FloatingWhatsApp";
 import { cdn, formatPrice } from "../../utils/format";
 import { api, API_BASE } from "../../utils/api";
+import { localized, localizedList } from "../../utils/helper";
 
 const PropertyDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -89,14 +90,12 @@ const PropertyDetailPage: React.FC = () => {
     );
   }
 
-  const title = ar ? property.title : (property.titleEn || property.title);
-  const description = ar ? property.description : (property.descriptionEn || property.description);
-  const city = ar ? property.city : (property.cityEn || property.city);
-  const address = ar ? property.address : (property.addressEn || property.address);
-  const category = ar ? property.category : (property.categoryEn || property.category);
-  const features = (ar || !property.featuresEn?.length)
-    ? property.features
-    : property.featuresEn;
+  const title = localized(property, "title", ar);
+  const description = localized(property, "description", ar);
+  const city = localized(property, "city", ar);
+  const address = localized(property, "address", ar);
+  const category = localized(property, "category", ar);
+  const features = localizedList(property, "features", ar);
   const isBuy = property.type === "buy";
   const hasPrice = property.price != null && property.price > 0;
 
