@@ -18,7 +18,7 @@ const SectionHead = ({ title, subTitle, variant }: props) => {
             
             <div className={`relative flex flex-col w-full max-w-6xl px-4
                 ${
-                    variant == 'section' ? 'items-start text-right' : 'items-center text-center'
+                    variant == 'section' ? 'items-start text-start' : 'items-center text-center'
                 } 
 
                 min-[300px]:max-[768px]:gap-4`
@@ -39,7 +39,7 @@ const SectionHead = ({ title, subTitle, variant }: props) => {
                     {subTitle && (
         <p className={`font-medium ${
             variant == 'section' 
-                ? 'text-xl text-gray-700 max-w-2xl' :
+                ? 'text-xl text-gray-700 dark:text-gray-300 max-w-2xl' :
             variant == 'hero' 
                 ? 'text-xl text-white mx-auto max-w-2xl' :
                 // في حالة الستيت: نزيد max-w ليمتد النص كما في الصورة تماماً

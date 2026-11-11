@@ -11,6 +11,7 @@ import AllPropertiesPage from "./website/components/Allpropertiespage/Allpropert
 import SEO from "./website/components/SEO/SEO";
 import AiChat from "./website/components/AiChat/AiChat";
 import BestEstate from "./website/components/BestEstate/BestEstate";
+import RentSection from "./website/components/RentSection/RentSection";
 import PropertiesList from "./website/components/PropertiesList/PropertiesList";
 import State from "./website/components/State";
 import WhyInvestors from "./website/components/WhyInvestors";
@@ -84,6 +85,8 @@ function App() {
                 <HomePage />
                 <AiChat />
                 <BestEstate />
+                {/* بيختفي لحالو إذا ما في عقارات إيجار نشطة */}
+                <RentSection />
                 <BrowseByCity />
                 <PropertiesList />
                 <State />

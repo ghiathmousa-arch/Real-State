@@ -206,5 +206,11 @@
   "priceRange": {
     "under": "Under {{value}}",
     "over": "Over {{value}}"
+  },
+  "rentSection": {
+    "title": "Properties for Rent",
+    "subtitle": "Daily, weekly, monthly or yearly rentals — pick the period that suits you",
+    "all": "All",
+    "viewAll": "All rentals"
   }
 }
