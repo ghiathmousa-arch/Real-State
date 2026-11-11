@@ -1,14 +1,36 @@
-import { useState } from "react"
-import { NavLink, useNavigate } from "react-router-dom"
-import { MdDashboard, MdOutlineBusiness, MdLogout, MdClose, MdEmail } from "react-icons/md"
+import { useEffect, useState } from "react"
+import { NavLink, useNavigate, useLocation } from "react-router-dom"
+import { MdDashboard, MdOutlineBusiness, MdLogout, MdClose, MdEmail, MdPendingActions, MdPeople } from "react-icons/md"
 import { IoMdAdd } from "react-icons/io"
 
 import { api } from "../../../utils/api"
-import { clearCurrentUser } from "../../hooks/useCurrentUser"
+import { clearCurrentUser, useCurrentUser } from "../../hooks/useCurrentUser"
 
 const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { isAdmin } = useCurrentUser()
   const [showLogoutPopup, setShowLogoutPopup] = useState(false)
+  // عدد طلبات التعديل المعلّقة (للأدمن) — بيتحدّث مع كل تنقّل بالداشبورد
+  const [pendingCount, setPendingCount] = useState(0)
+
+  useEffect(() => {
+    if (!isAdmin) return
+    api.get("/properties/pending-changes")
+      .then(res => setPendingCount(Array.isArray(res.data) ? res.data.length : 0))
+      .catch(() => setPendingCount(0))
+  }, [isAdmin, location.pathname])
+
+  // السب أدمن بيشوف: الرئيسية، العقارات، إضافة عقار. الأدمن كمان: الرسائل، بانتظار الموافقة، المستخدمين
+  const links = [
+    { label: "Dashboard", path: "/dashboard", icon: <MdDashboard /> },
+    { label: "Property Listings", path: "/dashboard/properties", icon: <MdOutlineBusiness /> },
+    ...(isAdmin ? [
+      { label: "الرسائل", path: "/dashboard/messages", icon: <MdEmail /> },
+      { label: "بانتظار الموافقة", path: "/dashboard/pending-changes", icon: <MdPendingActions />, badge: pendingCount },
+      { label: "المستخدمين", path: "/dashboard/users", icon: <MdPeople /> },
+    ] : []),
+  ]
 
   const handleConfirmLogout = async () => {
     try {
@@ -47,11 +69,7 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
           </div>
 
           <nav className="flex flex-col gap-2">
-            {[
-              { label: "Dashboard", path: "/dashboard", icon: <MdDashboard /> },
-              { label: "Property Listings", path: "/dashboard/properties", icon: <MdOutlineBusiness /> },
-              { label: "الرسائل", path: "/dashboard/messages", icon: <MdEmail /> },
-            ].map((link) => (
+            {links.map((link: { label: string; path: string; icon: React.ReactNode; badge?: number }) => (
               <NavLink
                 key={link.path}
                 to={link.path}
@@ -68,6 +86,11 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
               >
                 <span className="text-xl">{link.icon}</span>
                 <span>{link.label}</span>
+                {!!link.badge && (
+                  <span className="ms-auto min-w-[22px] h-[22px] px-1.5 rounded-full bg-amber-500 text-white text-xs font-black flex items-center justify-center">
+                    {link.badge}
+                  </span>
+                )}
               </NavLink>
             ))}
           </nav>
