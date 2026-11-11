@@ -131,6 +131,13 @@ const deleteCloudinaryImages = async (urls) => {
   const publicIds = [...new Set((urls || []).map(getCloudinaryPublicId).filter(Boolean))];
   if (publicIds.length === 0) return;
 
+  // بيئة الاختبار: النسخة فيها نفس روابط صور الموقع الحي — أي حذف كان رح يمسح صور العقارات
+  // الحقيقية. DISABLE_CLOUDINARY_DELETE=true = منطبع شو كان رح ينحذف وما منحذف شي
+  if (process.env.DISABLE_CLOUDINARY_DELETE === "true") {
+    console.log(`🧪 [DISABLE_CLOUDINARY_DELETE] ما انحذف شي — كان رح ينحذف (${publicIds.length}):`, publicIds.join(", "));
+    return;
+  }
+
   try {
     configureCloudinary();
     const results = await Promise.allSettled(
