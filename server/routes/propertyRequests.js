@@ -137,6 +137,20 @@ router.get("/count", protect, staffOnly, async (req, res) => {
   }
 });
 
+// ── GET /:id — طلب واحد (صفحة التحويل بالداشبورد بتجيبه بعد أي refresh) ──
+router.get("/:id", protect, staffOnly, async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id))
+      return res.status(400).json({ error: "ID غير صالح" });
+    const request = await PropertyRequest.findById(req.params.id);
+    if (!request) return res.status(404).json({ error: "الطلب غير موجود" });
+    res.json(request);
+  } catch (error) {
+    console.error("PropertyRequest GetById Error:", error);
+    res.status(500).json({ error: SERVER_ERROR });
+  }
+});
+
 // جلب طلب جديد (مش محوّل ولا مرفوض) — بيرجّع الطلب أو بيرد بالخطأ
 const findNewRequest = async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
