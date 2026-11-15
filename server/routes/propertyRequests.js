@@ -74,8 +74,9 @@ const validateRequestBody = (b) => {
   };
 };
 
-// honeypot: حقل "website" مخفي بالفورم — البشر ما بيشوفوه، البوتات بتعبّيه
-const isBot = (b) => typeof b.website === "string" && b.website.trim() !== "";
+// honeypot: حقل "hp_field" مخفي بالفورم — البشر ما بيشوفوه، البوتات بتعبّيه.
+// (كان اسمه "website" بس autofill تبع كروم كان يعبّيه، فطلبات حقيقية كانت تنرمى)
+const isBot = (b) => typeof b.hp_field === "string" && b.hp_field.trim() !== "";
 
 // ── POST / (عام) ──────────────────────────────────────────
 // الترتيب: rate limit ← قراءة الفورم (الصور بالذاكرة) ← honeypot ← تحقق ← رفع الصور لـ Cloudinary ← حفظ.
@@ -87,7 +88,11 @@ router.post(
   sanitizeBody,
   (req, res, next) => {
     // نجاح وهمي للبوت — ما منحفظ شي وما منرفع شي
-    if (isBot(req.body)) return res.status(201).json({ message: "تم استلام طلبك" });
+    if (isBot(req.body)) {
+      // منسجّل بالـ log عشان إذا طلب حقيقي انرمى بالغلط نعرف ليش
+      console.warn("PropertyRequest honeypot hit — not saved:", req.ip);
+      return res.status(201).json({ message: "تم استلام طلبك" });
+    }
 
     const checked = validateRequestBody(req.body);
     if (checked.errors)

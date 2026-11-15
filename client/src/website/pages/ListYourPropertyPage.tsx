@@ -24,7 +24,9 @@ const EMPTY = {
   ownerName: "", ownerPhone: "", type: "" as "" | "buy" | "rent", category: "", city: "",
   area: "", rooms: "", bathrooms: "", address: "", description: "",
   price: "", rentDaily: "", rentWeekly: "", rentMonthly: "", rentYearly: "", furnished: "",
-  website: "", // honeypot — مخفي عن البشر
+  // honeypot — مخفي عن البشر. اسمه مقصود ما بيشبه أي حقل معروف (website/email/url...)
+  // لأن autofill تبع كروم كان يعبّي حقل "website" المخفي، فالطلب الحقيقي كان ينعامل كبوت وما ينحفظ
+  hp_field: "",
 };
 
 const inputClass =
@@ -118,7 +120,7 @@ const ListYourPropertyPage = () => {
     }
 
     const data = new FormData();
-    const common = ["ownerName", "ownerPhone", "type", "category", "city", "area", "rooms", "bathrooms", "address", "description", "furnished", "website"] as const;
+    const common = ["ownerName", "ownerPhone", "type", "category", "city", "area", "rooms", "bathrooms", "address", "description", "furnished", "hp_field"] as const;
     common.forEach(f => data.append(f, form[f]));
     if (form.type === "rent") RENT_PERIODS.forEach(p => data.append(RENT_FIELD[p], form[RENT_FIELD[p]]));
     else data.append("price", form.price);
@@ -175,7 +177,9 @@ const ListYourPropertyPage = () => {
         <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
           {/* honeypot — البوتات بتعبّيه، البشر ما بيشوفوه */}
           <div aria-hidden="true" className="absolute -left-[9999px] w-px h-px overflow-hidden">
-            <label>Website<input type="text" name="website" tabIndex={-1} autoComplete="off" value={form.website} onChange={e => set("website", e.target.value)} /></label>
+            <input type="text" name="hp_field" tabIndex={-1} autoComplete="off" aria-label="leave empty"
+              data-lpignore="true" data-1p-ignore data-form-type="other"
+              value={form.hp_field} onChange={e => set("hp_field", e.target.value)} />
           </div>
 
           {/* (1) معلوماتك */}
