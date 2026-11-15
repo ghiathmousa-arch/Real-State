@@ -5,9 +5,11 @@ import { IoLocationOutline } from "react-icons/io5";
 import { LuBedSingle, LuBath, LuArrowUpLeft, LuArrowUpRight } from "react-icons/lu";
 import { CiRuler } from "react-icons/ci";
 import { cdn } from "../../utils/format";
-
-// 💠 التعديل 1: استخدام رابط الـ API من متغيرات البيئة بدلاً من localhost الثابت
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import PriceTag from "./PriceTag/PriceTag";
+import ListingBadges from "./PriceTag/ListingBadges";
+// 💠 جذر السيرفر من المصدر الموحّد utils/api.ts بدل قراءة VITE_API_URL هون
+import { API_BASE } from "../../utils/api";
+import { localized } from "../../utils/helper";
 
 const PropertyCard: React.FC<{ property: any }> = ({ property }) => {
     const { i18n } = useTranslation();
@@ -15,10 +17,11 @@ const PropertyCard: React.FC<{ property: any }> = ({ property }) => {
     const isAr = i18n.language === "ar";
 
     // جلب البيانات بناءً على اللغة المفعلة
-    const title = isAr ? property.title : property.titleEn;
-    const description = isAr ? property.description : property.descriptionEn;
-    const city = isAr ? property.city : property.cityEn;
-    const category = isAr ? property.category : property.categoryEn;
+    // إذا الموقع بالإنجليزي والنص الإنجليزي فاضي منعرض العربي
+    const title = localized(property, "title", isAr);
+    const description = localized(property, "description", isAr);
+    const city = localized(property, "city", isAr);
+    const category = localized(property, "category", isAr);
 
     // نصوص ثابتة بسيطة
     const labels = {
@@ -26,16 +29,12 @@ const PropertyCard: React.FC<{ property: any }> = ({ property }) => {
         baths: isAr ? "حمام" : (property.bathrooms === 1 ? "Bath" : "Baths"),
         area: isAr ? "م٢" : "m²",
         price: isAr ? "السعر" : "Price",
-        currency: isAr ? "ل.س" : "SYP",
-        sale: isAr ? "للبيع" : "For Sale",
-        rent: isAr ? "للإيجار" : "For Rent"
     };
 
-    const isSale = property.type === "sale" || property.type === "buy";
 
     // 💠 التعديل 2: معالجة رابط الصورة بشكل ديناميكي
     const imageSrc = property.images?.[0]
-        ? cdn(property.images[0].startsWith("http") ? property.images[0] : `${API_BASE_URL}${property.images[0]}`)
+        ? cdn(property.images[0].startsWith("http") ? property.images[0] : `${API_BASE}${property.images[0]}`)
         : null;
 
     return (
@@ -53,9 +52,7 @@ const PropertyCard: React.FC<{ property: any }> = ({ property }) => {
                 )}
 
                 <div className={`absolute top-4 ${isAr ? 'right-4' : 'left-4'} flex flex-col gap-2`}>
-                    <span className={`text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-lg ${isSale ? "bg-sky-600" : "bg-amber-500"}`}>
-                        {isSale ? labels.sale : labels.rent}
-                    </span>
+                    <ListingBadges property={property} showFeatured={false} />
                     {property.isFeatured && (
                         <div className="bg-emerald-500 text-white w-8 h-8 flex items-center justify-center rounded-full shadow-lg border-2 border-white animate-pulse text-xl">
                             ★
@@ -97,11 +94,7 @@ const PropertyCard: React.FC<{ property: any }> = ({ property }) => {
                 <div className={`flex items-center justify-between mt-auto ${isAr ? "flex-row-reverse" : ""}`}>
                     <div>
                         <span className="text-[10px] text-gray-400 font-black block uppercase">{labels.price}</span>
-                        <div className="text-xl font-black text-sky-700 dark:text-sky-400">
-                            {property.price
-                                ? <>{property.price.toLocaleString()} <span className="text-xs">{labels.currency}</span></>
-                                : <span className="text-sm">{isAr ? "السعر عند الطلب" : "Price on request"}</span>}
-                        </div>
+                        <PriceTag property={property} size="lg" className="font-black" />
                     </div>
                     <div className="bg-sky-50 dark:bg-gray-700 text-sky-600 p-3 rounded-2xl group-hover:bg-sky-600 group-hover:text-white transition-colors">
                         {isAr ? <LuArrowUpLeft size={20} /> : <LuArrowUpRight size={20} />}

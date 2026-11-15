@@ -27,7 +27,7 @@ const FeatureInput = ({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-xs font-black text-gray-400">{label}</label>
+      <label className="text-sm font-bold text-gray-700">{label}</label>
 
       <div className="flex gap-2">
         <input
@@ -36,7 +36,7 @@ const FeatureInput = ({
           onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), onAdd())}
           placeholder={placeholder}
           dir={dir}
-          className="flex-1 p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:border-blue-500 text-sm text-[#0f2d4a]"
+          className="flex-1 p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:border-blue-500 text-base font-bold text-[#0f2d4a]"
         />
         <button
           type="button"

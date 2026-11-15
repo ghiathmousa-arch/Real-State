@@ -2,9 +2,7 @@
 // (المصدر الوحيد: server/constants/property.js) بدل ما يكونوا مكررين هون كمان.
 
 import { useEffect, useState, useMemo } from "react"
-import axios from "axios"
-
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000"
+import { api } from "../utils/api"
 
 interface Option {
   ar: string
@@ -19,7 +17,7 @@ let categoriesPromise: Promise<Option[]> | null = null
 const fetchCities = () => {
   if (!citiesPromise) {
     // لو الطلب فشل، نصفّر الكاش عشان أي محاولة جاية تقدر تعيد الطلب بدل ما تضل عالقة على وعد مرفوض للأبد
-    citiesPromise = axios.get<Option[]>(`${BASE_URL}/api/cities`)
+    citiesPromise = api.get<Option[]>("/cities")
       .then(res => res.data)
       .catch(err => { citiesPromise = null; throw err })
   }
@@ -28,7 +26,7 @@ const fetchCities = () => {
 
 const fetchCategories = () => {
   if (!categoriesPromise) {
-    categoriesPromise = axios.get<Option[]>(`${BASE_URL}/api/categories`)
+    categoriesPromise = api.get<Option[]>("/categories")
       .then(res => res.data)
       .catch(err => { categoriesPromise = null; throw err })
   }
@@ -78,4 +76,11 @@ export const PROPERTY_STATUS = [
 export const FEATURED_OPTIONS = [
   { value: "false", label: "لا" },
   { value: "true", label: "نعم" },
+]
+
+// مفروش؟ — "" = غير محدد (السيرفر بيخزّنه null)
+export const FURNISHED_OPTIONS = [
+  { value: "", label: "غير محدد" },
+  { value: "furnished", label: "مفروش" },
+  { value: "unfurnished", label: "غير مفروش" },
 ]

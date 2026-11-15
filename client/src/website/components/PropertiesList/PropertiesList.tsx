@@ -1,66 +1,20 @@
-import React, { useState, useEffect, useContext, useMemo } from "react";
-import axios from "axios";
+import React, { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, Link } from "react-router-dom";
 import { IoLocationOutline } from "react-icons/io5";
-import { LuBedSingle, LuArrowLeft, LuArrowRight, LuArrowUpRight } from "react-icons/lu";
+import { LuBedSingle, LuArrowUpRight } from "react-icons/lu";
 import { CiRuler } from "react-icons/ci";
 import { PiBathtub } from "react-icons/pi";
-import { searchContext } from "../../Layout/Layout";
-import { withImagesFirst, cdn } from "../../../utils/format";
+import { cdn } from "../../../utils/format";
+import { api, API_BASE } from "../../../utils/api";
+import { localized } from "../../../utils/helper";
+import PriceTag from "../PriceTag/PriceTag";
+import ListingBadges from "../PriceTag/ListingBadges";
+import { sortProperties } from "../../../utils/propertyFilters";
 
 
-const PER_PAGE = 8;
-
-// ── Pagination ────────────────────────────────────────────────────────────────
-const Pagination = ({
-    currentPage, totalPages, onPageChange, ar,
-}: {
-    currentPage: number; totalPages: number;
-    onPageChange: (p: number) => void; ar: boolean;
-}) => {
-    if (totalPages <= 1) return null;
-
-    const getPages = () => {
-        const delta = 2;
-        const left = Math.max(1, currentPage - delta);
-        const right = Math.min(totalPages, currentPage + delta);
-        const pages: (number | "…")[] = [];
-        if (left > 1) { pages.push(1); if (left > 2) pages.push("…"); }
-        for (let i = left; i <= right; i++) pages.push(i);
-        if (right < totalPages) { if (right < totalPages - 1) pages.push("…"); pages.push(totalPages); }
-        return pages;
-    };
-
-    const Prev = ar ? LuArrowRight : LuArrowLeft;
-    const Next = ar ? LuArrowLeft : LuArrowRight;
-
-    return (
-        <div className="flex items-center justify-center gap-2 mt-12 select-none">
-            <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-sky-50 hover:border-sky-300 hover:text-sky-600 dark:hover:bg-sky-900/20 dark:hover:border-sky-700 dark:hover:text-sky-400 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200">
-                <Prev size={15} /> {ar ? "السابق" : "Prev"}
-            </button>
-            <div className="flex items-center gap-1">
-                {getPages().map((p, i) =>
-                    p === "…" ? (
-                        <span key={`dot-${i}`} className="w-8 text-center text-gray-400 text-sm">…</span>
-                    ) : (
-                        <button key={p} onClick={() => onPageChange(p as number)}
-                            className={`w-9 h-9 rounded-xl text-sm font-semibold transition-all duration-200
-                                ${p === currentPage ? "bg-sky-600 text-white shadow-md shadow-sky-200 dark:shadow-sky-900" : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"}`}>
-                            {p}
-                        </button>
-                    )
-                )}
-            </div>
-            <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-sky-50 hover:border-sky-300 hover:text-sky-600 dark:hover:bg-sky-900/20 dark:hover:border-sky-700 dark:hover:text-sky-400 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200">
-                {ar ? "التالي" : "Next"} <Next size={15} />
-            </button>
-        </div>
-    );
-};
+// "أحدث العقارات" بالرئيسية — آخر 8 عقارات نشطة، والباقي بصفحة /properties
+const LATEST_COUNT = 8;
 
 // ── PropertiesList ────────────────────────────────────────────────────────────
 const PropertiesList: React.FC = () => {
@@ -68,58 +22,37 @@ const PropertiesList: React.FC = () => {
     const ar = i18n.language === "ar";
     const navigate = useNavigate();
 
-    const API_URL = import.meta.env.VITE_API_URL;
-
-    // ← جلب البيانات المفلترة والحالة من الكونتكست
-    const { filteredData, loading: filterLoading, search } = useContext(searchContext);
-
     const [allProperties, setAllProperties] = useState<any[]>([]);
-    const [loadingAll, setLoadingAll] = useState<boolean>(true);
-    const [page, setPage] = useState(1);
+    const [loading, setLoading] = useState<boolean>(true);
 
-    // هل الفلتر نشط؟ (يعني المستخدم اختار شي)
-    const isFiltered = search.location !== "" || search.type !== "" || search.price !== "";
-
-    // العقارات المعروضة: إذا في فلتر نشط نعرض filteredData، وإلا نعرض الكل
-    // مرتّبة: يلي معها صور أول — قبل تقسيم الصفحات حتى يكون الترتيب شامل
+    // الأحدث أول (يلي معها صور قبل يلي بلا صور)، وبس أول LATEST_COUNT
     const properties = useMemo(
-        () => withImagesFirst(isFiltered ? filteredData : allProperties),
-        [isFiltered, filteredData, allProperties]
+        () => sortProperties(allProperties, "newest").slice(0, LATEST_COUNT),
+        [allProperties]
     );
-    const loading = isFiltered ? filterLoading : loadingAll;
 
     // جلب كل العقارات مرة واحدة عند أول تحميل
     useEffect(() => {
         const fetchProperties = async () => {
             try {
-                setLoadingAll(true);
-                const response = await axios.get(`${API_URL}/api/properties`);
+                setLoading(true);
+                const response = await api.get("/properties");
                 setAllProperties(Array.isArray(response.data) ? response.data : []);
             } catch (err) {
                 console.error("Error fetching:", err);
             } finally {
-                setLoadingAll(false);
+                setLoading(false);
             }
         };
         fetchProperties();
-    }, [API_URL]);
+    }, []);
 
-    // إعادة الصفحة للأولى عند تغيير الفلتر أو اللغة
-    useEffect(() => { setPage(1); }, [search, i18n.language]);
-
-    const totalPages = Math.ceil(properties.length / PER_PAGE);
-    const currentItems = properties.slice((page - 1) * PER_PAGE, page * PER_PAGE);
-
-    const handlePageChange = (p: number) => {
-        setPage(p);
-        document.getElementById("PropertiesList")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    };
 
     if (loading) {
         return (
             <section className="py-14 px-6 dark:bg-gray-800">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-16">
-                    {Array.from({ length: PER_PAGE }).map((_, i) => (
+                    {Array.from({ length: LATEST_COUNT }).map((_, i) => (
                         <div key={i} className="rounded-2xl bg-gray-100 dark:bg-gray-700 animate-pulse h-72" />
                     ))}
                 </div>
@@ -133,15 +66,11 @@ const PropertiesList: React.FC = () => {
                 <div className={ar ? "text-right" : "text-left"}>
                     <span className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-widest text-sky-600 dark:text-sky-400 uppercase mb-2">
                         <span className="w-5 h-px bg-sky-500 inline-block" />
-                        {ar ? "استكشف" : "Explore"}
+                        {t("properties.explore")}
                         <span className="w-5 h-px bg-sky-500 inline-block" />
                     </span>
                     <h1 className="text-2xl md:text-4xl font-extrabold text-gray-800 dark:text-white leading-tight">
-                        {/* عنوان يتغير حسب حالة الفلتر */}
-                        {isFiltered ? (ar ? "نتائج البحث" : "Search Results") : t("properties.allEstates")}
-                        <span className="ms-3 align-middle text-sm font-semibold px-2.5 py-1 rounded-full bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400">
-                            {properties.length}
-                        </span>
+                        {t("properties.latest")}
                     </h1>
                     <div className={`mt-3 h-1 w-16 rounded-full bg-sky-600 ${ar ? "ms-auto" : ""}`} />
                 </div>
@@ -154,20 +83,18 @@ const PropertiesList: React.FC = () => {
             </div>
 
             {/* ── Grid ── */}
-            {currentItems.length > 0 ? (
+            {properties.length > 0 ? (
                 <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                        {currentItems.map((property) => {
-                            const title = ar ? property.title : (property.titleEn || property.title);
-                            const city = ar ? property.city : (property.cityEn || property.city);
+                        {properties.map((property) => {
+                            const title = localized(property, "title", ar);
+                            const city = localized(property, "city", ar);
 
                             let imgSrc: string | null = null;
                             if (property.images && property.images.length > 0) {
                                 const firstImg = property.images[0];
-                                imgSrc = cdn(firstImg.startsWith("http") ? firstImg : `${API_URL}${firstImg}`);
+                                imgSrc = cdn(firstImg.startsWith("http") ? firstImg : `${API_BASE}${firstImg}`);
                             }
-
-                            const isBuy = property.type === "buy";
 
                             return (
                                 <div
@@ -181,14 +108,7 @@ const PropertiesList: React.FC = () => {
                                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                         )}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                                        <div className={`absolute top-3 flex gap-1.5 ${ar ? "left-3" : "right-3"}`}>
-                                            <span className={`text-xs font-bold px-2.5 py-1 rounded-full text-white shadow-sm ${isBuy ? "bg-sky-600" : "bg-amber-500"}`}>
-                                                {isBuy ? t("properties.sale") : t("properties.rent")}
-                                            </span>
-                                            {property.isFeatured && (
-                                                <span className="text-xs font-bold px-2 py-1 rounded-full bg-emerald-500 text-white shadow-sm">★</span>
-                                            )}
-                                        </div>
+                                        <ListingBadges property={property} className={`absolute top-3 ${ar ? "left-3" : "right-3"} max-w-[85%]`} />
                                     </div>
 
                                     <div className={`p-4 ${ar ? "text-right" : "text-left"}`}>
@@ -202,26 +122,16 @@ const PropertiesList: React.FC = () => {
                                             {(property.rooms ?? 0) > 0 && <span className="flex items-center gap-1"><LuBedSingle className="text-sm" />{property.rooms}</span>}
                                             {(property.bathrooms ?? 0) > 0 && <span className="flex items-center gap-1"><PiBathtub className="text-sm" />{property.bathrooms}</span>}
                                         </div>
-                                        <p className="text-sky-700 dark:text-sky-400 font-bold text-lg leading-none">
-                                            {property.price?.toLocaleString() ?? "0"}
-                                            <span className="text-xs font-normal text-gray-400 ms-1">
-                                                {t("properties.currency")}{!isBuy && <> / {t("properties.month")}</>}
-                                            </span>
-                                        </p>
+                                        <PriceTag property={property} size="md" />
                                     </div>
                                 </div>
                             );
                         })}
                     </div>
-
-                    <Pagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} ar={ar} />
                 </>
             ) : (
                 <div className="text-center py-16 text-gray-400 dark:text-gray-500">
-                    {isFiltered
-                        ? (ar ? "لا توجد نتائج تطابق بحثك" : "No results match your search")
-                        : t("properties.noPropertiesFound")
-                    }
+                    {t("properties.noPropertiesFound")}
                 </div>
             )}
         </section>

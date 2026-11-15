@@ -27,7 +27,7 @@ const AuthForm = <T extends object>({ title, description, inputs, checkbox, btn,
   }
 
   return (
-    <form className="w-full max-w-sm bg-white rounded-2xl shadow-xl border border-gray-100 px-8 py-10" onSubmit={sendData}>
+    <form dir="rtl" className="w-full max-w-sm bg-white rounded-2xl shadow-xl border border-gray-100 px-8 py-10" onSubmit={sendData}>
 
       <div className="text-center mb-8">
         <h1 className="text-3xl font-extrabold text-blue-950 tracking-tight">{title}</h1>
@@ -45,6 +45,8 @@ const AuthForm = <T extends object>({ title, description, inputs, checkbox, btn,
               name={input.name}
               placeholder={input.pleaceholder}
               id={`input-${index}`}
+              // الإيميل وكلمة السر دايماً من اليسار لليمين حتى بالفورم العربي
+              dir={input.type === "email" || input.type === "password" ? "ltr" : undefined}
               onChange={handleChange}
               className="w-full h-11 px-4 rounded-xl border border-gray-200 bg-gray-50 outline-none text-sm text-gray-800 placeholder-gray-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 transition-all"
             />

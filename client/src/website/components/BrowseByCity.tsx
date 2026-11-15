@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import { api } from "../../utils/api";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { HiOutlineBuildingOffice2 } from "react-icons/hi2";
 import { LuArrowLeft, LuArrowRight } from "react-icons/lu";
+import { localized } from "../../utils/helper";
 
 const MAX_CITIES = 6;
 
@@ -15,14 +16,12 @@ const BrowseByCity = () => {
     const [properties, setProperties] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const API_URL = import.meta.env.VITE_API_URL;
-
     useEffect(() => {
         let alive = true;
         const fetchProperties = async () => {
             try {
                 setLoading(true);
-                const res = await axios.get(`${API_URL}/api/properties`);
+                const res = await api.get("/properties");
                 if (alive) setProperties(Array.isArray(res.data) ? res.data : []);
             } catch (err) {
                 console.error("Error fetching properties for cities:", err);
@@ -33,7 +32,7 @@ const BrowseByCity = () => {
         };
         fetchProperties();
         return () => { alive = false; };
-    }, [API_URL]);
+    }, []);
 
     // نبني قائمة المدن من العقارات الموجودة فعلاً، فما في مدينة بتفتح على نتيجة فاضية
     const cities = useMemo(() => {
@@ -88,7 +87,7 @@ const BrowseByCity = () => {
                     <>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                             {cities.map((item) => {
-                                const name = ar ? item.city : (item.cityEn || item.city);
+                                const name = localized(item, "city", ar);
 
                                 return (
                                     <button

@@ -5,6 +5,11 @@ node_modules/
 # تجاهل ملفات الإعدادات في كل المشروع
 .env
 **/.env
+# بيئة الاختبار وأي ملف env تاني (بس النماذج *.example بترفع)
+.env.*
+**/.env.*
+!**/.env.example
+!**/.env.test.example
 
 # تجاهل ملفات الأخطاء والسجلات
 *.log
@@ -22,3 +27,6 @@ RUN_COMMANDS.md
 
 # نسخة محلية من بيانات العقارات (dump) — لا ترفع على git
 props.json
+
+# ملفات Vite المؤقتة (vite.config.ts.timestamp-*.mjs) — بتنولد وقت التشغيل وما لازم ترفع
+*.timestamp-*.mjs

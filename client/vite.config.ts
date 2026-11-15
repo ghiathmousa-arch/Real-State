@@ -82,6 +82,11 @@ export default defineConfig(({ mode }) => ({
     tailwindcss(),
     seoTags(),
   ],
+  // التطوير المحلي: /api بيتحوّل للسيرفر (localhost:5000) — هيك الواجهة والـ API من نفس الـ origin
+  // (بيلزم لما VITE_API_URL=http://localhost:5173). ما بيأثر على بناء الإنتاج.
+  server: {
+    proxy: { '/api': 'http://localhost:5000' },
+  },
   // نحذف console.*/debugger من بناء الإنتاج فقط، عشان يضل شغال بالتطوير المحلي عادي
   esbuild: {
     drop: mode === 'production' ? ['console', 'debugger'] : [],

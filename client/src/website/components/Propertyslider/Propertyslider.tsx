@@ -8,12 +8,16 @@ import { LuBedSingle } from "react-icons/lu";
 import { CiRuler } from "react-icons/ci";
 import { PiBathtub } from "react-icons/pi";
 import { cdn } from "../../../utils/format";
+import { API_BASE } from "../../../utils/api";
+import { localized } from "../../../utils/helper";
+import PriceTag from "../PriceTag/PriceTag";
+import ListingBadges from "../PriceTag/ListingBadges";
 
 interface Property {
   _id: string;
   title?: string; titleEn?: string;
   city?: string; cityEn?: string;
-  price?: number; area?: number;
+  price?: number | null; area?: number;
   rooms?: number; bathrooms?: number;
   type?: string; images?: string[];
   isFeatured?: boolean;
@@ -33,8 +37,6 @@ const PropertySlider: React.FC<Props> = ({
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const ar = i18n.language === "ar";
-
-  const API_URL = import.meta.env.VITE_API_URL;
 
   const [rawIndex, setIndex] = useState(0);
   const [perPage, setPerPage] = useState(initialPerPage);
@@ -120,14 +122,12 @@ const PropertySlider: React.FC<Props> = ({
           style={{ transform: `translateX(${translateX})`, gap: `${GAP}px` }}
         >
           {properties.map((property) => {
-            const name = ar ? property.title : (property.titleEn || property.title);
-            const city = ar ? property.city : (property.cityEn || property.city);
+            const name = localized(property, "title", ar);
+            const city = localized(property, "city", ar);
 
             const imgSrc = property.images?.[0]
-              ? cdn(property.images[0].startsWith("http") ? property.images[0] : `${API_URL}${property.images[0]}`)
+              ? cdn(property.images[0].startsWith("http") ? property.images[0] : `${API_BASE}${property.images[0]}`)
               : null;
-
-            const isBuy = property.type === "buy";
 
             return (
               <div
@@ -149,19 +149,7 @@ const PropertySlider: React.FC<Props> = ({
                     />
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
-                  <div className={`absolute top-2.5 flex gap-1.5 ${ar ? "left-2.5" : "right-2.5"}`}>
-                    <span
-                      className={`text-xs font-bold px-2.5 py-1 rounded-full text-white shadow-sm ${isBuy ? "bg-sky-600" : "bg-amber-500"
-                        }`}
-                    >
-                      {isBuy ? t("properties.sale") : t("properties.rent")}
-                    </span>
-                    {property.isFeatured && (
-                      <span className="text-xs font-bold px-2 py-1 rounded-full bg-emerald-500 text-white">
-                        ★
-                      </span>
-                    )}
-                  </div>
+                  <ListingBadges property={property} className={`absolute top-2.5 ${ar ? "left-2.5" : "right-2.5"} max-w-[85%]`} />
                 </div>
 
                 <div className={`p-4 ${ar ? "text-right" : "text-left"}`}>
@@ -197,13 +185,7 @@ const PropertySlider: React.FC<Props> = ({
                       </span>
                     )}
                   </div>
-                  <p className="text-sky-700 dark:text-sky-400 font-bold text-base leading-none">
-                    {property.price?.toLocaleString() ?? "0"}
-                    <span className="text-xs font-normal text-gray-400 ms-1">
-                      {t("properties.currency")}
-                      {!isBuy && <> / {t("properties.month")}</>}
-                    </span>
-                  </p>
+                  <PriceTag property={property} size="sm" />
                 </div>
               </div>
             );

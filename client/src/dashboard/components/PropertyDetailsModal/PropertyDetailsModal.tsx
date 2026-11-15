@@ -5,7 +5,7 @@ import {
   MdInfoOutline, MdChevronLeft, MdChevronRight, MdBathtub,
   MdCalendarToday, MdUpdate, MdStar, MdHome, MdSell
 } from "react-icons/md"
-import { getImgSrc, formatPrice, BASE_URL, cdn } from '../../../utils/format'
+import { getImgSrc, formatPrice, formatRentPrices, BASE_URL, cdn } from '../../../utils/format'
 
 interface Props {
   isOpen: boolean
@@ -14,14 +14,26 @@ interface Props {
   onEditClick: () => void
 }
 
+// السعر: البيع = السعر الواحد، الإيجار = كل المدد المعبّاة، ولا شي = "عند الطلب"
+const priceText = (property: any): string => {
+  if (property.type === "rent") {
+    const items = formatRentPrices(property.rentPrices, true)
+    return items.length ? items.map(i => i.text).join(" · ") : "عند الطلب"
+  }
+  return property.price != null ? formatPrice(property.price) : "عند الطلب"
+}
+
+const FURNISHED_LABELS: Record<string, string> = { furnished: "مفروش", unfurnished: "غير مفروش" }
+
 // ── إحصائيات العقار — array بدل تكرار JSX ──────────────
 const buildStats = (property: any) => [
-  { label: "السعر", value: property.price != null ? `${formatPrice(property.price)} ل.س` : "—", icon: <MdAttachMoney size={20} />, color: "text-green-600", bg: "bg-green-50" },
+  { label: "السعر", value: priceText(property), icon: <MdAttachMoney size={20} />, color: "text-green-600", bg: "bg-green-50" },
   { label: "المساحة", value: `${property.area} م²`, icon: <MdSquareFoot size={20} />, color: "text-blue-600", bg: "bg-blue-50" },
   { label: "الغرف", value: property.rooms || "—", icon: <MdOutlineMeetingRoom size={20} />, color: "text-purple-600", bg: "bg-purple-50" },
   { label: "الحمامات", value: property.bathrooms || "—", icon: <MdBathtub size={20} />, color: "text-cyan-600", bg: "bg-cyan-50" },
   { label: "النوع", value: property.type === "buy" ? "للبيع" : "للإيجار", icon: <MdSell size={20} />, color: "text-amber-600", bg: "bg-amber-50" },
   { label: "الفئة", value: property.category || "—", icon: <MdHome size={20} />, color: "text-indigo-600", bg: "bg-indigo-50" },
+  { label: "مفروش؟", value: FURNISHED_LABELS[property.furnished] || "غير محدد", icon: <MdHome size={20} />, color: "text-rose-600", bg: "bg-rose-50" },
 ]
 
 const PropertyDetailsModal = ({ isOpen, onClose, property, onEditClick }: Props) => {

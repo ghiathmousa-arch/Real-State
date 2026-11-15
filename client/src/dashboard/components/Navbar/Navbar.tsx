@@ -1,9 +1,10 @@
 import { useState } from "react"
 import { IoIosSearch, IoIosMenu } from "react-icons/io" // ضفنا أيقونة المنيو
 import { useNavigate } from "react-router-dom"
+import { useCurrentUser, ROLE_LABELS } from "../../hooks/useCurrentUser"
 
 const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
-  const user = JSON.parse(localStorage.getItem("user") || "{}")
+  const user: any = useCurrentUser().user ?? {}
   const navigate = useNavigate()
   const [query, setQuery] = useState("")
 
@@ -32,11 +33,11 @@ const Navbar = ({ onMenuClick }: { onMenuClick: () => void }) => {
       {/* User Info */}
       <div className="flex items-center gap-3">
         <div className="text-right">
-          <p className="text-xs lg:text-sm font-black text-[#0f2d4a]">{user.name || "Admin"}</p>
-          <p className="text-[10px] lg:text-xs text-gray-400">Admin</p>
+          <p className="text-xs lg:text-sm font-black text-[#0f2d4a]">{user.name || "أدمن"}</p>
+          <p className="text-[10px] lg:text-xs text-gray-400">{ROLE_LABELS[user.role as keyof typeof ROLE_LABELS] ?? "أدمن"}</p>
         </div>
         <div className="w-8 h-8 lg:w-9 lg:h-9 rounded-full bg-[#004e80] text-white flex items-center justify-center text-sm font-bold">
-          {user.name?.[0] || "A"}
+          {user.name?.[0] || "أ"}
         </div>
       </div>
     </header>

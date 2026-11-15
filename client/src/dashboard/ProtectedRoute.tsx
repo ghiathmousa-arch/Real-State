@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react"
 import { Navigate, Outlet } from "react-router-dom"
 
-const API_URL = import.meta.env.VITE_API_URL;
-const BASE_URL = API_URL?.replace("/api", "");
+import { api } from "../utils/api"
+import { isStaffRole, saveCurrentUser, clearCurrentUser } from "./hooks/useCurrentUser"
 
 const ProtectedRoute = () => {
   const [status, setStatus] = useState<"loading" | "authorized" | "unauthorized">("loading")
@@ -10,13 +10,14 @@ const ProtectedRoute = () => {
   useEffect(() => {
     // التحقق الفعلي من الصلاحية يصير عالسيرفر عبر كوكي الجلسة httpOnly،
     // مش بالاكتفاء بقراءة localStorage (كانت بوابة من جهة الفرونت فقط وقابلة للتجاوز)
-    fetch(`${BASE_URL}/api/auth/me`, { credentials: "include" })
-      .then(res => (res.ok ? res.json() : Promise.reject()))
-      .then(user => {
-        if (user.role === "admin") {
-          localStorage.setItem("user", JSON.stringify(user))
+    api.get("/auth/me")
+      .then(({ data: user }) => {
+        // الأدمن والسب أدمن (editor) بيدخلوا — الصلاحيات التفصيلية بالسيرفر وبـ AdminRoute
+        if (isStaffRole(user.role)) {
+          saveCurrentUser(user)
           setStatus("authorized")
         } else {
+          clearCurrentUser()
           setStatus("unauthorized")
         }
       })

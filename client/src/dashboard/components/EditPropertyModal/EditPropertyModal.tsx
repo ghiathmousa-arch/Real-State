@@ -1,22 +1,22 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { MdClose, MdSave, MdCloudUpload } from "react-icons/md"
-import axios from 'axios'
 import SuccessModal from '../SuccessModal/SuccessModal'
 import FormInput from '../../../components/FormInput/FormInput'
 import FormSelect from "../../../components/FormSelect/FormSelect"
 import FeatureInput from '../FeatureInput/FeatureInput'
+import EnglishSection from '../EnglishSection/EnglishSection'
+import { useCurrentUser } from '../../hooks/useCurrentUser'
+import RentPriceFields, { EMPTY_RENT_INPUTS, RENT_FIELDS, rentInputsFrom, type RentInputs } from '../RentPriceFields/RentPriceFields'
 import { buildPropertyFormData } from '../../../utils/buildPropertyFormData'
 import { cdn } from '../../../utils/format'
+import { api, API_BASE, getApiError } from '../../../utils/api'
 import {
   usePropertyOptions,
-  PROPERTY_TYPES, PROPERTY_STATUS, FEATURED_OPTIONS
+  PROPERTY_TYPES, PROPERTY_STATUS, FEATURED_OPTIONS, FURNISHED_OPTIONS
 } from '../../../constants/property'
 
 const MAX_IMAGES = 12
 const MAX_IMAGE_MB = 7
-
-const API_URL = import.meta.env.VITE_API_URL || ""
-const BASE_URL = API_URL.replace(/\/api\/?$/, "")
 
 interface Props {
   isOpen: boolean
@@ -27,58 +27,88 @@ interface Props {
 
 const TEXT_FIELDS = [
   { name: "title", label: "عنوان العقار", placeholder: "شقة فاخرة في المزة" },
-  { name: "titleEn", label: "Property Title (EN)", placeholder: "Luxury Apartment in Mezza", dir: "ltr" as const },
   { name: "description", label: "الوصف", placeholder: "وصف تفصيلي...", isTextarea: true },
+]
+
+// الحقول الإنجليزية كلها اختيارية ومحطوطة بقسم مطوي — إذا فاضية الموقع بيعرض العربي
+const EN_FIELDS = [
+  { name: "titleEn", label: "Property Title (EN)", placeholder: "Luxury Apartment in Mezza", dir: "ltr" as const },
+  { name: "addressEn", label: "Address (EN)", placeholder: "District, Street...", dir: "ltr" as const },
   { name: "descriptionEn", label: "Description (EN)", placeholder: "Detailed description...", dir: "ltr" as const, isTextarea: true },
 ]
 
+// العقار عندو أي نص إنجليزي؟ — إذا إي، قسم الإنجليزي بيفتح لحالو بالتعديل
+const hasEnglishContent = (p: any) =>
+  Boolean(p?.titleEn?.trim() || p?.descriptionEn?.trim() || p?.addressEn?.trim() || p?.featuresEn?.length)
+
 const NUMBER_FIELDS = [
-  { name: "area", label: "المساحة (م²)", type: "number", min: 0 },
-  { name: "rooms", label: "عدد الغرف", type: "number", min: 0 },
-  { name: "bathrooms", label: "عدد الحمامات", type: "number", min: 0 },
+  // numeric بدل type="number" — عشان الأرقام العربية (٠-٩) تنقبل وتتحوّل
+  { name: "area", label: "المساحة (م²)", numeric: "decimal" as const },
+  { name: "rooms", label: "عدد الغرف", numeric: "int" as const },
+  { name: "bathrooms", label: "عدد الحمامات", numeric: "int" as const },
 ]
 
 const ADDRESS_FIELDS = [
   { name: "address", label: "العنوان التفصيلي", placeholder: "الحي، الشارع..." },
-  { name: "addressEn", label: "Address (EN)", placeholder: "District, Street...", dir: "ltr" as const },
 ]
 
 const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
-  const { cities, citiesEn, categories, categoriesEn } = usePropertyOptions()
+  const { cities, categories } = usePropertyOptions()
   const [formData, setFormData] = useState<any>({})
   const [priceInput, setPriceInput] = useState("")
-  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null)
+  // أسعار الإيجار الأربعة — state منفصل متل السعر
+  const [rentInputs, setRentInputs] = useState<RentInputs>(EMPTY_RENT_INPUTS)
+  // الصور: القديمة اللي لسا محفوظة (روابط) + الجديدة المختارة (ملفات ومعاينات)
+  const [existingImages, setExistingImages] = useState<string[]>([])
+  const [newFiles, setNewFiles] = useState<File[]>([])
+  const [newPreviews, setNewPreviews] = useState<string[]>([])
   const [imageError, setImageError] = useState("")
   const [submitError, setSubmitError] = useState("")
   const [features, setFeatures] = useState<string[]>([])
   const [featuresEn, setFeaturesEn] = useState<string[]>([])
   const [featureInput, setFeatureInput] = useState("")
   const [featureInputEn, setFeatureInputEn] = useState("")
+  const [showEnglish, setShowEnglish] = useState(false)
   const [loading, setLoading] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  // السب أدمن: التعديل بيروح طلب بانتظار موافقة الأدمن (202) — ما في "مميز؟"
+  const { isAdmin } = useCurrentUser()
+  const [submittedForApproval, setSubmittedForApproval] = useState(false)
   const lastIdRef = useRef<string | null>(null)
 
   useEffect(() => {
+    // لما المودال يتسكّر منصفّر الـ ID — عشان أي فتح جاي يبلّش من بيانات العقار الحقيقية
+    // (مثلاً صور انشالت بدون حفظ ما لازم تضل مخفية وتنحذف بالحفظ الجاي)
+    if (!isOpen) {
+      lastIdRef.current = null
+      return
+    }
     // يشتغل بس لما يتغير الـ ID — مش كل re-render
     if (property && property._id !== lastIdRef.current) {
       lastIdRef.current = property._id
       setFormData({ ...property })
       setPriceInput(property.price != null ? String(property.price) : "")
+      setRentInputs(rentInputsFrom(property.rentPrices))
       setFeatures(property.features || [])
       setFeaturesEn(property.featuresEn || [])
-      setSelectedFiles(null)
+      setShowEnglish(hasEnglishContent(property))
+      setExistingImages((property.images || []).filter((img: string) => img && !img.includes('undefined')))
+      setNewFiles([])
+      setNewPreviews([])
+      setImageError("")
+      setSubmitError("")
     }
-  }, [property])
+  }, [property, isOpen])
 
+  // cityEn و categoryEn ما عاد ينبعتوا — السيرفر بيحسبهن من القيمة العربية
   const SELECT_FIELDS = useMemo(() => [
     { name: "category", label: "الفئة", placeholder: "اختر الفئة", options: categories.map(c => ({ value: c, label: c })) },
-    { name: "categoryEn", label: "Category (EN)", placeholder: "Select Category", dir: "ltr" as const, options: categoriesEn.map(c => ({ value: c, label: c })) },
     { name: "type", label: "النوع", options: PROPERTY_TYPES },
     { name: "city", label: "المدينة", placeholder: "اختر المدينة", options: cities.map(c => ({ value: c, label: c })) },
-    { name: "cityEn", label: "City (EN)", placeholder: "Select City", dir: "ltr" as const, options: citiesEn.map(c => ({ value: c, label: c })) },
     { name: "status", label: "الحالة", options: PROPERTY_STATUS },
-    { name: "isFeatured", label: "مميز؟", options: FEATURED_OPTIONS },
-  ], [cities, citiesEn, categories, categoriesEn])
+    ...(isAdmin ? [{ name: "isFeatured", label: "مميز؟", options: FEATURED_OPTIONS }] : []),
+    { name: "furnished", label: "مفروش؟", options: FURNISHED_OPTIONS },
+  ], [cities, categories, isAdmin])
 
   if (!isOpen) return null
 
@@ -95,25 +125,43 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
     if (val && !featuresEn.includes(val)) { setFeaturesEn(prev => [...prev, val]); setFeatureInputEn("") }
   }
 
+  const totalImages = existingImages.length + newFiles.length
+
+  // الصور الجديدة بتنضاف فوق الموجودة (مش بدالها) — والمجموع ما بيتجاوز MAX_IMAGES
   const handleImages = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files || [])
+    e.target.value = "" // عشان نقدر نختار نفس الملف مرة تانية بعد حذفه
 
-    if (selected.length > MAX_IMAGES) {
-      setImageError(`الحد الأقصى ${MAX_IMAGES} صورة — اخترت ${selected.length}`)
-      e.target.value = ""
+    if (totalImages + selected.length > MAX_IMAGES) {
+      setImageError(`الحد الأقصى ${MAX_IMAGES} صورة — عندك ${totalImages} واخترت ${selected.length}`)
       return
     }
 
     const tooBig = selected.find(f => f.size > MAX_IMAGE_MB * 1024 * 1024)
     if (tooBig) {
       setImageError(`"${tooBig.name}" أكبر من ${MAX_IMAGE_MB} ميجابايت`)
-      e.target.value = ""
       return
     }
 
     setImageError("")
-    setSelectedFiles(e.target.files)
+    setNewFiles(prev => [...prev, ...selected])
+    setNewPreviews(prev => [...prev, ...selected.map(f => URL.createObjectURL(f))])
   }
+
+  const removeExistingImage = (url: string) => {
+    setExistingImages(prev => prev.filter(img => img !== url))
+    setImageError("")
+  }
+
+  const removeNewImage = (index: number) => {
+    URL.revokeObjectURL(newPreviews[index])
+    setNewFiles(prev => prev.filter((_, i) => i !== index))
+    setNewPreviews(prev => prev.filter((_, i) => i !== index))
+    setImageError("")
+  }
+
+  const toImgSrc = (img: string) =>
+    cdn(img.startsWith('http') ? img : `${API_BASE}/${img.replace(/^\//, '')}`)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -121,34 +169,26 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
     setSubmitError("")
     try {
       const data = buildPropertyFormData({
-        formData: { ...formData, price: priceInput },
+        formData: {
+          ...formData,
+          price: priceInput,
+          ...Object.fromEntries(RENT_FIELDS.map(f => [f.name, rentInputs[f.period]])),
+        },
         features,
         featuresEn,
+        keepImages: existingImages,
+        newImages: newFiles,
       })
 
-      if (selectedFiles && selectedFiles.length > 0) {
-        data.append('replaceImages', 'true')
-        Array.from(selectedFiles).forEach(file => data.append('images', file))
-      } else {
-        data.append('replaceImages', 'false')
-      }
-
-      await axios.put(`${BASE_URL}/api/properties/${property._id}`, data, {
-        withCredentials: true,
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
+      const res = await api.put(`/properties/${property._id}`, data)
+      setSubmittedForApproval(res.status === 202)
       setShowSuccess(true)
-    } catch (error: any) {
-      setSubmitError(error.response?.data?.error || "تعذّر حفظ التعديلات، حاول مرة تانية")
+    } catch (error) {
+      setSubmitError(getApiError(error, "تعذّر حفظ التعديلات، حاول مرة تانية"))
     } finally {
       setLoading(false)
     }
   }
-
-  const currentImg = property?.images?.[0]
-  const imgSrc = currentImg
-    ? cdn(currentImg.startsWith('http') ? currentImg : `${BASE_URL}/${currentImg.replace(/^\//, '')}`)
-    : null
 
   return (
     <>
@@ -162,7 +202,9 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
           <div className="flex justify-between items-center mb-6 sm:mb-8">
             <div>
               <h2 className="text-xl sm:text-2xl font-black text-[#0f2d4a]">تعديل بيانات العقار</h2>
-              <p className="text-xs text-gray-400 font-bold mt-1">تحديث المعلومات بالعربي والإنجليزي</p>
+              <p className="text-xs text-gray-400 font-bold mt-1">
+                {isAdmin ? "تحديث المعلومات بالعربي — الإنجليزي اختياري" : "التعديل بيتطبّق بعد موافقة الأدمن"}
+              </p>
             </div>
             <button type="button" onClick={onClose}
               className="p-2 sm:p-3 bg-gray-50 text-gray-400 hover:text-red-500 rounded-2xl transition-all">
@@ -170,11 +212,11 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
             </button>
           </div>
 
-          {imgSrc && !selectedFiles && (
-            <div className="mb-5">
-              <p className="text-xs font-black text-gray-400 mb-2">الصورة الحالية</p>
-              <img src={imgSrc} className="w-full h-36 sm:h-40 object-cover rounded-2xl border border-gray-100" alt="current" />
-            </div>
+          {/* في طلب تعديل معلّق — السب أدمن لازم يعرف إن طلبه الجديد رح يستبدله */}
+          {!isAdmin && property?.pendingChanges && (
+            <p className="mb-6 text-sm font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3">
+              في تعديل سابق لهالعقار لسا بانتظار موافقة الأدمن — إذا حفظت هلق، تعديلك الجديد رح يستبدله.
+            </p>
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -191,12 +233,19 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
                 onChange={e => handleChange(f.name, e.target.value)} />
             ))}
 
-            {/* السعر — state منفصل عشان ما يتأثر بالـ useEffect */}
-            <FormInput
-              name="price" label="السعر (ل.س)" inputMode="numeric"
-              placeholder="اختياري"
-              value={priceInput}
-              onChange={e => setPriceInput(e.target.value.replace(/[^0-9]/g, ''))} />
+            {/* السعر — state منفصل عشان ما يتأثر بالـ useEffect.
+                إيجار = 4 أسعار للمدد، بيع = سعر واحد */}
+            {formData.type === "rent" ? (
+              <RentPriceFields
+                values={rentInputs}
+                onChange={(period, value) => setRentInputs(prev => ({ ...prev, [period]: value }))} />
+            ) : (
+              <FormInput
+                name="price" label="السعر (بالدولار $)" numeric="int"
+                placeholder="مثال: 85000 (اختياري)"
+                value={priceInput}
+                onChange={e => setPriceInput(e.target.value)} />
+            )}
 
             {NUMBER_FIELDS.map(f => (
               <FormInput key={f.name} {...f}
@@ -222,28 +271,66 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
               onInputChange={setFeatureInput} onAdd={addFeature}
               onRemove={i => setFeatures(prev => prev.filter((_, j) => j !== i))} />
 
-            <FeatureInput
-              label="Features (EN)" placeholder="Pool, Garden..." dir="ltr"
-              features={featuresEn} input={featureInputEn} tagColor="green"
-              onInputChange={setFeatureInputEn} onAdd={addFeatureEn}
-              onRemove={i => setFeaturesEn(prev => prev.filter((_, j) => j !== i))} />
+            {/* الحقول الإنجليزية من الـ state — بتنبعت مع الفورم حتى لو القسم مطوي */}
+            <EnglishSection open={showEnglish} onToggle={setShowEnglish}>
+              {EN_FIELDS.map(f => (
+                <FormInput key={f.name} {...f}
+                  value={formData[f.name] ?? ''}
+                  onChange={e => handleChange(f.name, e.target.value)} />
+              ))}
+              <FeatureInput
+                label="Features (EN)" placeholder="Pool, Garden..." dir="ltr"
+                features={featuresEn} input={featureInputEn} tagColor="green"
+                onInputChange={setFeatureInputEn} onAdd={addFeatureEn}
+                onRemove={i => setFeaturesEn(prev => prev.filter((_, j) => j !== i))} />
+            </EnglishSection>
 
             <div className="sm:col-span-2 space-y-1.5">
-              <label className="block text-xs font-black text-gray-400">
-                استبدال الصور {selectedFiles ? `— تم اختيار ${selectedFiles.length} صور` : "(اختياري)"}
+              <label className="block text-sm font-bold text-gray-700">
+                الصور — {totalImages} من {MAX_IMAGES}
               </label>
-              <div className="relative group">
-                <input type="file" multiple accept="image/*"
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                  onChange={handleImages} />
-                <div className={`p-5 sm:p-6 border-2 border-dashed rounded-[2rem] flex flex-col items-center gap-2 transition-all
-                  ${selectedFiles ? "border-blue-400 bg-blue-50" : "border-gray-200 group-hover:border-blue-400"}`}>
-                  <MdCloudUpload size={30} className={selectedFiles ? "text-blue-500" : "text-gray-300 group-hover:text-blue-500"} />
-                  <span className="text-xs font-bold text-gray-400 text-center">
-                    {selectedFiles ? `${selectedFiles.length} صور جاهزة — ستحل محل القديمة` : "اسحب الصور هنا أو اضغط للاختيار"}
-                  </span>
+
+              {/* الصور الحالية + الجديدة — كل وحدة إلها زر حذف */}
+              {totalImages > 0 && (
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-3">
+                  {existingImages.map(img => (
+                    <div key={img} className="relative">
+                      <img src={toImgSrc(img)} className="w-full h-20 object-cover rounded-2xl border border-gray-100" alt="" />
+                      <button type="button" onClick={() => removeExistingImage(img)} title="حذف الصورة"
+                        className="absolute top-1 left-1 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow">
+                        <MdClose size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  {newPreviews.map((src, i) => (
+                    <div key={src} className="relative">
+                      <img src={src} className="w-full h-20 object-cover rounded-2xl border-2 border-blue-400" alt="" />
+                      <span className="absolute bottom-1 right-1 text-[9px] font-black bg-blue-500 text-white px-1.5 rounded-md">جديدة</span>
+                      <button type="button" onClick={() => removeNewImage(i)} title="إزالة الصورة"
+                        className="absolute top-1 left-1 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow">
+                        <MdClose size={14} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              </div>
+              )}
+
+              {totalImages < MAX_IMAGES && (
+                <div className="relative group">
+                  <input type="file" multiple accept="image/*"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    onChange={handleImages} />
+                  <div className={`p-5 sm:p-6 border-2 border-dashed rounded-[2rem] flex flex-col items-center gap-2 transition-all
+                    ${newFiles.length > 0 ? "border-blue-400 bg-blue-50" : "border-gray-200 group-hover:border-blue-400"}`}>
+                    <MdCloudUpload size={30} className={newFiles.length > 0 ? "text-blue-500" : "text-gray-300 group-hover:text-blue-500"} />
+                    <span className="text-xs font-bold text-gray-400 text-center">
+                      {newFiles.length > 0
+                        ? `${newFiles.length} صور جديدة — بتنضاف للموجودة. اضغط لإضافة المزيد`
+                        : "أضف صور جديدة — اسحبها هنا أو اضغط للاختيار"}
+                    </span>
+                  </div>
+                </div>
+              )}
               {imageError && (
                 <p className="text-xs font-bold text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
                   {imageError}
@@ -268,7 +355,9 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
       </div>
 
       <SuccessModal
-        isOpen={showSuccess} title="تم التعديل!" message="تم تحديث بيانات العقار بنجاح"
+        isOpen={showSuccess}
+        title={submittedForApproval ? "تم إرسال التعديل" : "تم التعديل!"}
+        message={submittedForApproval ? "تم إرسال التعديل — بانتظار موافقة الأدمن" : "تم تحديث بيانات العقار بنجاح"}
         primaryBtn={{
           label: "حسناً", onClick: () => {
             lastIdRef.current = null

@@ -41,4 +41,13 @@ const adminOnly = (req, res, next) => {
   next();
 };
 
-module.exports = { protect, adminOnly };
+// ─── staffOnly: الأدمن أو السب أدمن (editor) ─────────────
+// للأشياء المشتركة بالداشبورد (شوف كل العقارات، إضافة، طلب تعديل). يُستخدم بعد protect دائماً
+const STAFF_ROLES = ["admin", "editor"];
+const staffOnly = (req, res, next) => {
+  if (!STAFF_ROLES.includes(req.user?.role))
+    return res.status(403).json({ error: "هذا الإجراء لفريق الإدارة فقط" });
+  next();
+};
+
+module.exports = { protect, adminOnly, staffOnly };

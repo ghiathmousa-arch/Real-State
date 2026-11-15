@@ -3,18 +3,30 @@ import Header from "../components/Header/Header"
 import { useEffect, useState, useMemo, useCallback } from "react"
 import StatCard from "../components/StatCard/StatCard"
 import PropertiesTable from "../components/PropertiesTable/PropertiesTable"
+import { formatPrice } from "../../utils/format"
+import { api } from "../../utils/api"
+import { useCurrentUser } from "../hooks/useCurrentUser"
 
-const API_URL = import.meta.env.VITE_API_URL;
-const BASE_URL = API_URL?.replace("/api", "");
 
 
 const Properties = () => {
+  const { isAdmin } = useCurrentUser();
   const [propertiesList, setPropertiesList] = useState([]);
+  // فلتر "حسب الشخص" (للأدمن) — بينفلتر بالسيرفر ?createdBy=
+  const [createdBy, setCreatedBy] = useState("");
+  const [people, setPeople] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    api.get("/auth/users")
+      .then(res => setPeople(Array.isArray(res.data) ? res.data : []))
+      .catch(err => console.error("Users fetch error:", err));
+  }, [isAdmin]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     total: 0,
     available: 0,
-    marketValue: "0.0",
+    marketValue: "$0",
     pending: 0,
   });
 
@@ -22,21 +34,23 @@ const Properties = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${BASE_URL}/api/properties`);
-      const data = await res.json();
+      // قائمة الأدمن (كل الحالات) — القائمة العامة صارت بترجّع النشط بس
+      const { data } = await api.get("/properties/admin/all", {
+        params: createdBy ? { createdBy } : undefined,
+      });
 
       // التأكد من أن البيانات مصفوفة
       const properties = Array.isArray(data) ? data : data.data || [];
       setPropertiesList(properties);
 
       // حساب الإحصائيات بذكاء
-      const totalValue = properties.reduce((acc: number, p: any) => acc + (Number(p.price) || 0), 0);
+      // القيمة السوقية = أسعار البيع بس (الإيجار ما إلو price — أسعاره بـ rentPrices)
+      const totalValue = properties
+        .filter((p: any) => p.type === "buy")
+        .reduce((acc: number, p: any) => acc + (Number(p.price) || 0), 0);
 
-      // تنسيق القيمة السوقية (مثلاً مليار ل.س)
-      const formattedMarketValue = new Intl.NumberFormat('en-US', {
-        minimumFractionDigits: 1,
-        maximumFractionDigits: 1,
-      }).format(totalValue / 1000000000);
+      // تنسيق القيمة السوقية بالدولار (مثلاً $1.2M) — نفس formatPrice المستخدمة بكل المشروع
+      const formattedMarketValue = formatPrice(totalValue);
 
       setStats({
         total: properties.length,
@@ -49,7 +63,7 @@ const Properties = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [createdBy]);
 
   useEffect(() => {
     fetchData();
@@ -79,8 +93,8 @@ const Properties = () => {
       title: "القيمة السوقية",
       value: loading ? "..." : (
         <div className="flex flex-row-reverse items-baseline gap-1 font-black">
-          <span>{stats.marketValue}B</span>
-          <span className="text-[10px] text-gray-400 uppercase">ل.س</span>
+          <span dir="ltr">{stats.marketValue}</span>
+          <span className="text-[10px] text-gray-400 uppercase">USD</span>
         </div>
       ),
       change: "تقريبي",
@@ -118,6 +132,9 @@ const Properties = () => {
           data={propertiesList}
           loading={loading}
           refreshData={fetchData}
+          people={isAdmin ? people : undefined}
+          createdBy={createdBy}
+          onCreatedByChange={setCreatedBy}
         />
       </div>
     </div>

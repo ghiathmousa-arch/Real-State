@@ -6,49 +6,98 @@ import SuccessModal from '../SuccessModal/SuccessModal'
 import FormInput from '../../../components/FormInput/FormInput'
 import FormSelect from '../../../components/FormSelect/FormSelect'
 import FeatureInput from '../FeatureInput/FeatureInput'
+import EnglishSection from '../EnglishSection/EnglishSection'
+import RentPriceFields from '../RentPriceFields/RentPriceFields'
+import { useCurrentUser } from '../../hooks/useCurrentUser'
 import { buildPropertyFormData } from '../../../utils/buildPropertyFormData'
+import { getImgSrc } from '../../../utils/format'
+import { api, getApiError } from '../../../utils/api'
 import {
   usePropertyOptions,
-  PROPERTY_TYPES, PROPERTY_STATUS, FEATURED_OPTIONS
+  PROPERTY_TYPES, PROPERTY_STATUS, FEATURED_OPTIONS, FURNISHED_OPTIONS
 } from '../../../constants/property'
 
 const MAX_IMAGES = 12
 const MAX_IMAGE_MB = 7
 
-const API_URL = import.meta.env.VITE_API_URL
-const BASE_URL = API_URL?.replace("/api", "")
-
 const TEXT_FIELDS = [
   { name: "title", label: "عنوان العقار", placeholder: "شقة فاخرة في المزة", required: true },
-  { name: "titleEn", label: "Property Title (EN)", placeholder: "Luxury Apartment in Mezza", dir: "ltr" as const },
   { name: "description", label: "الوصف", placeholder: "وصف تفصيلي للعقار...", isTextarea: true },
+]
+
+// الحقول الإنجليزية كلها اختيارية ومحطوطة بقسم مطوي — إذا فاضية الموقع بيعرض العربي
+const EN_FIELDS = [
+  { name: "titleEn", label: "Property Title (EN)", placeholder: "Luxury Apartment in Mezza", dir: "ltr" as const },
+  { name: "addressEn", label: "Address (EN)", placeholder: "District, Street...", dir: "ltr" as const },
   { name: "descriptionEn", label: "Description (EN)", placeholder: "Detailed description...", dir: "ltr" as const, isTextarea: true },
 ]
 
 const NUMBER_FIELDS = [
-  { name: "area", label: "المساحة (م²)", type: "number", placeholder: "150", required: true, min: 0 },
-  { name: "rooms", label: "عدد الغرف", type: "number", placeholder: "3", min: 0 },
-  { name: "bathrooms", label: "عدد الحمامات", type: "number", placeholder: "2", min: 0 },
+  // numeric بدل type="number" — عشان الأرقام العربية (٠-٩) تنقبل وتتحوّل
+  { name: "area", label: "المساحة (م²)", numeric: "decimal" as const, placeholder: "150", required: true },
+  { name: "rooms", label: "عدد الغرف", numeric: "int" as const, placeholder: "3" },
+  { name: "bathrooms", label: "عدد الحمامات", numeric: "int" as const, placeholder: "2" },
 ]
 
 const ADDRESS_FIELDS = [
   { name: "address", label: "العنوان التفصيلي", placeholder: "الحي، الشارع..." },
-  { name: "addressEn", label: "Address (EN)", placeholder: "District, Street...", dir: "ltr" as const },
 ]
 
-const AddProperty = () => {
-  const navigate = useNavigate()
-  const { cities, citiesEn, categories, categoriesEn } = usePropertyOptions()
+// "طلب عرض" من فورم الموقع العام — بيفتح فورم الإضافة معبّى ببياناته وصوره (وضع "من طلب")
+export interface ListingRequest {
+  _id: string
+  type: "buy" | "rent"
+  category: string
+  city: string
+  area?: number | null
+  rooms?: number | null
+  bathrooms?: number | null
+  address?: string
+  description?: string
+  price?: number | null
+  rentPrices?: Partial<Record<"daily" | "weekly" | "monthly" | "yearly", number | null>>
+  furnished?: string | null
+  images?: string[]
+}
 
+const str = (v: unknown) => (v === null || v === undefined ? "" : String(v))
+
+// fromRequest: إذا موجود، الحفظ بيروح لـ POST /property-requests/:id/convert بدل POST /properties
+const AddProperty = ({ fromRequest }: { fromRequest?: ListingRequest } = {}) => {
+  const navigate = useNavigate()
+  const { cities, categories, loading: optionsLoading } = usePropertyOptions()
+
+  // القيم الأولية من الطلب (عنوان مقترح: "شقة للإيجار في دمشق")
+  const defaults = useMemo<Record<string, string>>(() => {
+    if (!fromRequest) return {}
+    const r = fromRequest
+    return {
+      title: `${r.category} ${r.type === "rent" ? "للإيجار" : "للبيع"} في ${r.city}`,
+      description: str(r.description),
+      category: r.category, type: r.type, city: r.city,
+      furnished: str(r.furnished),
+      price: str(r.price),
+      area: str(r.area), rooms: str(r.rooms), bathrooms: str(r.bathrooms),
+      address: str(r.address),
+    }
+  }, [fromRequest])
+  const rentDefaults = useMemo(() => ({
+    daily: str(fromRequest?.rentPrices?.daily), weekly: str(fromRequest?.rentPrices?.weekly),
+    monthly: str(fromRequest?.rentPrices?.monthly), yearly: str(fromRequest?.rentPrices?.yearly),
+  }), [fromRequest])
+
+  // "عقار مميز؟" للأدمن بس — السب أدمن ما بيشوفه (والسيرفر بيخليه false)
+  const { isAdmin } = useCurrentUser()
+
+  // cityEn و categoryEn ما عاد ينبعتوا — السيرفر بيحسبهن من القيمة العربية
   const SELECT_FIELDS = useMemo(() => [
     { name: "category", label: "الفئة", required: true, placeholder: "اختر الفئة", options: categories.map(c => ({ value: c, label: c })) },
-    { name: "categoryEn", label: "Category (EN)", required: true, placeholder: "Select Category", dir: "ltr" as const, options: categoriesEn.map(c => ({ value: c, label: c })) },
     { name: "type", label: "النوع", required: true, placeholder: "اختر النوع", options: PROPERTY_TYPES },
     { name: "city", label: "المدينة", required: true, placeholder: "اختر المدينة", options: cities.map(c => ({ value: c, label: c })) },
-    { name: "cityEn", label: "City (EN)", required: true, placeholder: "Select City", dir: "ltr" as const, options: citiesEn.map(c => ({ value: c, label: c })) },
     { name: "status", label: "الحالة", options: PROPERTY_STATUS },
-    { name: "isFeatured", label: "عقار مميز؟", options: FEATURED_OPTIONS },
-  ], [cities, citiesEn, categories, categoriesEn])
+    ...(isAdmin ? [{ name: "isFeatured", label: "عقار مميز؟", options: FEATURED_OPTIONS }] : []),
+    { name: "furnished", label: "مفروش؟", options: FURNISHED_OPTIONS },
+  ], [cities, categories, isAdmin])
 
   const [loading, setLoading] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
@@ -60,14 +109,18 @@ const AddProperty = () => {
   const [featuresEn, setFeaturesEn] = useState<string[]>([])
   const [featureInput, setFeatureInput] = useState("")
   const [featureInputEn, setFeatureInputEn] = useState("")
+  // النوع المختار — بيحدد إذا منعرض خانة السعر (بيع) أو أسعار الإيجار الأربعة (إيجار)
+  const [type, setType] = useState<string>(fromRequest?.type ?? "")
+  // صور الطلب اللي رح تنتقل للعقار — الأدمن بيقدر يشيل منها
+  const [requestImages, setRequestImages] = useState<string[]>(fromRequest?.images ?? [])
   const formRef = useRef<HTMLFormElement>(null)
 
   const handleImages = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files || [])
 
     // نوقف الاختيار هون بدل ما نخلي السيرفر يرفضه بعد رفع كامل — أسرع وأوضح للمستخدم
-    if (selected.length > MAX_IMAGES) {
-      setImageError(`الحد الأقصى ${MAX_IMAGES} صورة — اخترت ${selected.length}`)
+    if (selected.length + requestImages.length > MAX_IMAGES) {
+      setImageError(`الحد الأقصى ${MAX_IMAGES} صورة — اخترت ${selected.length}${requestImages.length ? ` + ${requestImages.length} من الطلب` : ""}`)
       e.target.value = ""
       return
     }
@@ -104,19 +157,17 @@ const AddProperty = () => {
     setLoading(true)
     setSubmitError("")
     try {
-      const formData = buildPropertyFormData({ formEl: e.currentTarget, features, featuresEn })
-      files.forEach(file => formData.append('images', file))
+      const formData = buildPropertyFormData({ formEl: e.currentTarget, features, featuresEn, newImages: files })
 
-      const res = await fetch(`${BASE_URL}/api/properties`, {
-        method: 'POST',
-        credentials: 'include',
-        body: formData
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || "تعذّر إضافة العقار")
+      if (fromRequest) {
+        formData.append('keepRequestImages', JSON.stringify(requestImages))
+        await api.post(`/property-requests/${fromRequest._id}/convert`, formData)
+      } else {
+        await api.post('/properties', formData)
+      }
       setShowSuccess(true)
-    } catch (err: any) {
-      setSubmitError(err.message || "تعذّر الاتصال بالسيرفر، حاول مرة تانية")
+    } catch (err) {
+      setSubmitError(getApiError(err, "تعذّر إضافة العقار، تأكد من الاتصال وحاول مرة تانية"))
     } finally {
       setLoading(false)
     }
@@ -130,27 +181,45 @@ const AddProperty = () => {
     setFiles([])
     setFeatures([])
     setFeaturesEn([])
+    setType("")
     formRef.current?.reset()
   }
 
+  // من طلب: منستنى المدن والفئات قبل ما نرسم الفورم — وإلا القيم الأولية للقوائم ما بتنطبق
+  if (fromRequest && optionsLoading)
+    return <div className="p-10 text-center text-[#004e80] font-bold">جاري التحميل...</div>
+
   return (
     <div className="p-6 bg-[#f8faff] min-h-screen" dir="rtl">
-      <Header title="إضافة عقار جديد" description="أدخل بيانات العقار بالعربي والإنجليزي" />
+      <Header
+        title={fromRequest ? "تحويل طلب لعقار" : "إضافة عقار جديد"}
+        description={fromRequest
+          ? "راجع بيانات الطلب وعدّلها — رقم واسم المالك ما بينتقلوا للعقار"
+          : "أدخل بيانات العقار بالعربي — الإنجليزي اختياري"} />
 
       <form ref={formRef} onSubmit={handleSubmit}
+        onChange={e => {
+          const el = e.target as HTMLSelectElement
+          if (el.name === "type") setType(el.value)
+        }}
         className="mt-8 bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-          {TEXT_FIELDS.map(f => <FormInput key={f.name} {...f} />)}
-          {SELECT_FIELDS.map(f => <FormSelect key={f.name} {...f} />)}
+          {TEXT_FIELDS.map(f => <FormInput key={f.name} {...f} defaultValue={defaults[f.name]} />)}
+          {SELECT_FIELDS.map(f => <FormSelect key={f.name} {...f} defaultValue={defaults[f.name]} />)}
 
-          <FormInput
-            name="price" label="السعر (ل.س)" placeholder="1,000,000 (اختياري)" inputMode="numeric"
-            onChange={e => { (e.target as HTMLInputElement).value = e.target.value.replace(/[^0-9]/g, '') }}
-          />
+          {/* إيجار = 4 أسعار للمدد، بيع (أو ما انختار نوع) = سعر واحد */}
+          {type === "rent" ? (
+            <RentPriceFields defaults={rentDefaults} />
+          ) : (
+            <FormInput
+              name="price" label="السعر (بالدولار $)" placeholder="مثال: 85000 (اختياري)" numeric="int"
+              defaultValue={defaults.price}
+            />
+          )}
 
-          {NUMBER_FIELDS.map(f => <FormInput key={f.name} {...f} />)}
-          {ADDRESS_FIELDS.map(f => <FormInput key={f.name} {...f} />)}
+          {NUMBER_FIELDS.map(f => <FormInput key={f.name} {...f} defaultValue={defaults[f.name]} />)}
+          {ADDRESS_FIELDS.map(f => <FormInput key={f.name} {...f} defaultValue={defaults[f.name]} />)}
 
           <FormInput name="videoUrl" label="رابط فيديو يوتيوب (اختياري)" type="url" placeholder="https://youtu.be/xxxxxxx" dir="ltr" />
 
@@ -161,16 +230,37 @@ const AddProperty = () => {
             onRemove={i => setFeatures(prev => prev.filter((_, j) => j !== i))}
           />
 
-          <FeatureInput
-            label="Features (EN)" placeholder="Pool, Garden... then Enter"
-            features={featuresEn} input={featureInputEn} tagColor="green" dir="ltr"
-            onInputChange={setFeatureInputEn} onAdd={addFeatureEn}
-            onRemove={i => setFeaturesEn(prev => prev.filter((_, j) => j !== i))}
-          />
+          <EnglishSection>
+            {EN_FIELDS.map(f => <FormInput key={f.name} {...f} />)}
+            <FeatureInput
+              label="Features (EN)" placeholder="Pool, Garden... then Enter"
+              features={featuresEn} input={featureInputEn} tagColor="green" dir="ltr"
+              onInputChange={setFeatureInputEn} onAdd={addFeatureEn}
+              onRemove={i => setFeaturesEn(prev => prev.filter((_, j) => j !== i))}
+            />
+          </EnglishSection>
 
           {/* الصور */}
           <div className="md:col-span-2 flex flex-col gap-1.5">
-            <label className="text-xs font-black text-gray-400">الصور *</label>
+            <label className="text-sm font-bold text-gray-700">الصور *</label>
+            {/* صور الطلب — بتنتقل للعقار إلا اللي بتشيلها (هي بتنحذف من Cloudinary) */}
+            {requestImages.length > 0 && (
+              <div className="mb-3">
+                <p className="text-[11px] font-bold text-gray-400 mb-2">صور الطلب ({requestImages.length})</p>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                  {requestImages.map(url => (
+                    <div key={url} className="relative">
+                      <img src={getImgSrc([url]) ?? ""} className="w-full h-20 object-cover rounded-2xl border-2 border-amber-300" alt="" />
+                      <button type="button" title="إزالة الصورة"
+                        onClick={() => setRequestImages(prev => prev.filter(u => u !== url))}
+                        className="absolute top-1 left-1 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow">
+                        <MdClose size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="relative group">
               <input type="file" multiple accept="image/*" onChange={handleImages}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
@@ -214,9 +304,9 @@ const AddProperty = () => {
           <button type="submit" disabled={loading}
             className="flex-1 py-5 bg-[#0f2d4a] text-white rounded-[1.5rem] font-black flex items-center justify-center gap-3 hover:bg-blue-900 shadow-xl transition-all disabled:opacity-50">
             <MdSave size={22} />
-            {loading ? "جاري الإضافة..." : "إضافة العقار"}
+            {loading ? "جاري الإضافة..." : fromRequest ? "تحويل لعقار ونشره" : "إضافة العقار"}
           </button>
-          <button type="button" onClick={() => navigate('/dashboard/properties')}
+          <button type="button" onClick={() => navigate(fromRequest ? '/dashboard/requests' : '/dashboard/properties')}
             className="px-8 py-5 bg-gray-100 text-gray-600 rounded-[1.5rem] font-black hover:bg-gray-200 transition-all">
             إلغاء
           </button>
@@ -226,7 +316,9 @@ const AddProperty = () => {
       <SuccessModal
         isOpen={showSuccess} title="تمت الإضافة!" message="تم إضافة العقار بنجاح إلى قاعدة البيانات"
         primaryBtn={{ label: "عرض العقارات", onClick: () => navigate('/dashboard/properties') }}
-        secondaryBtn={{ label: "إضافة عقار آخر", onClick: resetForm }}
+        secondaryBtn={fromRequest
+          ? { label: "رجوع للطلبات", onClick: () => navigate('/dashboard/requests') }
+          : { label: "إضافة عقار آخر", onClick: resetForm }}
       />
     </div>
   )

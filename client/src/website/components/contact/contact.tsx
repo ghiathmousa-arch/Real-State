@@ -2,12 +2,11 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { WHATSAPP_NUMBER } from "../../../constants/contact";
+import { api } from "../../../utils/api";
 
 const Contact: React.FC = () => {
     const { t, i18n } = useTranslation();
     const isAr = i18n.language === "ar";
-
-    const API_URL = import.meta.env.VITE_API_URL;
 
     const [formData, setFormData] = useState({
         name: "",
@@ -50,20 +49,11 @@ const Contact: React.FC = () => {
         setStatus("loading");
 
         try {
-            const response = await fetch(`${API_URL}/api/contact`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData),
-            });
-
-            if (response.ok) {
-                setStatus("success");
-                setShowModal(true);
-                setFormData({ name: "", email: "", phone: "", message: "" });
-            } else {
-                setStatus("error");
-                setShowModal(true);
-            }
+            // api (axios) بيرمي لأي رد مش 2xx — فالخطأ من السيرفر والشبكة بيوصلوا للـ catch
+            await api.post("/contact", formData);
+            setStatus("success");
+            setShowModal(true);
+            setFormData({ name: "", email: "", phone: "", message: "" });
         } catch (error) {
             console.error("Contact Error:", error);
             setStatus("error");

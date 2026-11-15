@@ -1,20 +1,23 @@
 import React, { useState, useEffect, useMemo } from "react";
-import axios from "axios";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { IoLocationOutline } from "react-icons/io5";
-import { LuBedSingle, LuArrowLeft, LuArrowRight, LuSearch } from "react-icons/lu";
+import { LuBedSingle, LuArrowLeft, LuArrowRight } from "react-icons/lu";
 import { CiRuler } from "react-icons/ci";
 import { PiBathtub } from "react-icons/pi";
 import PropertySlider from "../Propertyslider/Propertyslider";
-import { withImagesFirst, cdn } from "../../../utils/format";
+import { cdn } from "../../../utils/format";
+import { api, API_BASE } from "../../../utils/api";
+import { localized } from "../../../utils/helper";
+import PriceTag from "../PriceTag/PriceTag";
+import ListingBadges from "../PriceTag/ListingBadges";
+import { applyFilters, sortProperties, hasActiveFilters } from "../../../utils/propertyFilters";
+import { useUrlFilters } from "../../hooks/useUrlFilters";
+import FilterBar from "./FilterBar";
+import SEO from "../SEO/SEO";
 
 const PER_PAGE = 12;
 
-// ✅ التصحيح: API_URL يحتوي على /api مسبقاً من متغير البيئة
-const API_URL = import.meta.env.VITE_API_URL;
-// BASE_URL للصور المحلية فقط (مش Cloudinary)
-const BASE_URL = API_URL?.replace("/api", "");
 
 // ── Pagination ────────────────────────────────────────────────────────────────
 const Pagination = ({
@@ -71,24 +74,21 @@ const AllPropertiesPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const ar = i18n.language === "ar";
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  // كل الفلاتر من الـ URL (type, rentPeriod, furnished, city, category, minPrice, maxPrice, q, sort)
+  const { filters, update, reset } = useUrlFilters();
 
   const [allProperties, setAllProperties] = useState<any[]>([]);
   const [featured, setFeatured] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
 
-  const [search, setSearch] = useState("");
-  const [typeFilter, setType] = useState("");
-  const [cityFilter, setCity] = useState(searchParams.get("city") || "");
 
   // ── جلب البيانات ──
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // ✅ التصحيح: API_URL يحتوي /api مسبقاً فلا نكررها
-        const res = await axios.get(`${API_URL}/api/properties`);
+        const res = await api.get("/properties");
         const data = Array.isArray(res.data) ? res.data : [];
         setAllProperties(data);
         setFeatured(data.filter((p: any) => p.isFeatured));
@@ -102,37 +102,41 @@ const AllPropertiesPage: React.FC = () => {
   }, []);
 
   // ── فلترة محلية ── محسوبة أثناء الـ render (بدل useState+useEffect) بدل ما نعمل render إضافي بلا داعي
-  const filtered = useMemo(() => {
-    let result = [...allProperties];
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      result = result.filter(p =>
-        p.title?.toLowerCase().includes(q) ||
-        p.titleEn?.toLowerCase().includes(q) ||
-        p.city?.toLowerCase().includes(q) ||
-        p.cityEn?.toLowerCase().includes(q)
-      );
-    }
-    if (typeFilter) result = result.filter(p => p.type === typeFilter);
-    if (cityFilter) result = result.filter(p => p.city === cityFilter || p.cityEn === cityFilter);
-    // الترتيب قبل تقسيم الصفحات، حتى يكون ترتيب شامل مش داخل كل صفحة لحالها
-    return withImagesFirst(result);
-  }, [search, typeFilter, cityFilter, allProperties]);
-
-  // مزامنة فلتر المدينة مع الرابط (?city=) — لما نجي من قسم "تصفّح حسب المنطقة"
-  useEffect(() => {
-    setCity(searchParams.get("city") || "");
-  }, [searchParams]);
+  // الترتيب قبل تقسيم الصفحات، حتى يكون ترتيب شامل مش داخل كل صفحة لحالها
+  const filtered = useMemo(
+    () => sortProperties(
+      applyFilters(allProperties, filters),
+      filters.sort,
+      filters.type === "rent" ? filters.rentPeriod : ""
+    ),
+    [filters, allProperties]
+  );
 
   // إعادة الصفحة للأولى عند تغيّر الفلتر — side-effect حقيقي، لازم يضل بـ useEffect منفصل
   useEffect(() => {
     setPage(1);
-  }, [search, typeFilter, cityFilter, allProperties]);
+  }, [filters, allProperties]);
 
-  const cities = useMemo(
-    () => [...new Set(allProperties.map(p => p.city).filter(Boolean))],
-    [allProperties]
-  );
+  // أعداد التبويبات (الكل / للبيع / للإيجار) حسب باقي الفلاتر
+  const counts = useMemo(() => {
+    const base = applyFilters(allProperties, filters, true);
+    return {
+      all: base.length,
+      buy: base.filter(p => p.type === "buy").length,
+      rent: base.filter(p => p.type === "rent").length,
+    };
+  }, [allProperties, filters]);
+
+  // خيارات المدينة والفئة من العقارات الموجودة — القيمة بالعربي (متل الـ URL)، والعرض حسب اللغة
+  const optionsFrom = (field: "city" | "category") => {
+    const map = new Map<string, string>();
+    allProperties.forEach(p => {
+      if (p[field] && !map.has(p[field])) map.set(p[field], localized(p, field, ar));
+    });
+    return [...map].map(([value, label]) => ({ value, label }));
+  };
+  const cities = useMemo(() => optionsFrom("city"), [allProperties, ar]);
+  const categories = useMemo(() => optionsFrom("category"), [allProperties, ar]);
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
   const currentItems = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
@@ -142,51 +146,30 @@ const AllPropertiesPage: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-screen p-8 bg-gray-50 dark:bg-gray-900 ${ar ? "text-right" : "text-left"}`}>
+    <div className={`min-h-screen pt-16 pb-8 sm:px-8 bg-gray-50 dark:bg-gray-900 ${ar ? "text-right" : "text-left"}`}>
+      {/* عنوان ووصف خاصين لكل تبويب — صفحة الإيجار بالذات بتستهدف "عقارات للإيجار في سوريا" */}
+      <SEO
+        title={filters.type === "rent" ? t("seo.rentTitle") : filters.type === "buy" ? t("seo.buyTitle") : t("seo.allTitle")}
+        description={filters.type === "rent" ? t("seo.rentDescription") : filters.type === "buy" ? t("seo.buyDescription") : undefined}
+      />
 
       {/* ── Hero ── */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-6 py-10">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-3xl md:text-5xl font-extrabold text-gray-800 dark:text-white mb-2">
-            {t("properties.allEstates")}
+            {filters.type === "rent" ? t("listing.rentTitle") : filters.type === "buy" ? t("listing.buyTitle") : t("properties.allEstates")}
             <span className="ms-3 text-base font-semibold px-3 py-1 rounded-full bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400">
               {filtered.length}
             </span>
           </h1>
           <p className="text-gray-400 dark:text-gray-500 text-sm">
-            {ar ? "تصفح جميع العقارات المتاحة وابحث عن ما يناسبك" : "Browse all available properties and find what suits you"}
+            {filters.type === "rent" ? t("listing.rentSubtitle") : t("listing.subtitle")}
           </p>
         </div>
       </div>
 
-      {/* ── فلاتر sticky ── */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-6 py-4 sticky top-0 z-10">
-        <div className={`max-w-7xl mx-auto flex flex-wrap gap-3 items-center ${ar ? "flex-row-reverse" : ""}`}>
-          <div className="relative flex-1 min-w-[180px] max-w-xs">
-            <LuSearch className={`absolute top-1/2 -translate-y-1/2 text-gray-400 text-sm ${ar ? "right-3" : "left-3"}`} />
-            <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-              placeholder={ar ? "ابحث عن عقار..." : "Search properties..."}
-              className={`w-full py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-200 placeholder:text-gray-400 focus:outline-none focus:border-sky-400 ${ar ? "pr-8 pl-3" : "pl-8 pr-3"}`} />
-          </div>
-          <select value={typeFilter} onChange={e => setType(e.target.value)}
-            className="py-2 px-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:border-sky-400 min-w-[120px]">
-            <option value="">{ar ? "الكل" : "All Types"}</option>
-            <option value="buy">{ar ? "للبيع" : "For Sale"}</option>
-            <option value="rent">{ar ? "للإيجار" : "For Rent"}</option>
-          </select>
-          <select value={cityFilter} onChange={e => setCity(e.target.value)}
-            className="py-2 px-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:border-sky-400 min-w-[120px]">
-            <option value="">{ar ? "كل المدن" : "All Cities"}</option>
-            {cities.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-          {(search || typeFilter || cityFilter) && (
-            <button onClick={() => { setSearch(""); setType(""); setCity(""); }}
-              className="px-4 py-2 rounded-xl text-sm text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-              {ar ? "إعادة تعيين" : "Reset"}
-            </button>
-          )}
-        </div>
-      </div>
+      {/* ── فلاتر (sticky تحت النافبار) ── */}
+      <FilterBar filters={filters} update={update} reset={reset} counts={counts} cities={cities} categories={categories} />
 
       {/* ── Grid ── */}
       <div className="max-w-7xl mx-auto px-6 py-10">
@@ -200,17 +183,15 @@ const AllPropertiesPage: React.FC = () => {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {currentItems.map(property => {
-                const title = ar ? property.title : (property.titleEn || property.title);
-                const city = ar ? property.city : (property.cityEn || property.city);
+                const title = localized(property, "title", ar);
+                const city = localized(property, "city", ar);
 
                 // ✅ التصحيح: نتحقق إذا كان الرابط Cloudinary (http) نأخذه مباشرة
-                // وإذا كان رابط محلي (/uploads/...) ندمجه مع BASE_URL
+                // وإذا كان رابط محلي (/uploads/...) ندمجه مع API_BASE (جذر السيرفر)
                 const firstImg = property.images?.[0];
                 const imgSrc = firstImg
-                  ? cdn(firstImg.startsWith("http") ? firstImg : `${BASE_URL}${firstImg}`)
+                  ? cdn(firstImg.startsWith("http") ? firstImg : `${API_BASE}${firstImg}`)
                   : null;
-
-                const isBuy = property.type === "buy";
 
                 return (
                   <div key={property._id}
@@ -222,14 +203,7 @@ const AllPropertiesPage: React.FC = () => {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                      <div className={`absolute top-3 flex gap-1.5 ${ar ? "left-3" : "right-3"}`}>
-                        <span className={`text-xs font-bold px-2.5 py-1 rounded-full text-white shadow-sm ${isBuy ? "bg-sky-600" : "bg-amber-500"}`}>
-                          {isBuy ? t("properties.sale") : t("properties.rent")}
-                        </span>
-                        {property.isFeatured && (
-                          <span className="text-xs font-bold px-2 py-1 rounded-full bg-emerald-500 text-white shadow-sm">★</span>
-                        )}
-                      </div>
+                      <ListingBadges property={property} className={`absolute top-3 ${ar ? "left-3" : "right-3"} max-w-[85%]`} />
                     </div>
                     <div className={`p-4 ${ar ? "text-right" : "text-left"}`}>
                       <h3 className="font-bold text-gray-800 dark:text-white text-base leading-snug mb-1 line-clamp-1">{title}</h3>
@@ -242,12 +216,7 @@ const AllPropertiesPage: React.FC = () => {
                         {(property.rooms ?? 0) > 0 && <span className="flex items-center gap-1"><LuBedSingle className="text-sm" />{property.rooms}</span>}
                         {(property.bathrooms ?? 0) > 0 && <span className="flex items-center gap-1"><PiBathtub className="text-sm" />{property.bathrooms}</span>}
                       </div>
-                      <p className="text-sky-700 dark:text-sky-400 font-bold text-lg leading-none">
-                        {property.price?.toLocaleString() ?? "0"}
-                        <span className="text-xs font-normal text-gray-400 ms-1">
-                          {t("properties.currency")}{!isBuy && <> / {t("properties.month")}</>}
-                        </span>
-                      </p>
+                      <PriceTag property={property} size="md" />
                     </div>
                   </div>
                 );
@@ -258,7 +227,15 @@ const AllPropertiesPage: React.FC = () => {
         ) : (
           <div className="text-center py-24 text-gray-400 dark:text-gray-500">
             <p className="text-5xl mb-4">🏠</p>
-            <p className="text-lg">{t("properties.noPropertiesFound")}</p>
+            <p className="text-lg font-bold text-gray-500 dark:text-gray-400">
+              {hasActiveFilters(filters) ? t("listing.emptyFiltered") : t("properties.noPropertiesFound")}
+            </p>
+            {hasActiveFilters(filters) && (
+              <button onClick={reset}
+                className="mt-6 px-6 py-3 rounded-2xl bg-[#004E80] hover:bg-sky-700 text-white font-bold transition">
+                {t("listing.reset")}
+              </button>
+            )}
           </div>
         )}
       </div>

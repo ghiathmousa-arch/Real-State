@@ -1,23 +1,54 @@
-import { useState } from "react"
-import { NavLink, useNavigate } from "react-router-dom"
-import { MdDashboard, MdOutlineBusiness, MdLogout, MdClose, MdEmail } from "react-icons/md"
+import { useEffect, useState } from "react"
+import { NavLink, useNavigate, useLocation } from "react-router-dom"
+import { MdDashboard, MdOutlineBusiness, MdLogout, MdClose, MdEmail, MdPendingActions, MdPeople, MdInbox } from "react-icons/md"
 import { IoMdAdd } from "react-icons/io"
 
-const API_URL = import.meta.env.VITE_API_URL;
-const BASE_URL = API_URL?.replace("/api", "");
+import { api } from "../../../utils/api"
+import { clearCurrentUser, useCurrentUser } from "../../hooks/useCurrentUser"
 
 const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { isAdmin } = useCurrentUser()
   const [showLogoutPopup, setShowLogoutPopup] = useState(false)
+  // عدد طلبات التعديل المعلّقة (للأدمن) — بيتحدّث مع كل تنقّل بالداشبورد
+  const [pendingCount, setPendingCount] = useState(0)
+  // عدد طلبات "اعرض عقارك" الجديدة (أدمن وسب أدمن)
+  const [requestsCount, setRequestsCount] = useState(0)
+
+  useEffect(() => {
+    api.get("/property-requests/count")
+      .then(res => setRequestsCount(res.data?.count ?? 0))
+      .catch(() => setRequestsCount(0))
+  }, [location.pathname])
+
+  useEffect(() => {
+    if (!isAdmin) return
+    api.get("/properties/pending-changes")
+      .then(res => setPendingCount(Array.isArray(res.data) ? res.data.length : 0))
+      .catch(() => setPendingCount(0))
+  }, [isAdmin, location.pathname])
+
+  // السب أدمن بيشوف: الرئيسية، العقارات، طلبات العرض، إضافة عقار. الأدمن كمان: الرسائل، بانتظار الموافقة، المستخدمين
+  const links = [
+    { label: "لوحة التحكم", path: "/dashboard", icon: <MdDashboard /> },
+    { label: "العقارات", path: "/dashboard/properties", icon: <MdOutlineBusiness /> },
+    { label: "طلبات العرض", path: "/dashboard/requests", icon: <MdInbox />, badge: requestsCount },
+    ...(isAdmin ? [
+      { label: "الرسائل", path: "/dashboard/messages", icon: <MdEmail /> },
+      { label: "بانتظار الموافقة", path: "/dashboard/pending-changes", icon: <MdPendingActions />, badge: pendingCount },
+      { label: "المستخدمين", path: "/dashboard/users", icon: <MdPeople /> },
+    ] : []),
+  ]
 
   const handleConfirmLogout = async () => {
     try {
       // يمسح كوكي الجلسة httpOnly من طرف السيرفر — localStorage.removeItem لا يكفي لأنه ما بيوصلها أصلاً
-      await fetch(`${BASE_URL}/api/auth/logout`, { method: "POST", credentials: "include" })
+      await api.post("/auth/logout")
     } catch {
       // حتى لو فشل الطلب (مثلاً الشبكة)، نكمّل تسجيل الخروج محلياً
     }
-    localStorage.removeItem("user")
+    clearCurrentUser()
     navigate("/dashboard/login")
   }
 
@@ -42,16 +73,12 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
           </button>
 
           <div className="mb-10 text-right">
-            <h1 className="text-lg font-bold text-[#004e80]">Syrian Estate Admin</h1>
-            <p className="text-xs text-gray-400 font-medium">Premium Management</p>
+            <h1 className="text-lg font-bold text-[#004e80]">إدارة عقارات سوريا</h1>
+            <p className="text-xs text-gray-400 font-medium">لوحة الإدارة</p>
           </div>
 
           <nav className="flex flex-col gap-2">
-            {[
-              { label: "Dashboard", path: "/dashboard", icon: <MdDashboard /> },
-              { label: "Property Listings", path: "/dashboard/properties", icon: <MdOutlineBusiness /> },
-              { label: "الرسائل", path: "/dashboard/messages", icon: <MdEmail /> },
-            ].map((link) => (
+            {links.map((link: { label: string; path: string; icon: React.ReactNode; badge?: number }) => (
               <NavLink
                 key={link.path}
                 to={link.path}
@@ -68,6 +95,11 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
               >
                 <span className="text-xl">{link.icon}</span>
                 <span>{link.label}</span>
+                {!!link.badge && (
+                  <span className="ms-auto min-w-[22px] h-[22px] px-1.5 rounded-full bg-amber-500 text-white text-xs font-black flex items-center justify-center">
+                    {link.badge}
+                  </span>
+                )}
               </NavLink>
             ))}
           </nav>
@@ -86,7 +118,7 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
             }
           >
             <span className="text-xl"><IoMdAdd /></span>
-            <span>Add New Property</span>
+            <span>إضافة عقار</span>
           </NavLink>
 
           <button
@@ -94,7 +126,7 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 active:bg-red-100 active:scale-95 transition-all duration-200"
           >
             <span className="text-xl"><MdLogout /></span>
-            <span>Logout</span>
+            <span>تسجيل الخروج</span>
           </button>
         </div>
       </aside>

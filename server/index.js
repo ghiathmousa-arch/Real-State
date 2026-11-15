@@ -5,7 +5,8 @@ const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const mongoSanitize = require("express-mongo-sanitize");
 
-require("dotenv").config({ path: __dirname + "/.env" });
+// server/.env، أو الملف اللي بـ ENV_FILE (بيئة الاختبار) — شوف config/loadEnv.js
+require("./config/loadEnv").loadEnv();
 
 const connectDB = require("./config/db");
 const { apiLimiter } = require("./middleware");
@@ -14,6 +15,7 @@ const { CITIES, CATEGORIES } = require("./constants/property");
 const propertiesRouter = require("./routes/properties");
 const authRouter = require("./routes/auth");
 const contactRouter = require("./routes/contact");
+const propertyRequestsRouter = require("./routes/propertyRequests");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -70,6 +72,7 @@ app.use(mongoSanitize());
 app.use("/api/properties", propertiesRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/contact", contactRouter);
+app.use("/api/property-requests", propertyRequestsRouter); // "اعرض عقارك"
 
 // بيانات ثابتة بالكود (server/constants/property.js) — ما بتتغيّر إلا بـ deploy جديد،
 // فكاش يوم كامل آمن 100% وبيوفر أكتر endpoint مضروب بالموقع

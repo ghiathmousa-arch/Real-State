@@ -7,10 +7,12 @@ import Footer from "./website/components/Footer";
 import HomePage from "./website/pages/HomePage";
 import PropertyDetailPage from "./website/pages/PropertyDetailPage";
 import AllPropertiesPage from "./website/components/Allpropertiespage/Allpropertiespage";
+import ListYourPropertyPage from "./website/pages/ListYourPropertyPage";
 
 import SEO from "./website/components/SEO/SEO";
 import AiChat from "./website/components/AiChat/AiChat";
 import BestEstate from "./website/components/BestEstate/BestEstate";
+import RentSection from "./website/components/RentSection/RentSection";
 import PropertiesList from "./website/components/PropertiesList/PropertiesList";
 import State from "./website/components/State";
 import WhyInvestors from "./website/components/WhyInvestors";
@@ -84,6 +86,8 @@ function App() {
                 <HomePage />
                 <AiChat />
                 <BestEstate />
+                {/* بيختفي لحالو إذا ما في عقارات إيجار نشطة */}
+                <RentSection />
                 <BrowseByCity />
                 <PropertiesList />
                 <State />
@@ -97,6 +101,7 @@ function App() {
           />
           <Route path="properties" element={<AllPropertiesPage />} />
           <Route path="properties/:id" element={<PropertyDetailPage />} />
+          <Route path="list-your-property" element={<ListYourPropertyPage />} />
         </Route>
       </Routes>
 

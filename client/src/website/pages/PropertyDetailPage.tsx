@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
 import { useTranslation } from "react-i18next";
 import {
   LuArrowLeft, LuArrowRight,
@@ -14,7 +13,11 @@ import { PiBathtub } from "react-icons/pi";
 import { TbCheck } from "react-icons/tb";
 import PropertySlider from "../components/Propertyslider/Propertyslider";
 import FloatingWhatsApp from "../components/FloatingWhatsApp/FloatingWhatsApp";
-import { cdn } from "../../utils/format";
+import SEO from "../components/SEO/SEO";
+import { cdn, formatPrice, formatRentPrices, type RentPeriod } from "../../utils/format";
+import { WHATSAPP_NUMBER } from "../../constants/contact";
+import { api, API_BASE } from "../../utils/api";
+import { localized, localizedList } from "../../utils/helper";
 
 const PropertyDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -27,8 +30,8 @@ const PropertyDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeImg, setActiveImg] = useState(0);
   const [liked, setLiked] = useState(false);
-  const API_URL = import.meta.env.VITE_API_URL;
-  const BASE_URL = API_URL?.replace("/api", "");
+  // مدة الإيجار المختارة بمربع السعر — "" = أول مدة متوفرة
+  const [selectedPeriod, setSelectedPeriod] = useState<"" | RentPeriod>("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,22 +39,21 @@ const PropertyDetailPage: React.FC = () => {
         setLoading(true);
         window.scrollTo(0, 0);
 
-        const res = await axios.get(`${API_URL}/api/properties/${id}`);
+        const res = await api.get(`/properties/${id}`);
         const prop = res.data;
         setProperty(prop);
         setActiveImg(0);
 
-        const allRes = await axios.get(`${API_URL}/api/properties`);
-        const all: any[] = Array.isArray(allRes.data) ? allRes.data : [];
+        // عقارات مشابهة: لازم تكون من نفس النوع (إيجار مع إيجار، بيع مع بيع).
+        // الأولوية لنفس المدينة، وإذا ما كفّوا منكمّل من نفس النوع بأي مدينة.
+        const allRes = await api.get("/properties", { params: { type: prop.type } });
+        const sameType: any[] = (Array.isArray(allRes.data) ? allRes.data : [])
+          .filter(p => p._id !== prop._id && p.type === prop.type);
 
-        const filtered = all
-          .filter(p =>
-            p._id !== prop._id &&
-            (p.category === prop.category || p.city === prop.city)
-          )
-          .slice(0, 6);
+        const sameCity = sameType.filter(p => p.city === prop.city);
+        const otherCities = sameType.filter(p => p.city !== prop.city);
 
-        setSimilar(filtered);
+        setSimilar([...sameCity, ...otherCities].slice(0, 6));
       } catch (e) {
         console.error(e);
       } finally {
@@ -91,19 +93,38 @@ const PropertyDetailPage: React.FC = () => {
     );
   }
 
-  const title = ar ? property.title : (property.titleEn || property.title);
-  const description = ar ? property.description : (property.descriptionEn || property.description);
-  const city = ar ? property.city : (property.cityEn || property.city);
-  const address = ar ? property.address : (property.addressEn || property.address);
-  const category = ar ? property.category : (property.categoryEn || property.category);
-  const features = (ar || !property.featuresEn?.length)
-    ? property.features
-    : property.featuresEn;
+  const title = localized(property, "title", ar);
+  const description = localized(property, "description", ar);
+  const city = localized(property, "city", ar);
+  const address = localized(property, "address", ar);
+  const category = localized(property, "category", ar);
+  const features = localizedList(property, "features", ar);
   const isBuy = property.type === "buy";
-  const hasPrice = property.price != null && property.price > 0;
+  // الإيجار: كل المدد المعبّاة سطر سطر. البيع: السعر الواحد
+  const rentItems = isBuy ? [] : formatRentPrices(property.rentPrices, ar);
+  const hasPrice = isBuy ? property.price != null && property.price > 0 : rentItems.length > 0;
+  const selectedRent = rentItems.find(i => i.period === selectedPeriod) ?? rentItems[0];
+
+  // رسالة واتساب جاهزة: العنوان + (مدة الإيجار المختارة) + السعر + رابط الصفحة
+  const pageUrl = window.location.href;
+  const priceText = isBuy ? (hasPrice ? formatPrice(property.price) : "") : selectedRent?.price ?? "";
+  const periodText = !isBuy && selectedRent ? t(`rentPeriods.${selectedRent.period}`) : "";
+  const whatsappMessage = ar
+    ? `مرحباً، مهتم بـ "${title}"${periodText ? ` — إيجار ${periodText}` : ""}${priceText ? ` بسعر ${priceText}` : ""}. الرابط: ${pageUrl}`
+    : `Hello, I'm interested in "${title}"${periodText ? ` — ${periodText} rent` : ""}${priceText ? ` at ${priceText}` : ""}. Link: ${pageUrl}`;
+  const whatsappLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`;
+
+  // حالة العقار: المباع والمعلّق ما بيظهروا بالقوائم العامة، بس صفحتهم بتفتح من الروابط القديمة
+  const isActive = !property.status || property.status === "active";
+  const statusBadge =
+    property.status === "sold"
+      ? { label: ar ? "مباع" : "Sold", note: ar ? "هذا العقار لم يعد متاحاً" : "This property is no longer available", color: "bg-red-600" }
+      : property.status === "pending"
+        ? { label: ar ? "معلّق" : "Pending", note: ar ? "هذا العقار محجوز حالياً وقيد المراجعة" : "This property is currently on hold", color: "bg-amber-500" }
+        : null;
 
   const images: string[] = property.images?.length
-    ? property.images.map((img: string) => cdn(img.startsWith("http") ? img : `${BASE_URL}${img}`))
+    ? property.images.map((img: string) => cdn(img.startsWith("http") ? img : `${API_BASE}${img}`))
     : [];
 
   const BackIcon = ar ? LuArrowRight : LuArrowLeft;
@@ -118,13 +139,20 @@ const PropertyDetailPage: React.FC = () => {
       dir={ar ? "rtl" : "ltr"}
       className={`min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 ${ar ? "text-right" : "text-left"}`}
     >
+      {/* العنوان بيذكر بيع/إيجار والسعر (للإيجار: أقصر مدة) */}
+      <SEO
+        title={[
+          title,
+          isBuy ? t("seo.forSale") : t("seo.forRent"),
+          isBuy ? (hasPrice ? formatPrice(property.price) : "") : rentItems[0]?.text ?? "",
+        ].filter(Boolean).join(" — ")}
+        description={description ? description.slice(0, 155) : undefined}
+      />
       <FloatingWhatsApp
-        message={
-          ar
-            ? `مرحباً، أنا مهتم بهذا العقار: ${title}\nرابط العقار: ${window.location.href}`
-            : `Hello, I'm interested in this property: ${title}\nLink: ${window.location.href}`
-        }
+        message={whatsappMessage}
         position={ar ? "left" : "right"}
+        // ≤ 800px الزر العائم كان يقعد فوق مربع السعر/المدد — وفي زر واتساب كبير بالمربع أصلاً
+        className="max-[800px]:hidden"
       />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6">
 
@@ -136,6 +164,13 @@ const PropertyDetailPage: React.FC = () => {
           <BackIcon size={16} className="group-hover:-translate-x-0.5 transition-transform" />
           {ar ? "العودة للقائمة" : "Back to listings"}
         </button>
+
+        {/* تنبيه العقار غير المتاح (مباع / معلّق) — الصفحة بتضل تفتح عشان الروابط القديمة */}
+        {statusBadge && (
+          <div className={`mb-3 rounded-2xl px-4 py-3 text-sm font-bold text-white ${statusBadge.color}`}>
+            {statusBadge.label} — {statusBadge.note}
+          </div>
+        )}
 
         {/* ════════════════════════════════
             معرض الصور
@@ -174,9 +209,14 @@ const PropertyDetailPage: React.FC = () => {
                             ${isBuy ? "bg-sky-600" : "bg-amber-500"}`}>
               {isBuy ? t("properties.sale") : t("properties.rent")}
             </span>
-            {property.isFeatured && (
+            {property.isFeatured && isActive && (
               <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-500 text-white shadow">
                 ★ {ar ? "مميز" : "Featured"}
+              </span>
+            )}
+            {statusBadge && (
+              <span className={`text-xs font-black px-3 py-1.5 rounded-full text-white shadow ${statusBadge.color}`}>
+                {statusBadge.label}
               </span>
             )}
           </div>
@@ -214,9 +254,9 @@ const PropertyDetailPage: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 mb-4">
           <div className={`flex flex-col sm:flex-row items-start sm:justify-between gap-4 sm:gap-6 ${ar ? "sm:flex-row" : "sm:flex-row-reverse"}`}>
             {/* العنوان */}
-            <div className={`${hasPrice ? "flex-1" : "w-full"} w-full ${ar ? "text-right" : "text-left"}`}>
+            <div className={`flex-1 w-full ${ar ? "text-right" : "text-left"}`}>
               <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">{category}</p>
-              <h1 className={`font-extrabold text-gray-800 dark:text-white leading-tight mb-3 ${hasPrice ? "text-2xl md:text-3xl" : "text-3xl md:text-4xl"}`}>
+              <h1 className="font-extrabold text-gray-800 dark:text-white leading-tight mb-3 text-2xl md:text-3xl">
                 {title}
               </h1>
               {(address || city) && (
@@ -226,18 +266,59 @@ const PropertyDetailPage: React.FC = () => {
                 </div>
               )}
             </div>
-            {/* السعر */}
-            {hasPrice && (
-              <div className={`shrink-0 w-full sm:w-auto ${ar ? "text-left sm:text-left" : "text-right sm:text-right"}`}>
-                <p className="text-3xl font-extrabold text-sky-600 dark:text-sky-400 leading-none">
-                  {property.price?.toLocaleString()}
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  {t("properties.currency")}
-                  {!isBuy && <> / {t("properties.month")}</>}
-                </p>
-              </div>
-            )}
+            {/* السعر + واتساب */}
+            <div className="shrink-0 w-full sm:w-72 flex flex-col gap-3">
+              {isBuy ? (
+                hasPrice ? (
+                  <div className={ar ? "text-right" : "text-left"}>
+                    <p dir="ltr" className={`text-3xl font-extrabold text-sky-600 dark:text-sky-400 leading-none ${ar ? "text-right" : "text-left"}`}>
+                      {formatPrice(property.price)}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">{t("properties.currency")}</p>
+                  </div>
+                ) : (
+                  <p className="text-lg font-bold text-sky-600 dark:text-sky-400">{t("properties.priceOnRequest")}</p>
+                )
+              ) : rentItems.length > 0 ? (
+                // مدد الإيجار — كل مدة سطر قابل للاختيار (radio): المدة بأول السطر والسعر بآخره
+                <div role="radiogroup" aria-label={t("detail.rentPeriods")} className="flex flex-col gap-2">
+                  {rentItems.map(item => {
+                    const checked = item.period === selectedRent?.period;
+                    return (
+                      <button key={item.period} role="radio" aria-checked={checked}
+                        onClick={() => setSelectedPeriod(item.period)}
+                        className={`flex items-center justify-between gap-3 px-4 py-3 rounded-xl border-2 transition-all text-start
+                          ${checked
+                            ? "border-amber-500 bg-amber-50 dark:bg-amber-900/20"
+                            : "border-gray-100 dark:border-gray-700 hover:border-amber-300"}`}>
+                        <span className="flex items-center gap-2 font-bold text-gray-700 dark:text-gray-200">
+                          <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${checked ? "border-amber-500" : "border-gray-300 dark:border-gray-500"}`}>
+                            {checked && <span className="w-2 h-2 rounded-full bg-amber-500" />}
+                          </span>
+                          {t(`rentPeriods.${item.period}`)}
+                        </span>
+                        <span className="text-xl font-extrabold text-sky-600 dark:text-sky-400">
+                          <span dir="ltr">{item.price}</span>
+                          <span className="text-xs font-bold text-gray-400 ms-1">/ {item.label}</span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                  <p className="text-xs text-gray-400">{t("properties.currency")}</p>
+                </div>
+              ) : (
+                <p className="text-lg font-bold text-sky-600 dark:text-sky-400">{t("properties.priceOnRequest")}</p>
+              )}
+
+              {/* واتساب برسالة جاهزة — بس للعقار المتاح */}
+              {isActive && (
+                <a href={whatsappLink} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-green-500 hover:bg-green-600 text-white font-bold text-base shadow-lg transition-all">
+                  <img src="/img/whatsapp.svg" width={22} height={22} alt="" />
+                  {isBuy ? t("detail.whatsappBuy") : t("detail.whatsappRent")}
+                </a>
+              )}
+            </div>
           </div>
         </div>
         {/* ════════════════════════════════
@@ -306,6 +387,12 @@ const PropertyDetailPage: React.FC = () => {
               { label: ar ? "الحالة" : "Status", value: property.status === "active" ? (ar ? "متاح" : "Available") : property.status },
               { label: ar ? "النوع" : "Type", value: isBuy ? (ar ? "للبيع" : "For Sale") : (ar ? "للإيجار" : "For Rent") },
               { label: ar ? "الفئة" : "Category", value: category },
+              ...(!isBuy && rentItems.length > 0
+                ? [{ label: t("detail.rentPeriods"), value: rentItems.map(i => t(`rentPeriods.${i.period}`)).join(ar ? "، " : ", ") }]
+                : []),
+              ...(property.furnished
+                ? [{ label: t("detail.furnished"), value: t(`properties.${property.furnished}`) }]
+                : []),
               { label: ar ? "تاريخ الإضافة" : "Added", value: new Date(property.createdAt).toLocaleDateString(ar ? "ar-SY" : "en-US") },
             ].map(row => (
               <div key={row.label} className={ar ? "text-right" : "text-left"}>

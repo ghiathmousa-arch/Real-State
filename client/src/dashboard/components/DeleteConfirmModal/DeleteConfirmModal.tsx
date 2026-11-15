@@ -6,9 +6,14 @@ interface Props {
   onClose: () => void;
   onConfirm: () => void;
   title: string;
+  // نص التحذير — الافتراضي للعقار (الموديل بينستعمل كمان لحذف المستخدمين)
+  message?: string;
 }
 
-const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, title }: Props) => {
+const DeleteConfirmModal = ({
+  isOpen, onClose, onConfirm, title,
+  message = "هذا الإجراء لا يمكن التراجع عنه وسيتم مسح كافة البيانات المرتبطة بالعقار.",
+}: Props) => {
   if (!isOpen) return null;
 
   return (
@@ -39,7 +44,7 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, title }: Props) => {
           <h3 className="text-xl font-black text-[#0f2d4a] mb-2">تأكيد الحذف</h3>
           <p className="text-gray-500 text-sm leading-relaxed mb-8">
             هل أنت متأكد من حذف <span className="font-bold text-red-600">"{title}"</span>؟
-            هذا الإجراء لا يمكن التراجع عنه وسيتم مسح كافة البيانات المرتبطة بالعقار.
+            {message}
           </p>
 
           <div className="flex flex-col sm:flex-row-reverse gap-3">

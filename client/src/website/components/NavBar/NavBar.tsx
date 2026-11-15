@@ -33,6 +33,12 @@ const navItems: NavItem[] = [
   { translationKey: "nav.contact", to: "#contact" },
 ];
 
+// روابط صفحات (مش أقسام بالرئيسية) — مداخل البيع والإيجار لصفحة كل العقارات
+const listingLinks = [
+  { translationKey: "nav.forSale", type: "buy" },
+  { translationKey: "nav.forRent", type: "rent" },
+] as const;
+
 const NavBar: React.FC<NavBarProps> = ({ theme, setTheme }) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -59,6 +65,32 @@ const NavBar: React.FC<NavBarProps> = ({ theme, setTheme }) => {
     sections.forEach((section) => observer.observe(section));
     return () => observer.disconnect();
   }, [location.pathname]);
+
+  const activeListingType =
+    location.pathname === "/properties" ? new URLSearchParams(location.search).get("type") : null;
+
+  const goToListings = (type: "buy" | "rent") => {
+    navigate(`/properties?type=${type}`);
+    window.scrollTo({ top: 0 });
+    setIsOpen(false);
+  };
+
+  // زر واحد لرابط بيع/إيجار — نفس شكل باقي الروابط، الإيجار بلونه البرتقالي لما يكون نشط
+  const renderListingLinks = (mobile: boolean) =>
+    listingLinks.map((link) => {
+      const active = activeListingType === link.type;
+      return (
+        <button
+          key={link.type}
+          onClick={() => goToListings(link.type)}
+          className={`text-sm cursor-pointer bg-transparent border-none whitespace-nowrap ${mobile ? "" : "hover:text-accent"} ${
+            active ? (link.type === "rent" ? "text-amber-500 font-bold" : "text-sky-500 font-bold") : ""
+          }`}
+        >
+          {t(link.translationKey)}
+        </button>
+      );
+    });
 
   const handleNavClick = (to: string) => {
     if (location.pathname !== "/") {
@@ -90,24 +122,32 @@ const NavBar: React.FC<NavBarProps> = ({ theme, setTheme }) => {
       />
 
       {/* قائمة الديسكتوب */}
-      <div className="hidden md:flex items-center gap-6">
-        {navItems.map((item) => (
+      <div className="hidden lg:flex items-center gap-4 xl:gap-6">
+        {navItems.map((item, i) => [
+          i === 1 && renderListingLinks(false),
           <button
             key={item.to}
             onClick={() => handleNavClick(item.to)}
-            className={`text-sm hover:text-accent cursor-pointer bg-transparent border-none ${
+            className={`text-sm hover:text-accent cursor-pointer bg-transparent border-none whitespace-nowrap ${
               item.to === `#${active}` && location.pathname === "/"
                 ? "text-sky-500"
                 : ""
             }`}
           >
             {t(item.translationKey)}
-          </button>
-        ))}
+          </button>,
+        ])}
       </div>
 
       {/* أزرار الديسكتوب */}
-      <div className="hidden md:flex gap-2 items-center">
+      <div className="hidden lg:flex gap-2 items-center">
+        {/* "اعرض عقارك" — زر بارز لصفحة الفورم العام */}
+        <button
+          onClick={() => { navigate("/list-your-property"); window.scrollTo({ top: 0 }); }}
+          className="me-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold whitespace-nowrap shadow transition"
+        >
+          {t("nav.listProperty")}
+        </button>
         <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           className="text-2xl p-2"
@@ -129,7 +169,7 @@ const NavBar: React.FC<NavBarProps> = ({ theme, setTheme }) => {
 
       {/* زر الموبايل */}
       <button
-        className="md:hidden text-2xl"
+        className="lg:hidden text-2xl"
         onClick={() => setIsOpen((prev) => !prev)}
       >
         <GiHamburgerMenu />
@@ -138,11 +178,12 @@ const NavBar: React.FC<NavBarProps> = ({ theme, setTheme }) => {
       {/* قائمة الموبايل */}
       {isOpen && (
         <div
-          className={`md:hidden fixed top-14 ${
+          className={`lg:hidden fixed top-14 ${
             i18n.dir() === "rtl" ? "left-0" : "right-0"
           } w-[70%] bg-white dark:bg-gray-800 flex flex-col text-center gap-4 px-4 pb-4 pt-4 shadow-lg rounded-lg`}
         >
-          {navItems.map((item) => (
+          {navItems.map((item, i) => [
+            i === 1 && renderListingLinks(true),
             <button
               key={item.to}
               onClick={() => handleNavClick(item.to)}
@@ -153,8 +194,15 @@ const NavBar: React.FC<NavBarProps> = ({ theme, setTheme }) => {
               }`}
             >
               {t(item.translationKey)}
-            </button>
-          ))}
+            </button>,
+          ])}
+
+          <button
+            onClick={() => { navigate("/list-your-property"); window.scrollTo({ top: 0 }); setIsOpen(false); }}
+            className="py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold"
+          >
+            {t("nav.listProperty")}
+          </button>
 
           <div className="border-t pt-3 flex justify-center gap-6">
             <button

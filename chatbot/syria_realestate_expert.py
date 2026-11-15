@@ -133,7 +133,7 @@ class SyriaRealEstateBot:
                 return self._ask(
                     "📞 للتواصل مع الدعم:\n"
                     "➡️ اضغط على 'تواصل معنا' في أسفل الصفحة\n"
-                    "أو راسلنا على: support@syriaproperties.sy"
+                    "أو راسلنا على واتساب: https://wa.me/963985148289"
                 )
             else:
                 return self._ask(

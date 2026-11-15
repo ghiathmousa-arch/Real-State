@@ -1,23 +1,19 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { useTranslation } from "react-i18next";
 import PropertyCard from "../PropetyCards";
 import { cdn } from "../../../utils/format";
+import { api, API_BASE } from "../../../utils/api";
 
 const BestEstate: React.FC = () => {
     const { t, i18n } = useTranslation();
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const API_URL = import.meta.env.VITE_API_URL;
-    // استخراج الدومين الأساسي في حال وجود صور محلية قديمة
-    const BASE_URL = API_URL?.replace("/api", "");
-
     useEffect(() => {
         const fetchFeaturedProperties = async () => {
             try {
                 setLoading(true);
-                const response = await axios.get(`${API_URL}/api/properties/featured`);
+                const response = await api.get("/properties/featured");
                 setProperties(Array.isArray(response.data) ? response.data : []);
             } catch (err) {
                 console.error("Error fetching featured properties:", err);
@@ -27,7 +23,7 @@ const BestEstate: React.FC = () => {
             }
         };
         fetchFeaturedProperties();
-    }, [API_URL]);
+    }, []);
 
     return (
         <section className="py-16 px-6 bg-gray-50 dark:bg-gray-900/50" id="featuredProperties">
@@ -60,7 +56,7 @@ const BestEstate: React.FC = () => {
                             {properties.slice(0, 3).map((item: any) => {
                                 // 🛠️ الفحص الذكي للروابط قبل تمريرها للمكوّن لضمان عدم تشوه الرابط
                                 const processedImages = item.images?.map((img: string) =>
-                                    cdn(img.startsWith("http") ? img : `${BASE_URL}${img}`)
+                                    cdn(img.startsWith("http") ? img : `${API_BASE}${img}`)
                                 ) || [];
 
                                 // نمرر البيانات للكرت مع مصفوفة الصور بعد معالجتها وتصحيحها

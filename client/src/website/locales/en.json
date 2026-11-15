@@ -4,7 +4,10 @@
     "featured": "Featured Properties",
     "list": "Properties List",
     "services": "Our Services",
-    "contact": "Contact Us"
+    "contact": "Contact Us",
+    "forSale": "For Sale",
+    "forRent": "For Rent",
+    "listProperty": "List Your Property"
   },
   "properties": {
     "allEstates": "All Estates",
@@ -12,8 +15,13 @@
     "sale": "Sale",
     "rent": "For Rent",
     "squareMeter": "m²",
-    "currency": "S.P",
-    "month": "month"
+    "currency": "US Dollar",
+    "priceOnRequest": "Price on request",
+    "latest": "Latest Properties",
+    "explore": "Explore",
+    "noPropertiesFound": "No properties available right now",
+    "furnished": "Furnished",
+    "unfurnished": "Unfurnished"
   },
   "contact": {
     "title": "Contact Us",
@@ -54,6 +62,10 @@
         "title": "Quick Links",
         "items": [
           {
+            "label": "List your property",
+            "to": "/list-your-property"
+          },
+          {
             "label": "Privacy Policy",
             "to": "/privacy"
           },
@@ -89,14 +101,14 @@
   },
   "search": {
     "placeholder": "Select an option",
-    "button": "Advanced Search",
+    "button": "Search",
     "location_label": "Location",
-    "type_label": "Type",
     "price_label": "Price",
-    "price_options": {
-      "low": "100M - 500M",
-      "high": "500M+"
-    }
+    "buy": "Buy",
+    "rent": "Rent",
+    "category_label": "Property type",
+    "period_label": "Rental period",
+    "choose_period_first": "Choose a period first"
   },
   "why_us": {
     "title": "Why Major Investors Choose Us?",
@@ -191,5 +203,128 @@
         "answer": "Yes. We follow up on fitting out and maintaining the property, and if it is an investment we handle letting it, managing it and collecting the rent, sending you regular reports on its status."
       }
     ]
+  },
+  "rentPeriods": {
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "yearly": "Yearly"
+  },
+  "priceRange": {
+    "under": "Under {{value}}",
+    "over": "Over {{value}}"
+  },
+  "rentSection": {
+    "title": "Properties for Rent",
+    "subtitle": "Daily, weekly, monthly or yearly rentals — pick the period that suits you",
+    "all": "All",
+    "viewAll": "All rentals"
+  },
+  "listing": {
+    "tabs": {
+      "all": "All",
+      "buy": "For Sale",
+      "rent": "For Rent"
+    },
+    "subtitle": "Browse all available properties and find what suits you",
+    "rentSubtitle": "Daily, weekly, monthly or yearly rentals — pick the period and budget that suit you",
+    "rentTitle": "Properties for Rent",
+    "buyTitle": "Properties for Sale",
+    "furnishedAll": "All",
+    "searchPlaceholder": "Search properties...",
+    "filters": "Filters",
+    "city": "City",
+    "category": "Category",
+    "allCities": "All cities",
+    "allCategories": "All categories",
+    "anyPrice": "Any price",
+    "sort": "Sort",
+    "sortNewest": "Newest",
+    "sortPriceAsc": "Price: low to high",
+    "sortPriceDesc": "Price: high to low",
+    "reset": "Reset",
+    "emptyFiltered": "No properties match these filters"
+  },
+  "detail": {
+    "rentPeriods": "Rental periods",
+    "furnished": "Furnished?",
+    "whatsappRent": "Book / ask on WhatsApp",
+    "whatsappBuy": "Ask on WhatsApp"
+  },
+  "seo": {
+    "rentTitle": "Properties for Rent in Syria — Daily, Monthly, Yearly",
+    "rentDescription": "Apartments, houses, shops and offices for rent in Syria: daily, weekly, monthly or yearly, priced in USD.",
+    "buyTitle": "Properties for Sale in Syria",
+    "buyDescription": "Apartments, houses, land and farms for sale across Syria, priced in USD.",
+    "allTitle": "All Properties — Buy & Rent in Syria",
+    "forRent": "For Rent",
+    "forSale": "For Sale"
+  },
+  "listProperty": {
+    "title": "List Your Property",
+    "intro": "Fill in the details below and our team will contact you within 24 hours. Only fields marked * are required.",
+    "seoTitle": "List your property for sale or rent",
+    "seoDescription": "Have a property for sale or rent in Syria? Fill in a short form and our team will get in touch and list it.",
+    "sections": {
+      "owner": "Your details",
+      "property": "The property",
+      "price": "Price",
+      "images": "Photos"
+    },
+    "fields": {
+      "ownerName": "Name",
+      "ownerPhone": "Phone / WhatsApp",
+      "type": "Sell or rent?",
+      "category": "Property type",
+      "city": "City",
+      "area": "Area (m²)",
+      "rooms": "Rooms",
+      "bathrooms": "Bathrooms",
+      "address": "Address / area",
+      "description": "Description",
+      "price": "Asking price (USD $)",
+      "furnished": "Furnished?"
+    },
+    "types": {
+      "buy": "Sell",
+      "rent": "Rent"
+    },
+    "choose": "Choose...",
+    "placeholders": {
+      "address": "e.g. Mezzeh, Jalaa St.",
+      "description": "Anything you'd like us to know: floor, finishing, view..."
+    },
+    "rentHint": "Fill in only the periods you rent for — not sure? Leave them empty and we'll discuss.",
+    "rentPrices": {
+      "daily": "Daily price $",
+      "weekly": "Weekly price $",
+      "monthly": "Monthly price $",
+      "yearly": "Yearly price $"
+    },
+    "priceHint": "Optional — not sure? Leave it empty and we'll discuss.",
+    "furnished": {
+      "unknown": "Not specified"
+    },
+    "imagesHint": "Tap here to add photos (up to {{max}}) — {{count}} added",
+    "removeImage": "Remove photo",
+    "submit": "Send request",
+    "sending": "Sending...",
+    "successTitle": "We got your request! 🎉",
+    "successText": "Thank you. Our team will call you within 24 hours.",
+    "whatsappButton": "Contact us directly on WhatsApp",
+    "whatsappMessage": "Hello, I sent a request to list my property on your website and would like to talk.",
+    "errors": {
+      "required": "This field is required",
+      "phone": "10 digits starting with 0, e.g. 0991234567",
+      "type": "Choose sell or rent",
+      "tooManyImages": "Maximum {{max}} photos",
+      "imageTooBig": "\"{{name}}\" is larger than {{mb}} MB",
+      "generic": "Couldn't send the request, please check the details",
+      "network": "Connection failed, check your internet and try again"
+    }
+  },
+  "whatsapp": {
+    "label": "Contact us",
+    "defaultMessage": "Hello, I'm interested in one of your properties"
   }
 }

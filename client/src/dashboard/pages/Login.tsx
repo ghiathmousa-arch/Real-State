@@ -1,15 +1,14 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import AuthForm from "../components/AuthForm/AuthForm"
+import { api, getApiError } from "../../utils/api"
+import { isStaffRole, saveCurrentUser } from "../hooks/useCurrentUser"
 
 export interface LoginData {
   email: string,
   password: string,
   remember: boolean
 }
-
-const API_URL = import.meta.env.VITE_API_URL;
-const BASE_URL = API_URL?.replace("/api", "");
 
 
 const Login = () => {
@@ -21,26 +20,24 @@ const Login = () => {
   const navigate = useNavigate()
 
   const handleSubmit = async (formData: LoginData) => {
+    let json
     try {
-      const res = await fetch(`${BASE_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include", // عشان كوكي الجلسة (httpOnly) ينحفظ بالمتصفح
-        body: JSON.stringify(formData)
-      })
-      const json = await res.json()
+      // withCredentials (بالـ api instance) عشان كوكي الجلسة (httpOnly) ينحفظ بالمتصفح
+      const res = await api.post("/auth/login", formData)
+      json = res.data
+    } catch (err: any) {
+      // رد من السيرفر (401/400/429…) = نعرض رسالته بس لو قصيرة ومتوقعة — getApiError بتفحص الطول
+      if (err?.response) return alert(getApiError(err, "بيانات خاطئة"))
+      console.log(err)
+      return alert("حدث خطأ، تحقق من الاتصال")
+    }
 
-      // نعرض رسالة السيرفر بس لو قصيرة ومتوقعة (رسائل الباك اند دايماً عربية قصيرة) — احتياط لو يوماً رجّع نص أطول
-      if (!res.ok) return alert(json.error && json.error.length < 200 ? json.error : "بيانات خاطئة")
-      if (json.user.role !== "admin") return alert("ليس لديك صلاحية")
+    try {
+      // الأدمن والسب أدمن (editor) بس
+      if (!isStaffRole(json.user.role)) return alert("ليس لديك صلاحية")
 
       // نخزّن بيانات العرض فقط (اسم/دور) — الجلسة الفعلية بكوكي httpOnly غير قابل للقراءة من JS
-      localStorage.setItem("user", JSON.stringify({
-        id: json.user.id,
-        name: json.user.name,
-        email: json.user.email,
-        role: json.user.role
-      }))
+      saveCurrentUser(json.user)
 
       navigate("/dashboard")
 
@@ -51,17 +48,17 @@ const Login = () => {
   }
 
   const inputs = [
-    { lable: "Email", type: "email", name: "email", pleaceholder: "Enter your email" },
-    { lable: "Password", type: "password", name: "password", pleaceholder: "Enter your password" }
+    { lable: "البريد الإلكتروني", type: "email", name: "email", pleaceholder: "name@example.com" },
+    { lable: "كلمة السر", type: "password", name: "password", pleaceholder: "••••••" }
   ]
 
   return (
     <AuthForm<LoginData>
-      title="Real state"
-      description="Welcome back to Real state"
+      title="عقارات سوريا"
+      description="أهلاً فيك — سجّل دخولك للوحة التحكم"
       inputs={inputs}
-      checkbox={{ lable: "Remember me", name: "remember" }}
-      btn="Login"
+      checkbox={{ lable: "تذكرني", name: "remember" }}
+      btn="تسجيل الدخول"
       setData={setData}
       onSubmit={handleSubmit}
     />

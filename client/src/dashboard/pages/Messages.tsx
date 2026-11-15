@@ -3,6 +3,7 @@ import {
   MdDelete, MdReply, MdMail, MdMailOutline,
   MdArrowBack, MdWarning, MdCheckCircle, MdClose
 } from "react-icons/md"
+import { api, getApiError } from "../../utils/api"
 
 interface Message {
   _id: string
@@ -13,9 +14,6 @@ interface Message {
   replied: boolean
   createdAt: string
 }
-
-const API_URL = import.meta.env.VITE_API_URL;
-const BASE_URL = API_URL?.replace("/api", "");
 
 const Messages = () => {
   const [messages, setMessages] = useState<Message[]>([])
@@ -30,22 +28,13 @@ const Messages = () => {
 
   const fetchMessages = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/api/contact`, {
-        credentials: "include" // كوكي الجلسة httpOnly بيُرسل تلقائياً
-      })
-
-      if (!res.ok) {
-        // ✅ لو فشل الطلب (401/403/500) نخلي messages array فاضي بدل undefined
-        setMessages([])
-        console.error("Failed to fetch messages, status:", res.status)
-        return
-      }
-
-      const data = await res.json()
+      // كوكي الجلسة httpOnly بيُرسل تلقائياً (withCredentials بالـ api instance)
+      const { data } = await api.get("/contact")
       setMessages(data.data ?? []) // ✅ احتياط إضافي
     } catch (error) {
+      // ✅ لو فشل الطلب (401/403/500) أو الشبكة نخلي messages array فاضي بدل undefined
       console.error("Error fetching messages:", error)
-      setMessages([]) // ✅ احتياط عند فشل الشبكة
+      setMessages([])
     } finally {
       setLoading(false)
     }
@@ -63,10 +52,7 @@ const Messages = () => {
     if (!id) return;
 
     try {
-      await fetch(`${BASE_URL}/api/contact/${id}`, {
-        method: "DELETE",
-        credentials: "include"
-      })
+      await api.delete(`/contact/${id}`)
       setMessages(prev => prev.filter(m => m._id !== id))
       if (selected?._id === id) setSelected(null)
     } catch (error) {
@@ -81,21 +67,15 @@ const Messages = () => {
     if (!selected || !replyText.trim()) return
     setSending(true)
     try {
-      const res = await fetch(`${BASE_URL}/api/contact/${selected._id}/reply`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ replyText })
-      })
-      const data = await res.json()
-      if (data.success) {
-        setSuccessPopup(true)
-        setReplyText("")
-        setMessages(prev => prev.map(m => m._id === selected._id ? { ...m, replied: true } : m))
-        setSelected(prev => prev ? { ...prev, replied: true } : null)
-      }
+      await api.post(`/contact/${selected._id}/reply`, { replyText })
+      setSuccessPopup(true)
+      setReplyText("")
+      setMessages(prev => prev.map(m => m._id === selected._id ? { ...m, replied: true } : m))
+      setSelected(prev => prev ? { ...prev, replied: true } : null)
     } catch (error) {
+      // فشل الإرسال (أو إعداد البريد ناقص) — الرسالة ما انعلّمت replied
       console.error("Error sending reply:", error)
+      alert(getApiError(error, "تعذّر إرسال الرد، تحقق من الاتصال"))
     } finally {
       setSending(false)
     }
