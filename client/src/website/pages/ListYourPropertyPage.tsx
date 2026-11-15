@@ -14,7 +14,7 @@ import { api } from "../../utils/api";
 import axios from "axios";
 import { digitsOnly } from "../../utils/digits";
 
-const MAX_IMAGES = 6;
+const MAX_IMAGES = 12; // نفس حد صور العقار
 const MAX_IMAGE_MB = 7;
 const RENT_FIELD = { daily: "rentDaily", weekly: "rentWeekly", monthly: "rentMonthly", yearly: "rentYearly" } as const;
 

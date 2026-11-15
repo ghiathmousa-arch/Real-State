@@ -32,8 +32,8 @@ const upload = multer({
   fileFilter: imageFileFilter,
 });
 
-// رفع صور فورم "اعرض عقارك" العام — نفس الفلتر والحجم (7MB) بس حد أقصى 6 صور بحقل "images"
-const REQUEST_MAX_IMAGES = 6;
+// رفع صور فورم "اعرض عقارك" العام — نفس الفلتر والحجم (7MB) وحد أقصى 12 صورة (متل العقار) بحقل "images"
+const REQUEST_MAX_IMAGES = 12;
 const requestUpload = multer({
   storage,
   limits: { fileSize: 7 * 1024 * 1024, files: REQUEST_MAX_IMAGES },

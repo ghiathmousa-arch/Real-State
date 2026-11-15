@@ -6,7 +6,7 @@ const { toLatinDigits } = require("../utils/propertyFields");
 // ما بينزل عالموقع أبداً: الأدمن/السب أدمن بيحوّله لعقار حقيقي (converted) أو بيرفضه (rejected).
 // اسم ورقم المالك بيضلوا هون بس — ما بينتقلوا للعقار ولا بيطلعوا للعامة.
 
-const MAX_REQUEST_IMAGES = 6;
+const MAX_REQUEST_IMAGES = 12;
 
 const PropertyRequestSchema = new mongoose.Schema({
   // ── المالك ──
@@ -39,7 +39,7 @@ const PropertyRequestSchema = new mongoose.Schema({
   },
   furnished: { type: String, enum: ["furnished", "unfurnished", null], default: null },
 
-  // روابط Cloudinary — حد أقصى 6
+  // روابط Cloudinary — حد أقصى 12 (متل العقار)
   images: {
     type: [String],
     default: [],
