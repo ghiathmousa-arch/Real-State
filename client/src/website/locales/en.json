@@ -315,7 +315,7 @@
     "whatsappMessage": "Hello, I sent a request to list my property on your website and would like to talk.",
     "errors": {
       "required": "This field is required",
-      "phone": "Digits only, e.g. 0991234567",
+      "phone": "10 digits starting with 0, e.g. 0991234567",
       "type": "Choose sell or rent",
       "tooManyImages": "Maximum {{max}} photos",
       "imageTooBig": "\"{{name}}\" is larger than {{mb}} MB",

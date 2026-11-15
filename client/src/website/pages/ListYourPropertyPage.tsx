@@ -12,7 +12,7 @@ import { WHATSAPP_NUMBER } from "../../constants/contact";
 import { RENT_PERIODS } from "../../utils/format";
 import { api } from "../../utils/api";
 import axios from "axios";
-import { toLatinDigits, digitsOnly } from "../../utils/digits";
+import { digitsOnly } from "../../utils/digits";
 
 const MAX_IMAGES = 6;
 const MAX_IMAGE_MB = 7;
@@ -97,9 +97,10 @@ const ListYourPropertyPage = () => {
   const validate = (): Errors => {
     const e: Errors = {};
     if (!form.ownerName.trim()) e.ownerName = t("listProperty.errors.required");
-    const phone = toLatinDigits(form.ownerPhone).replace(/[\s-]/g, "");
+    const phone = form.ownerPhone;
     if (!phone) e.ownerPhone = t("listProperty.errors.required");
-    else if (!/^\+?[0-9]{7,20}$/.test(phone)) e.ownerPhone = t("listProperty.errors.phone");
+    // رقم سوري: 10 أرقام بيبلّش بـ 0 (موبايل 09… أو أرضي 011…)
+    else if (!/^0[0-9]{9}$/.test(phone)) e.ownerPhone = t("listProperty.errors.phone");
     if (!form.type) e.type = t("listProperty.errors.type");
     if (!form.category) e.category = t("listProperty.errors.required");
     if (!form.city) e.city = t("listProperty.errors.required");
@@ -186,8 +187,9 @@ const ListYourPropertyPage = () => {
             </div>
             <div data-field="ownerPhone">
               <Label text={t("listProperty.fields.ownerPhone")} required />
-              <input className={inputClass} dir="ltr" inputMode="tel" autoComplete="tel" placeholder="09xx xxx xxx"
-                value={form.ownerPhone} onChange={e => set("ownerPhone", toLatinDigits(e.target.value).replace(/[^0-9+\s-]/g, ""))} />
+              <input className={inputClass} dir="ltr" inputMode="tel" autoComplete="tel" placeholder="0991234567"
+                value={form.ownerPhone} maxLength={10}
+                onChange={e => set("ownerPhone", digitsOnly(e.target.value).slice(0, 10))} />
               <FieldError msg={errors.ownerPhone} />
             </div>
           </Section>

@@ -25,7 +25,8 @@ const discardUploadsOnError = (req, res) => {
 };
 
 // ── التحقق من الطلب العام (قبل رفع الصور) ────────────────────
-const PHONE_RE = /^\+?[0-9]{7,20}$/;
+// رقم سوري: 10 أرقام بيبلّش بـ 0 (موبايل 09… أو أرضي 011…)
+const PHONE_RE = /^0[0-9]{9}$/;
 const validateRequestBody = (b) => {
   const errors = {};
   const ownerName = String(b.ownerName ?? "").trim();
@@ -36,7 +37,7 @@ const validateRequestBody = (b) => {
   if (!ownerName) errors.ownerName = "الاسم مطلوب";
   else if (ownerName.length > 100) errors.ownerName = "الاسم طويل كتير";
   if (!ownerPhone) errors.ownerPhone = "رقم الهاتف مطلوب";
-  else if (!PHONE_RE.test(ownerPhone)) errors.ownerPhone = "رقم الهاتف لازم يكون أرقام بس (7–20 رقم)";
+  else if (!PHONE_RE.test(ownerPhone)) errors.ownerPhone = "رقم الهاتف لازم يكون 10 أرقام ويبلّش بـ 0 (مثلاً 0991234567)";
   if (b.type !== "buy" && b.type !== "rent") errors.type = "اختار بيع أو إيجار";
   if (!findEn(CATEGORIES, b.category)) errors.category = b.category ? CATEGORY_ERROR_MSG : "الفئة مطلوبة";
   if (!findEn(CITIES, b.city)) errors.city = b.city ? CITY_ERROR_MSG : "المدينة مطلوبة";
