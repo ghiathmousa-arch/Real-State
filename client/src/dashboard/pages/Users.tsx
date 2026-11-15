@@ -16,6 +16,7 @@ interface UserRow {
   email: string
   role: StaffRole | "user"
   createdAt: string
+  createdBy: string | null // اسم الأدمن اللي أنشأ الحساب — null للحسابات القديمة
   propertiesCount: number
 }
 
@@ -106,14 +107,15 @@ const Users = () => {
                   <th className="px-4 py-3 text-center">الدور</th>
                   <th className="px-4 py-3 text-center">العقارات</th>
                   <th className="px-4 py-3 text-center">تاريخ الإنشاء</th>
+                  <th className="px-4 py-3 text-center">أنشأه</th>
                   <th className="px-4 py-3"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {loading ? (
-                  <tr><td colSpan={6} className="px-4 py-10 text-center text-gray-400 font-bold">جاري التحميل...</td></tr>
+                  <tr><td colSpan={7} className="px-4 py-10 text-center text-gray-400 font-bold">جاري التحميل...</td></tr>
                 ) : users.length === 0 ? (
-                  <tr><td colSpan={6} className="px-4 py-10 text-center text-gray-400 font-bold">ما في مستخدمين</td></tr>
+                  <tr><td colSpan={7} className="px-4 py-10 text-center text-gray-400 font-bold">ما في مستخدمين</td></tr>
                 ) : users.map(u => {
                   const isMe = u.id === me?.id
                   return (
@@ -130,6 +132,9 @@ const Users = () => {
                       <td className="px-4 py-3 text-center font-bold text-gray-600">{u.propertiesCount}</td>
                       <td className="px-4 py-3 text-center text-gray-400 text-xs whitespace-nowrap">
                         {u.createdAt ? new Date(u.createdAt).toLocaleDateString("ar-SY") : "—"}
+                      </td>
+                      <td className="px-4 py-3 text-center text-gray-500 text-xs font-bold whitespace-nowrap">
+                        {u.createdBy || "—"}
                       </td>
                       <td className="px-4 py-3 text-left">
                         {!isMe && (

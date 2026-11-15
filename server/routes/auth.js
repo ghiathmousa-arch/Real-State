@@ -54,7 +54,10 @@ router.post("/register", protect, adminOnly, async (req, res) => {
     if (exists)
       return res.status(400).json({ error: "البريد الإلكتروني مسجل مسبقاً" });
 
-    const user = await User.create({ name, email, password, role });
+    const user = await User.create({
+      name, email, password, role,
+      createdBy: { id: req.user._id, name: req.user.name },
+    });
 
     res.status(201).json({
       user: { id: user._id, name: user.name, email: user.email, role: user.role },
@@ -118,6 +121,7 @@ router.get("/users", protect, adminOnly, async (req, res) => {
       email: u.email,
       role: u.role,
       createdAt: u.createdAt,
+      createdBy: u.createdBy?.name || null,
       propertiesCount: countById.get(String(u._id)) || 0,
     })));
   } catch (error) {

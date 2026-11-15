@@ -7,6 +7,12 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   // admin = كل الصلاحيات · editor = سب أدمن (بيضيف فوراً، تعديله بموافقة الأدمن، ما بيحذف) · user = بلا صلاحيات داشبورد
   role: { type: String, enum: ["admin", "editor", "user"], default: "user" },
+  // مين أنشأ الحساب (أدمن من صفحة المستخدمين) — name نسخة عشان يضل ظاهر حتى لو انحذف حسابه.
+  // الحسابات القديمة أو المعمولة بسكريبت ما فيها
+  createdBy: {
+    id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    name: String,
+  },
 }, { timestamps: true });
 
 
