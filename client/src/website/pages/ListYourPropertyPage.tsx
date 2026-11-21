@@ -60,6 +60,9 @@ const ListYourPropertyPage = () => {
 
   const [form, setForm] = useState(EMPTY);
   const [files, setFiles] = useState<File[]>([]);
+  // المميزات (مسبح، حديقة...) — متل فورم الإضافة بالداشبورد: بتكتب وبتضغط "إضافة" أو Enter
+  const [features, setFeatures] = useState<string[]>([]);
+  const [featureInput, setFeatureInput] = useState("");
   const [previews, setPreviews] = useState<string[]>([]);
   const [errors, setErrors] = useState<Errors>({});
   const [submitError, setSubmitError] = useState("");
@@ -88,6 +91,12 @@ const ListYourPropertyPage = () => {
     setErrors(prev => ({ ...prev, images: undefined }));
     setFiles(prev => [...prev, ...selected]);
     setPreviews(prev => [...prev, ...selected.map(f => URL.createObjectURL(f))]);
+  };
+
+  const addFeature = () => {
+    const val = featureInput.trim();
+    if (val && !features.includes(val) && features.length < 30) setFeatures(prev => [...prev, val]);
+    setFeatureInput("");
   };
 
   const removeImage = (i: number) => {
@@ -125,6 +134,7 @@ const ListYourPropertyPage = () => {
     common.forEach(f => data.append(f, form[f]));
     if (form.type === "rent") RENT_PERIODS.forEach(p => data.append(RENT_FIELD[p], form[RENT_FIELD[p]]));
     else data.append("price", form.price);
+    data.append("features", features.join(","));
     files.forEach(f => data.append("images", f));
 
     setSending(true);
@@ -259,6 +269,34 @@ const ListYourPropertyPage = () => {
               <textarea className={`${inputClass} resize-y`} rows={4} maxLength={3000} value={form.description}
                 onChange={e => set("description", e.target.value)} placeholder={t("listProperty.placeholders.description")} />
               <FieldError msg={errors.description} />
+            </div>
+            <div className="sm:col-span-2" data-field="features">
+              <Label text={t("listProperty.fields.features")} />
+              <div className="flex gap-3">
+                <input className={`${inputClass} flex-1 min-w-0`} value={featureInput}
+                  onChange={e => setFeatureInput(e.target.value.replace(/,/g, "،"))}
+                  onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addFeature(); } }}
+                  placeholder={t("listProperty.placeholders.features")} maxLength={100} />
+                <button type="button" onClick={addFeature}
+                  className="shrink-0 px-6 rounded-2xl bg-[#004E80] hover:bg-sky-700 text-white text-lg font-bold transition">
+                  {t("listProperty.addFeature")}
+                </button>
+              </div>
+              {features.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {features.map((f, i) => (
+                    <span key={f} className="inline-flex items-center gap-2 ps-4 pe-2 py-2 rounded-full bg-sky-50 dark:bg-sky-900/30 text-sky-800 dark:text-sky-200 text-base font-bold">
+                      {f}
+                      <button type="button" onClick={() => setFeatures(prev => prev.filter((_, j) => j !== i))}
+                        aria-label={t("listProperty.removeFeature")}
+                        className="w-7 h-7 rounded-full bg-white dark:bg-gray-800 text-red-500 flex items-center justify-center">
+                        <MdClose size={16} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <FieldError msg={errors.features} />
             </div>
           </Section>
 

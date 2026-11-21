@@ -283,7 +283,8 @@
       "address": "Address / area",
       "description": "Description",
       "price": "Asking price (USD $)",
-      "furnished": "Furnished?"
+      "furnished": "Furnished?",
+      "features": "Features (optional)"
     },
     "types": {
       "buy": "Sell",
@@ -292,7 +293,8 @@
     "choose": "Choose...",
     "placeholders": {
       "address": "e.g. Mezzeh, Jalaa St.",
-      "description": "Anything you'd like us to know: floor, finishing, view..."
+      "description": "Anything you'd like us to know: floor, finishing, view...",
+      "features": "e.g. pool, garden, parking"
     },
     "rentHint": "Fill in only the periods you rent for — not sure? Leave them empty and we'll discuss.",
     "rentPrices": {
@@ -321,7 +323,9 @@
       "imageTooBig": "\"{{name}}\" is larger than {{mb}} MB",
       "generic": "Couldn't send the request, please check the details",
       "network": "Connection failed, check your internet and try again"
-    }
+    },
+    "addFeature": "Add",
+    "removeFeature": "Remove feature"
   },
   "whatsapp": {
     "label": "Contact us",

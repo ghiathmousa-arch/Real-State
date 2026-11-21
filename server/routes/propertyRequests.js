@@ -10,7 +10,7 @@ const Property = require("../models/Property");
 const { upload, uploadRequestImages, compressImages, deleteCloudinaryImages } = require("../middleware/upload");
 const { protect, staffOnly, sanitizeBody, requestLimiter } = require("../middleware");
 const { CITIES, CATEGORIES } = require("../constants/property");
-const { parseListingPrices, parseFurnished, findEn, toNum, toLatinDigits, CITY_ERROR_MSG, CATEGORY_ERROR_MSG, buildNewPropertyData } = require("../utils/propertyFields");
+const { parseListingPrices, parseFurnished, findEn, toNum, toArr, toLatinDigits, CITY_ERROR_MSG, CATEGORY_ERROR_MSG, buildNewPropertyData } = require("../utils/propertyFields");
 const { invalidatePropertiesCache } = require("./properties");
 
 const SERVER_ERROR = "حدث خطأ بالسيرفر، يرجى المحاولة لاحقاً";
@@ -42,6 +42,10 @@ const validateRequestBody = (b) => {
   if (!findEn(CATEGORIES, b.category)) errors.category = b.category ? CATEGORY_ERROR_MSG : "الفئة مطلوبة";
   if (!findEn(CITIES, b.city)) errors.city = b.city ? CITY_ERROR_MSG : "المدينة مطلوبة";
   if (String(b.description ?? "").length > 3000) errors.description = "الوصف أطول من 3000 حرف";
+  // المميزات: بتجي مفصولة بفواصل (متل فورم الداشبورد) — بدون تكرار، حد أقصى 30 وكل وحدة ≤ 100 حرف
+  const features = [...new Set(toArr(b.features).map((f) => String(f).trim()).filter(Boolean))];
+  if (features.length > 30) errors.features = "الحد الأقصى 30 ميزة";
+  else if (features.some((f) => f.length > 100)) errors.features = "كل ميزة لازم تكون أقصر من 100 حرف";
   if (String(b.ownerNote ?? "").length > 1000) errors.ownerNote = "الملاحظة أطول من 1000 حرف";
   if (String(b.address ?? "").length > 300) errors.address = "العنوان طويل كتير";
   for (const f of ["area", "rooms", "bathrooms"]) {
@@ -67,6 +71,7 @@ const validateRequestBody = (b) => {
       bathrooms: toNum(b.bathrooms),
       address: String(b.address ?? "").trim(),
       description: String(b.description ?? "").trim(),
+      features,
       price: prices.price,
       rentPrices: prices.rentPrices,
       furnished: parseFurnished(b.furnished),

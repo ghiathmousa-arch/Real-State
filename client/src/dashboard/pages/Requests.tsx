@@ -81,6 +81,13 @@ const RequestCard = ({ request, onChanged }: { request: any; onChanged: () => vo
           </p>
           {request.address && <p className="text-xs text-gray-500 mt-1">{request.address}</p>}
           {request.description && <p className="text-xs text-gray-500 mt-2 line-clamp-3">{request.description}</p>}
+          {request.features?.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {request.features.map((f: string) => (
+                <span key={f} className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700">{f}</span>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* المالك — للفريق بس، ما بيطلع للعامة */}

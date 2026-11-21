@@ -7,6 +7,7 @@ const { toLatinDigits } = require("../utils/propertyFields");
 // اسم ورقم المالك بيضلوا هون بس — ما بينتقلوا للعقار ولا بيطلعوا للعامة.
 
 const MAX_REQUEST_IMAGES = 12;
+const MAX_REQUEST_FEATURES = 30;
 
 const PropertyRequestSchema = new mongoose.Schema({
   // ── المالك ──
@@ -30,6 +31,12 @@ const PropertyRequestSchema = new mongoose.Schema({
   bathrooms: { type: Number, min: 0, default: null },
   address: { type: String, trim: true, maxlength: 300, default: "" },
   description: { type: String, trim: true, maxlength: 3000, default: "" },
+  // مميزات العقار (مسبح، حديقة...) — بتنتقل لـ features وقت التحويل لعقار
+  features: {
+    type: [{ type: String, trim: true, maxlength: 100 }],
+    default: [],
+    validate: [(v) => v.length <= MAX_REQUEST_FEATURES, `الحد الأقصى ${MAX_REQUEST_FEATURES} ميزة`],
+  },
   price: { type: Number, min: 0, default: null }, // للبيع — بالدولار
   rentPrices: {                                   // للإيجار — نفس شكل Property
     daily: { type: Number, min: 0, default: null },

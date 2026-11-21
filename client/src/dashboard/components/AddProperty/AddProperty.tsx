@@ -58,6 +58,7 @@ export interface ListingRequest {
   rentPrices?: Partial<Record<"daily" | "weekly" | "monthly" | "yearly", number | null>>
   furnished?: string | null
   images?: string[]
+  features?: string[]
 }
 
 const str = (v: unknown) => (v === null || v === undefined ? "" : String(v))
@@ -105,7 +106,7 @@ const AddProperty = ({ fromRequest }: { fromRequest?: ListingRequest } = {}) => 
   const [submitError, setSubmitError] = useState("")
   const [previews, setPreviews] = useState<string[]>([])
   const [files, setFiles] = useState<File[]>([])
-  const [features, setFeatures] = useState<string[]>([])
+  const [features, setFeatures] = useState<string[]>(fromRequest?.features ?? [])
   const [featuresEn, setFeaturesEn] = useState<string[]>([])
   const [featureInput, setFeatureInput] = useState("")
   const [featureInputEn, setFeatureInputEn] = useState("")
