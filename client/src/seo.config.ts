@@ -11,7 +11,7 @@ const SEO_CONFIG = {
   image: "https://real-state-six-chi.vercel.app/og-image.jpg",
 
   social: {
-    facebook: "https://www.facebook.com/share/1DB4FcDQKW/",
+    facebook: "https://www.facebook.com/share/1B7fUDqkca/",
     instagram: "https://www.instagram.com/syrianestate0",
   }
 }
