@@ -329,7 +329,8 @@
       "network": "تعذّر الاتصال، تأكد من الإنترنت وحاول مرة تانية"
     },
     "addFeature": "إضافة",
-    "removeFeature": "إزالة الميزة"
+    "removeFeature": "إزالة الميزة",
+    "preparingImages": "جاري تجهيز الصور..."
   },
   "whatsapp": {
     "label": "تواصل معنا",

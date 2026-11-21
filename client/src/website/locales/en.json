@@ -325,7 +325,8 @@
       "network": "Connection failed, check your internet and try again"
     },
     "addFeature": "Add",
-    "removeFeature": "Remove feature"
+    "removeFeature": "Remove feature",
+    "preparingImages": "Preparing photos..."
   },
   "whatsapp": {
     "label": "Contact us",

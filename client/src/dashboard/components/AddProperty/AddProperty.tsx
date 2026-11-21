@@ -11,6 +11,7 @@ import RentPriceFields from '../RentPriceFields/RentPriceFields'
 import { useCurrentUser } from '../../hooks/useCurrentUser'
 import { buildPropertyFormData } from '../../../utils/buildPropertyFormData'
 import { getImgSrc } from '../../../utils/format'
+import { shrinkImages } from '../../../utils/shrinkImage'
 import { api, getApiError } from '../../../utils/api'
 import {
   usePropertyOptions,
@@ -116,15 +117,17 @@ const AddProperty = ({ fromRequest }: { fromRequest?: ListingRequest } = {}) => 
   const [requestImages, setRequestImages] = useState<string[]>(fromRequest?.images ?? [])
   const formRef = useRef<HTMLFormElement>(null)
 
-  const handleImages = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = Array.from(e.target.files || [])
+  // الصور بتتصغّر بالمتصفح قبل الرفع — أسرع وما بتتعّب السيرفر
+  const handleImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = Array.from(e.target.files || [])
 
     // نوقف الاختيار هون بدل ما نخلي السيرفر يرفضه بعد رفع كامل — أسرع وأوضح للمستخدم
-    if (selected.length + requestImages.length > MAX_IMAGES) {
-      setImageError(`الحد الأقصى ${MAX_IMAGES} صورة — اخترت ${selected.length}${requestImages.length ? ` + ${requestImages.length} من الطلب` : ""}`)
+    if (picked.length + requestImages.length > MAX_IMAGES) {
+      setImageError(`الحد الأقصى ${MAX_IMAGES} صورة — اخترت ${picked.length}${requestImages.length ? ` + ${requestImages.length} من الطلب` : ""}`)
       e.target.value = ""
       return
     }
+    const selected = await shrinkImages(picked)
 
     const tooBig = selected.find(f => f.size > MAX_IMAGE_MB * 1024 * 1024)
     if (tooBig) {

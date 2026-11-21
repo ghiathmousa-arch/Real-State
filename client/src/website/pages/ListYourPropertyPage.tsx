@@ -13,6 +13,7 @@ import { RENT_PERIODS } from "../../utils/format";
 import { api } from "../../utils/api";
 import axios from "axios";
 import { digitsOnly } from "../../utils/digits";
+import { shrinkImages } from "../../utils/shrinkImage";
 
 const MAX_IMAGES = 12; // نفس حد صور العقار
 const MAX_IMAGE_MB = 7;
@@ -61,6 +62,7 @@ const ListYourPropertyPage = () => {
   const [form, setForm] = useState(EMPTY);
   const [files, setFiles] = useState<File[]>([]);
   // المميزات (مسبح، حديقة...) — متل فورم الإضافة بالداشبورد: بتكتب وبتضغط "إضافة" أو Enter
+  const [preparingImages, setPreparingImages] = useState(false);
   const [features, setFeatures] = useState<string[]>([]);
   const [featureInput, setFeatureInput] = useState("");
   const [previews, setPreviews] = useState<string[]>([]);
@@ -76,13 +78,17 @@ const ListYourPropertyPage = () => {
   // الأرقام العربية (٠-٩) بتتحوّل قبل الفلترة — وإلا بتنمسح بصمت
   const numeric = digitsOnly;
 
-  const addImages = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = Array.from(e.target.files || []);
+  // الصور بتتصغّر بالمتصفح قبل الرفع (shrinkImages) — أسرع على الموبايل وما بتتعّب السيرفر
+  const addImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = Array.from(e.target.files || []);
     e.target.value = "";
-    if (files.length + selected.length > MAX_IMAGES) {
+    if (files.length + picked.length > MAX_IMAGES) {
       setErrors(prev => ({ ...prev, images: t("listProperty.errors.tooManyImages", { max: MAX_IMAGES }) }));
       return;
     }
+    setPreparingImages(true);
+    const selected = await shrinkImages(picked);
+    setPreparingImages(false);
     const tooBig = selected.find(f => f.size > MAX_IMAGE_MB * 1024 * 1024);
     if (tooBig) {
       setErrors(prev => ({ ...prev, images: t("listProperty.errors.imageTooBig", { name: tooBig.name, mb: MAX_IMAGE_MB }) }));
@@ -340,7 +346,9 @@ const ListYourPropertyPage = () => {
                   <input type="file" multiple accept="image/*" onChange={addImages} className="absolute inset-0 opacity-0 cursor-pointer" />
                   <MdCloudUpload size={36} className="text-sky-500" />
                   <span className="text-base font-bold text-gray-600 dark:text-gray-300 text-center">
-                    {t("listProperty.imagesHint", { max: MAX_IMAGES, count: files.length })}
+                    {preparingImages
+                      ? t("listProperty.preparingImages")
+                      : t("listProperty.imagesHint", { max: MAX_IMAGES, count: files.length })}
                   </span>
                 </label>
               )}
@@ -365,7 +373,7 @@ const ListYourPropertyPage = () => {
             <p className="text-base font-bold text-red-600 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl px-5 py-4">{submitError}</p>
           )}
 
-          <button type="submit" disabled={sending}
+          <button type="submit" disabled={sending || preparingImages}
             className="w-full py-4 rounded-2xl bg-[#004E80] hover:bg-sky-700 text-white text-lg font-extrabold shadow-lg transition disabled:opacity-60">
             {sending ? t("listProperty.sending") : t("listProperty.submit")}
           </button>

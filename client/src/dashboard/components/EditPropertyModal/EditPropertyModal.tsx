@@ -9,6 +9,7 @@ import { useCurrentUser } from '../../hooks/useCurrentUser'
 import RentPriceFields, { EMPTY_RENT_INPUTS, RENT_FIELDS, rentInputsFrom, type RentInputs } from '../RentPriceFields/RentPriceFields'
 import { buildPropertyFormData } from '../../../utils/buildPropertyFormData'
 import { cdn } from '../../../utils/format'
+import { shrinkImages } from '../../../utils/shrinkImage'
 import { api, API_BASE, getApiError } from '../../../utils/api'
 import {
   usePropertyOptions,
@@ -128,14 +129,16 @@ const EditPropertyModal = ({ isOpen, onClose, property, onSuccess }: Props) => {
   const totalImages = existingImages.length + newFiles.length
 
   // الصور الجديدة بتنضاف فوق الموجودة (مش بدالها) — والمجموع ما بيتجاوز MAX_IMAGES
-  const handleImages = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = Array.from(e.target.files || [])
+  // الصور بتتصغّر بالمتصفح قبل الرفع — أسرع وما بتتعّب السيرفر
+  const handleImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = Array.from(e.target.files || [])
     e.target.value = "" // عشان نقدر نختار نفس الملف مرة تانية بعد حذفه
 
-    if (totalImages + selected.length > MAX_IMAGES) {
-      setImageError(`الحد الأقصى ${MAX_IMAGES} صورة — عندك ${totalImages} واخترت ${selected.length}`)
+    if (totalImages + picked.length > MAX_IMAGES) {
+      setImageError(`الحد الأقصى ${MAX_IMAGES} صورة — عندك ${totalImages} واخترت ${picked.length}`)
       return
     }
+    const selected = await shrinkImages(picked)
 
     const tooBig = selected.find(f => f.size > MAX_IMAGE_MB * 1024 * 1024)
     if (tooBig) {
