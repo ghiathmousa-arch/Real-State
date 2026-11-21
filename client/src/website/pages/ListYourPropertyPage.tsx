@@ -48,7 +48,8 @@ const Section = ({ n, title, children }: { n: number; title: string; children: R
       <span className="w-10 h-10 rounded-full bg-[#004E80] text-white flex items-center justify-center text-lg shrink-0">{n}</span>
       {title}
     </h2>
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">{children}</div>
+    {/* min-w-0: الخانات ما بتكبر أعرض من عمودها (وإلا بتعمل scroll أفقي على الشاشات الصغيرة) */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 [&>*]:min-w-0">{children}</div>
   </section>
 );
 
@@ -174,9 +175,11 @@ const ListYourPropertyPage = () => {
           <p className="text-lg sm:text-xl text-gray-500 dark:text-gray-400 mt-3">{t("listProperty.intro")}</p>
         </header>
 
-        <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
-          {/* honeypot — البوتات بتعبّيه، البشر ما بيشوفوه */}
-          <div aria-hidden="true" className="absolute -left-[9999px] w-px h-px overflow-hidden">
+        <form onSubmit={handleSubmit} noValidate className="relative flex flex-col gap-6">
+          {/* honeypot — البوتات بتعبّيه، البشر ما بيشوفوه.
+              ما منبعّده لبرّا الشاشة (left سالب كبير): بصفحة RTL هالشي بيعمل scroll أفقي وبيزيح الصفحة كلها.
+              بدالو: نقطة 1px شفافة جوّا الفورم نفسه */}
+          <div aria-hidden="true" className="absolute top-0 start-0 w-px h-px overflow-hidden opacity-0 pointer-events-none">
             <input type="text" name="hp_field" tabIndex={-1} autoComplete="off" aria-label="leave empty"
               data-lpignore="true" data-1p-ignore data-form-type="other"
               value={form.hp_field} onChange={e => set("hp_field", e.target.value)} />
