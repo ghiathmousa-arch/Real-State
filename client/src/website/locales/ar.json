@@ -330,7 +330,8 @@
     },
     "addFeature": "إضافة",
     "removeFeature": "إزالة الميزة",
-    "preparingImages": "جاري تجهيز الصور..."
+    "preparingImages": "جاري تجهيز الصور...",
+    "backToSite": "رجوع لتصفّح الموقع"
   },
   "whatsapp": {
     "label": "تواصل معنا",

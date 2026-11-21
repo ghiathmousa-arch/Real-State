@@ -5,6 +5,7 @@
 
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { MdClose, MdCloudUpload, MdCheckCircle } from "react-icons/md";
 import SEO from "../components/SEO/SEO";
 import { usePropertyOptions } from "../../constants/property";
@@ -176,6 +177,11 @@ const ListYourPropertyPage = () => {
             <img src="/img/whatsapp.svg" width={28} height={28} alt="" />
             {t("listProperty.whatsappButton")}
           </a>
+          {/* رجوع لتصفّح الموقع (الرئيسية) */}
+          <Link to="/" onClick={() => window.scrollTo({ top: 0 })}
+            className="mt-3 inline-flex items-center justify-center w-full py-3.5 rounded-2xl border-2 border-[#004E80] text-[#004E80] dark:border-sky-400 dark:text-sky-300 hover:bg-[#004E80] hover:text-white dark:hover:bg-sky-600 text-lg font-bold transition">
+            {t("listProperty.backToSite")}
+          </Link>
         </div>
       </div>
     );

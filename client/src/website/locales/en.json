@@ -326,7 +326,8 @@
     },
     "addFeature": "Add",
     "removeFeature": "Remove feature",
-    "preparingImages": "Preparing photos..."
+    "preparingImages": "Preparing photos...",
+    "backToSite": "Back to browsing the site"
   },
   "whatsapp": {
     "label": "Contact us",
