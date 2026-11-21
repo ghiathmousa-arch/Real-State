@@ -53,13 +53,20 @@ const uploadRequestImages = (req, res, next) => {
   });
 };
 
-// ضغط الصور ورفعها لـ Cloudinary — **صورة صورة مش كلهن سوا**:
-// صورة الموبايل (~12 ميغابكسل) بتاخد ~50MB بالذاكرة وقت فك الضغط، و11 صورة سوا كانت تتجاوز
-// ذاكرة سيرفر Render المجاني (512MB) وترجع "فشلت عملية معالجة الصور".
-// .rotate() بيطبّق اتجاه الصورة (EXIF) — بدونه صور الموبايل بتطلع مقلوبة أو على جنب.
-// إذا فشلت أي صورة، منحذف اللي انرفع قبلها عشان ما يضل يتيم على Cloudinary.
+// ضغط الصور ورفعها لـ Cloudinary.
+// • الصور الصغيرة (المتصفح صغّرها أصلاً لـ 1600px — shrinkImage بالواجهة): بتنرفع لـ Cloudinary مباشرة
+//   بدون sharp، وCloudinary بيحوّلها لـ webp. السيرفر المجاني ضعيف، وإعادة الضغط كانت تاخد ثواني لكل صورة.
+// • الصور الكبيرة (مثلاً من API مباشر أو متصفح ما صغّر): sharp — **وحدة وحدة** بقفل، لأن صورة الموبايل
+//   (~12 ميغابكسل) بتاخد ~50MB بالذاكرة وكذا وحدة سوا كانت تتجاوز ذاكرة Render (512MB).
+//   .rotate() بيطبّق اتجاه الصورة (EXIF).
+// • الرفع لـ Cloudinary بيصير 3 صور بنفس الوقت (شبكة مش ذاكرة) — والترتيب بيضل متل ما اختاره المستخدم.
+// • إذا فشلت أي صورة، منحذف اللي انرفع عشان ما يضل يتيم على Cloudinary.
 sharp.cache(false);
 sharp.concurrency(1);
+
+const MAX_DIM = 1600;
+const SMALL_FILE_BYTES = 1.5 * 1024 * 1024;
+const UPLOAD_CONCURRENCY = 3;
 
 const uploadToCloudinary = (buffer) =>
   new Promise((resolve, reject) => {
@@ -70,33 +77,72 @@ const uploadToCloudinary = (buffer) =>
     stream.end(buffer);
   });
 
+// قفل بسيط: شغلة sharp وحدة بالمرة (حماية الذاكرة)
+let sharpQueue = Promise.resolve();
+const withSharpLock = (fn) => {
+  const run = sharpQueue.then(fn, fn);
+  sharpQueue = run.catch(() => {});
+  return run;
+};
+
+// الصورة جاهزة للرفع المباشر؟ (صغيرة، وأبعادها ≤ 1600 — قراءة الـ header بس، رخيصة)
+const isAlreadySmall = async (buffer) => {
+  if (buffer.length > SMALL_FILE_BYTES) return false;
+  try {
+    const { width, height } = await sharp(buffer).metadata();
+    return Boolean(width && height && Math.max(width, height) <= MAX_DIM);
+  } catch {
+    return false;
+  }
+};
+
+const prepareImage = async (file) => {
+  const buffer = file.buffer;
+  file.buffer = null; // منحرّر النسخة بالـ req بأسرع وقت
+  if (await isAlreadySmall(buffer)) return buffer;
+  return withSharpLock(() =>
+    sharp(buffer, { failOn: "none" })
+      .rotate()
+      .resize(MAX_DIM, MAX_DIM, { fit: "inside", withoutEnlargement: true })
+      .webp({ quality: 78 })
+      .toBuffer()
+  );
+};
+
 const compressImages = async (req, res, next) => {
   configureCloudinary();
   req.compressedImages = [];
 
-  if (!req.files || req.files.length === 0) return next();
+  const files = req.files || [];
+  if (files.length === 0) return next();
 
-  try {
-    for (const file of req.files) {
-      const compressedBuffer = await sharp(file.buffer, { failOn: "none" })
-        .rotate()
-        .resize(1600, 1600, { fit: "inside", withoutEnlargement: true })
-        .webp({ quality: 78 })
-        .toBuffer();
-      file.buffer = null; // منحرّر الأصل من الذاكرة قبل الصورة الجاية
+  const urls = new Array(files.length); // نفس ترتيب المستخدم
+  let failed = null;
+  let nextIndex = 0;
 
-      const result = await uploadToCloudinary(compressedBuffer);
-      req.compressedImages.push(result.secure_url);
+  const worker = async () => {
+    while (!failed && nextIndex < files.length) {
+      const i = nextIndex++;
+      try {
+        const buffer = await prepareImage(files[i]);
+        urls[i] = (await uploadToCloudinary(buffer)).secure_url;
+      } catch (error) {
+        failed = failed || error;
+      }
     }
-    next();
-  } catch (error) {
+  };
+
+  await Promise.all(Array.from({ length: Math.min(UPLOAD_CONCURRENCY, files.length) }, worker));
+
+  if (failed) {
     // التفاصيل باللوغ بس (بدون مفاتيح) — للمستخدم رسالة عامة
-    console.error("compressImages Error:", error?.message || error);
-    const uploaded = req.compressedImages;
-    req.compressedImages = [];
-    deleteCloudinaryImages(uploaded);
-    res.status(500).json({ error: "فشلت عملية معالجة الصور — جرّب صور أقل أو أصغر" });
+    console.error("compressImages Error:", failed?.message || failed);
+    deleteCloudinaryImages(urls.filter(Boolean));
+    return res.status(500).json({ error: "فشلت عملية معالجة الصور — جرّب صور أقل أو أصغر" });
   }
+
+  req.compressedImages = urls;
+  next();
 };
 
 // ── حذف الصور من Cloudinary ─────────────────────────────────
