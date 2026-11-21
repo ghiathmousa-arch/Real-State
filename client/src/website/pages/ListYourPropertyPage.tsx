@@ -30,26 +30,26 @@ const EMPTY = {
 };
 
 const inputClass =
-  "w-full p-4 text-lg bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-2xl outline-none focus:border-sky-500 text-gray-800 dark:text-white";
+  "w-full px-4 py-3 text-base bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-2xl outline-none focus:border-sky-500 text-gray-800 dark:text-white";
 
 // مكونات صغيرة على مستوى الموديول (مش جوّا الصفحة) — وإلا كل حرف بيعيد تركيب الخانات وبيضيع الـ focus
 const FieldError = ({ msg }: { msg?: string }) =>
-  msg ? <p className="text-base font-bold text-red-600 mt-1.5">{msg}</p> : null;
+  msg ? <p className="text-sm font-bold text-red-600 mt-1.5">{msg}</p> : null;
 
 const Label = ({ text, required }: { text: string; required?: boolean }) => (
-  <label className="block text-lg font-bold text-gray-700 dark:text-gray-200 mb-2">
+  <label className="block text-base font-bold text-gray-700 dark:text-gray-200 mb-1.5">
     {text} {required && <span className="text-red-500">*</span>}
   </label>
 );
 
 const Section = ({ n, title, children }: { n: number; title: string; children: React.ReactNode }) => (
-  <section className="bg-white dark:bg-gray-800 rounded-3xl p-5 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-700">
-    <h2 className="flex items-center gap-3 text-xl sm:text-2xl font-extrabold text-gray-800 dark:text-white mb-6">
-      <span className="w-10 h-10 rounded-full bg-[#004E80] text-white flex items-center justify-center text-lg shrink-0">{n}</span>
+  <section className="bg-white dark:bg-gray-800 rounded-3xl p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+    <h2 className="flex items-center gap-3 text-lg sm:text-xl font-extrabold text-gray-800 dark:text-white mb-5">
+      <span className="w-8 h-8 rounded-full bg-[#004E80] text-white flex items-center justify-center text-base shrink-0">{n}</span>
       {title}
     </h2>
     {/* min-w-0: الخانات ما بتكبر أعرض من عمودها (وإلا بتعمل scroll أفقي على الشاشات الصغيرة) */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 [&>*]:min-w-0">{children}</div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 [&>*]:min-w-0">{children}</div>
   </section>
 );
 
@@ -181,8 +181,8 @@ const ListYourPropertyPage = () => {
 
       <div className="max-w-3xl mx-auto">
         <header className="mb-8">
-          <h1 className="text-3xl sm:text-5xl font-extrabold text-gray-800 dark:text-white">{t("listProperty.title")}</h1>
-          <p className="text-lg sm:text-xl text-gray-500 dark:text-gray-400 mt-3">{t("listProperty.intro")}</p>
+          <h1 className="text-2xl sm:text-4xl font-extrabold text-gray-800 dark:text-white">{t("listProperty.title")}</h1>
+          <p className="text-base sm:text-lg text-gray-500 dark:text-gray-400 mt-2">{t("listProperty.intro")}</p>
         </header>
 
         <form onSubmit={handleSubmit} noValidate className="relative flex flex-col gap-6">
@@ -218,7 +218,7 @@ const ListYourPropertyPage = () => {
               <div className="grid grid-cols-2 gap-3">
                 {(["buy", "rent"] as const).map(v => (
                   <button type="button" key={v} onClick={() => set("type", v)} aria-pressed={form.type === v}
-                    className={`py-5 rounded-2xl border-2 text-xl font-extrabold transition
+                    className={`py-3.5 rounded-2xl border-2 text-lg font-extrabold transition
                       ${form.type === v
                         ? v === "rent" ? "bg-amber-500 border-amber-500 text-white" : "bg-[#004E80] border-[#004E80] text-white"
                         : "border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-sky-400"}`}>
@@ -278,18 +278,18 @@ const ListYourPropertyPage = () => {
                   onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addFeature(); } }}
                   placeholder={t("listProperty.placeholders.features")} maxLength={100} />
                 <button type="button" onClick={addFeature}
-                  className="shrink-0 px-6 rounded-2xl bg-[#004E80] hover:bg-sky-700 text-white text-lg font-bold transition">
+                  className="shrink-0 px-5 rounded-2xl bg-[#004E80] hover:bg-sky-700 text-white text-base font-bold transition">
                   {t("listProperty.addFeature")}
                 </button>
               </div>
               {features.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-3">
                   {features.map((f, i) => (
-                    <span key={f} className="inline-flex items-center gap-2 ps-4 pe-2 py-2 rounded-full bg-sky-50 dark:bg-sky-900/30 text-sky-800 dark:text-sky-200 text-base font-bold">
+                    <span key={f} className="inline-flex items-center gap-2 ps-3 pe-1.5 py-1.5 rounded-full bg-sky-50 dark:bg-sky-900/30 text-sky-800 dark:text-sky-200 text-sm font-bold">
                       {f}
                       <button type="button" onClick={() => setFeatures(prev => prev.filter((_, j) => j !== i))}
                         aria-label={t("listProperty.removeFeature")}
-                        className="w-7 h-7 rounded-full bg-white dark:bg-gray-800 text-red-500 flex items-center justify-center">
+                        className="w-6 h-6 rounded-full bg-white dark:bg-gray-800 text-red-500 flex items-center justify-center">
                         <MdClose size={16} />
                       </button>
                     </span>
@@ -304,7 +304,7 @@ const ListYourPropertyPage = () => {
           <Section n={3} title={t("listProperty.sections.price")}>
             {form.type === "rent" ? (
               <>
-                <p className="sm:col-span-2 text-base text-gray-500 dark:text-gray-400 -mt-2">{t("listProperty.rentHint")}</p>
+                <p className="sm:col-span-2 text-sm text-gray-500 dark:text-gray-400 -mt-2">{t("listProperty.rentHint")}</p>
                 {RENT_PERIODS.map(p => (
                   <div key={p}>
                     <Label text={t(`listProperty.rentPrices.${p}`)} />
@@ -326,7 +326,7 @@ const ListYourPropertyPage = () => {
                 <Label text={t("listProperty.fields.price")} />
                 <input className={inputClass} dir="ltr" inputMode="numeric" placeholder="$"
                   value={form.price} onChange={e => set("price", numeric(e.target.value))} />
-                <p className="text-base text-gray-500 dark:text-gray-400 mt-1.5">{t("listProperty.priceHint")}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1.5">{t("listProperty.priceHint")}</p>
               </div>
             )}
             <div className="sm:col-span-2"><FieldError msg={errors.price} /></div>
@@ -336,10 +336,10 @@ const ListYourPropertyPage = () => {
           <Section n={4} title={t("listProperty.sections.images")}>
             <div className="sm:col-span-2" data-field="images">
               {files.length < MAX_IMAGES && (
-                <label className="relative flex flex-col items-center gap-2 p-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-3xl cursor-pointer hover:border-sky-400 transition">
+                <label className="relative flex flex-col items-center gap-2 p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-3xl cursor-pointer hover:border-sky-400 transition">
                   <input type="file" multiple accept="image/*" onChange={addImages} className="absolute inset-0 opacity-0 cursor-pointer" />
-                  <MdCloudUpload size={44} className="text-sky-500" />
-                  <span className="text-lg font-bold text-gray-600 dark:text-gray-300 text-center">
+                  <MdCloudUpload size={36} className="text-sky-500" />
+                  <span className="text-base font-bold text-gray-600 dark:text-gray-300 text-center">
                     {t("listProperty.imagesHint", { max: MAX_IMAGES, count: files.length })}
                   </span>
                 </label>
@@ -362,11 +362,11 @@ const ListYourPropertyPage = () => {
           </Section>
 
           {submitError && (
-            <p className="text-lg font-bold text-red-600 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl px-5 py-4">{submitError}</p>
+            <p className="text-base font-bold text-red-600 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl px-5 py-4">{submitError}</p>
           )}
 
           <button type="submit" disabled={sending}
-            className="w-full py-5 rounded-2xl bg-[#004E80] hover:bg-sky-700 text-white text-xl font-extrabold shadow-lg transition disabled:opacity-60">
+            className="w-full py-4 rounded-2xl bg-[#004E80] hover:bg-sky-700 text-white text-lg font-extrabold shadow-lg transition disabled:opacity-60">
             {sending ? t("listProperty.sending") : t("listProperty.submit")}
           </button>
         </form>
