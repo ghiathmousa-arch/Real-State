@@ -53,51 +53,49 @@ const uploadRequestImages = (req, res, next) => {
   });
 };
 
+// ضغط الصور ورفعها لـ Cloudinary — **صورة صورة مش كلهن سوا**:
+// صورة الموبايل (~12 ميغابكسل) بتاخد ~50MB بالذاكرة وقت فك الضغط، و11 صورة سوا كانت تتجاوز
+// ذاكرة سيرفر Render المجاني (512MB) وترجع "فشلت عملية معالجة الصور".
+// .rotate() بيطبّق اتجاه الصورة (EXIF) — بدونه صور الموبايل بتطلع مقلوبة أو على جنب.
+// إذا فشلت أي صورة، منحذف اللي انرفع قبلها عشان ما يضل يتيم على Cloudinary.
+sharp.cache(false);
+sharp.concurrency(1);
+
+const uploadToCloudinary = (buffer) =>
+  new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: "real-state", public_id: uuidv4(), resource_type: "image", format: "webp" },
+      (error, result) => (error ? reject(error) : resolve(result))
+    );
+    stream.end(buffer);
+  });
+
 const compressImages = async (req, res, next) => {
   configureCloudinary();
-  // ✅ تم حذف الـ console.log الذي كان يكشف مفاتيح Cloudinary
-
-  if (!req.files || req.files.length === 0) {
-    req.compressedImages = [];
-    return next();
-  }
-
   req.compressedImages = [];
 
+  if (!req.files || req.files.length === 0) return next();
+
   try {
-    await Promise.all(
-      req.files.map(async (file) => {
-        const compressedBuffer = await sharp(file.buffer)
-          .resize(1200, null, { withoutEnlargement: true })
-          .webp({ quality: 75 })
-          .toBuffer();
+    for (const file of req.files) {
+      const compressedBuffer = await sharp(file.buffer, { failOn: "none" })
+        .rotate()
+        .resize(1600, 1600, { fit: "inside", withoutEnlargement: true })
+        .webp({ quality: 78 })
+        .toBuffer();
+      file.buffer = null; // منحرّر الأصل من الذاكرة قبل الصورة الجاية
 
-        const result = await new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream(
-            {
-              folder: "real-state",
-              public_id: uuidv4(),
-              resource_type: "image",
-              format: "webp"
-            },
-            (error, result) => {
-              if (error) {
-                console.error("Cloudinary Upload Error:", error.message); // ✅ بدون تفاصيل حساسة
-                reject(error);
-              } else {
-                resolve(result);
-              }
-            }
-          );
-          stream.end(compressedBuffer);
-        });
-
-        req.compressedImages.push(result.secure_url);
-      })
-    );
+      const result = await uploadToCloudinary(compressedBuffer);
+      req.compressedImages.push(result.secure_url);
+    }
     next();
   } catch (error) {
-    res.status(500).json({ error: "فشلت عملية معالجة الصور" }); // ✅ بدون تفاصيل error.message
+    // التفاصيل باللوغ بس (بدون مفاتيح) — للمستخدم رسالة عامة
+    console.error("compressImages Error:", error?.message || error);
+    const uploaded = req.compressedImages;
+    req.compressedImages = [];
+    deleteCloudinaryImages(uploaded);
+    res.status(500).json({ error: "فشلت عملية معالجة الصور — جرّب صور أقل أو أصغر" });
   }
 };
 
